@@ -4,7 +4,7 @@ import { Toast } from "@/components/base";
 import { AuthProvider } from "@/core/providers/AuthProvider";
 import { SocketProvider } from "@/core/providers/SocketProvider";
 import "@/i18n";
-import { BrowserRouter } from "react-router-dom";
+import { Outlet } from "react-router";
 import { PageHeaderProvider } from "@/core/providers/PageHeaderProvider";
 import { GlobalSocketHandlersSubscriber } from "@/core/providers/GlobalSocketHandlersSubscriber";
 
@@ -13,16 +13,16 @@ function App() {
     return (
         <QueryClientProvider client={queryClient}>
             <PageHeaderProvider>
-                <BrowserRouter>
+                <Router>
                     <AuthProvider>
                         <SocketProvider>
                             <GlobalSocketHandlersSubscriber>
-                                <Router />
+                                <Outlet />
                                 <Toast.Area richColors />
                             </GlobalSocketHandlersSubscriber>
                         </SocketProvider>
                     </AuthProvider>
-                </BrowserRouter>
+                </Router>
             </PageHeaderProvider>
         </QueryClientProvider>
     );

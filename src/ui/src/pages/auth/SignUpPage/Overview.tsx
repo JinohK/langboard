@@ -7,12 +7,12 @@ import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef">): JSX.Element {
     const cardContentList: (keyof ISignUpForm)[] = ["email", "industry", "purpose", "affiliation", "position"];
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const { mutate } = useSignUp();
     const failCallback = useCallback((errors?: Record<string, string>) => {
         if (!errors) {
@@ -72,7 +72,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                 },
             },
             [EHttpStatus.HTTP_503_SERVICE_UNAVAILABLE]: {
-                after: () => navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email } }),
+                after: () => navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email: values.email }, smooth: true }),
             },
         },
         useDefaultBadRequestHandler: true,

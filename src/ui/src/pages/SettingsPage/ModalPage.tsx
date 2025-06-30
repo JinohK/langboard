@@ -6,10 +6,10 @@ import GlobalRelationshipCreateFormDialog from "@/pages/SettingsPage/components/
 import UserCreateFormDialog from "@/pages/SettingsPage/components/users/UserCreateFormDialog";
 import WebhookCreateFormDialog from "@/pages/SettingsPage/components/webhook/WebhookCreateFormDialog";
 import { memo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 const ModalPage = memo(() => {
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const [isOpened, setIsOpened] = useState(true);
 
     const moveToBack = () => {

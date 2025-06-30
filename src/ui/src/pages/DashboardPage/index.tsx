@@ -1,4 +1,4 @@
-import { memo, useReducer, useRef } from "react";
+import { memo, useReducer } from "react";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -7,8 +7,8 @@ import { ROUTES } from "@/core/routing/constants";
 import ProjectPage from "@/pages/DashboardPage/ProjectPage";
 import CardsPage, { SkeletonCardsPage } from "@/pages/DashboardPage/CardsPage";
 import TrackingPage, { SkeletonTrackingPage } from "@/pages/DashboardPage/TrackingPage";
-import { useNavigate } from "react-router-dom";
-import { Navigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { Navigate } from "react-router";
 import { DashboardProvider } from "@/core/providers/DashboardProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { Project } from "@/core/models";
@@ -17,7 +17,7 @@ import { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs
 
 const DashboardProxy = memo((): JSX.Element => {
     const [t] = useTranslation();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const [pageType, tabName] = location.pathname.split("/").slice(2);
     const { data, isFetching } = useGetAllStarredProjects();
     const scrollAreaUpdater = useReducer((x) => x + 1, 0);
@@ -30,13 +30,13 @@ const DashboardProxy = memo((): JSX.Element => {
         projects: {
             name: t("dashboard.Projects"),
             onClick: () => {
-                navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
+                navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { smooth: true });
             },
         },
         cards: {
             name: t("dashboard.Cards"),
             onClick: () => {
-                navigateRef.current(ROUTES.DASHBOARD.CARDS);
+                navigate(ROUTES.DASHBOARD.CARDS, { smooth: true });
             },
         },
         starred: {
@@ -45,14 +45,14 @@ const DashboardProxy = memo((): JSX.Element => {
                 starredProjects.map((project) => ({
                     name: project.title,
                     onClick: () => {
-                        navigateRef.current(ROUTES.BOARD.MAIN(project.uid));
+                        navigate(ROUTES.BOARD.MAIN(project.uid));
                     },
                 })) ?? [],
         },
         tacking: {
             name: t("dashboard.Tracking"),
             onClick: () => {
-                navigateRef.current(ROUTES.DASHBOARD.TRACKING);
+                navigate(ROUTES.DASHBOARD.TRACKING, { smooth: true });
             },
         },
     };
@@ -62,14 +62,14 @@ const DashboardProxy = memo((): JSX.Element => {
             icon: "plus",
             name: t("dashboard.Create New Project"),
             onClick: () => {
-                navigateRef.current(`${location.pathname}/new-project`);
+                navigate(`${location.pathname}/new-project`);
             },
         },
         {
             icon: "history",
             name: t("dashboard.My Activity"),
             onClick: () => {
-                navigateRef.current(`${location.pathname}/my-activity`);
+                navigate(`${location.pathname}/my-activity`);
             },
         },
     ];
@@ -114,13 +114,7 @@ const DashboardProxy = memo((): JSX.Element => {
             scrollAreaMutable={scrollAreaMutable}
             className="overflow-x-hidden"
         >
-            {currentUser ? (
-                <DashboardProvider navigate={navigateRef.current} currentUser={currentUser}>
-                    {pageContent}
-                </DashboardProvider>
-            ) : (
-                skeletonContent
-            )}
+            {currentUser ? <DashboardProvider currentUser={currentUser}>{pageContent}</DashboardProvider> : skeletonContent}
         </DashboardStyledLayout>
     );
 });

@@ -6,7 +6,7 @@ import { ESettingType } from "@/core/models/AppSettingModel";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import ApiKeyRow from "@/pages/SettingsPage/components/keys/ApiKeyRow";
-import { useReducer } from "react";
+import { useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IApiKeyListProps {
@@ -16,11 +16,11 @@ export interface IApiKeyListProps {
 
 function ApiKeyList({ selectedKeys, setSelectedKeys }: IApiKeyListProps) {
     const [t] = useTranslation();
+    const viewportRef = useRef<HTMLDivElement | null>(null);
     const updater = useReducer((x) => x + 1, 0);
     const apiKeys = AppSettingModel.Model.useModels((model) => model.setting_type === ESettingType.ApiKey);
     const PAGE_SIZE = 30;
     const { items: keys, nextPage, hasMore } = useInfiniteScrollPager({ allItems: apiKeys, size: PAGE_SIZE, updater });
-    const listId = "settings-api-keys-list";
 
     const selectAll = () => {
         setSelectedKeys((prev) => {
@@ -58,9 +58,9 @@ function ApiKeyList({ selectedKeys, setSelectedKeys }: IApiKeyListProps) {
                     </Table.Row>
                 </Table.Header>
             </Table.Root>
-            <ScrollArea.Root viewportId={listId} mutable={keys}>
+            <ScrollArea.Root viewportRef={viewportRef} mutable={keys}>
                 <InfiniteScroller.NoVirtual
-                    scrollable={() => document.getElementById(listId)}
+                    scrollable={() => viewportRef.current}
                     loadMore={nextPage}
                     hasMore={hasMore}
                     loader={

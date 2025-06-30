@@ -11,7 +11,7 @@ from models.UserNotification import NotificationType
 from sqlalchemy import String
 from sqlalchemy import cast as sql_cast
 from ...core.service import ServiceHelper
-from ...publishers import ProjectInvitationPublisher
+from ...publishers import ProjectInvitationPublisher, ProjectPublisher
 from ...tasks.activities import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService
 from .NotificationService import NotificationService
@@ -175,7 +175,6 @@ class ProjectInvitationService(BaseService):
             with DbSession.use(readonly=False) as db:
                 db.delete(invitation)
 
-        urls = {}
         email_service = self._get_service(EmailService)
         notification_service = self._get_service(NotificationService)
         for email in invitation_result.emails_should_invite:
@@ -201,9 +200,38 @@ class ProjectInvitationService(BaseService):
                     "url": token_url,
                 },
             )
-            urls[email] = token_url
 
         return True
+
+    async def update_by_signed_up(self, user: User):
+        invitations = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
+                SqlBuilder.select.tables(ProjectInvitation, Project)
+                .join(Project, ProjectInvitation.column("project_id") == Project.column("id"))
+                .where(
+                    (ProjectInvitation.column("email") == user.email) & (ProjectInvitation.column("token") != None)  # noqa
+                )
+            )
+            invitations = result.all()
+
+        if not invitations:
+            return
+
+        project_service = self._get_service_by_name("project")
+        notification_service = self._get_service(NotificationService)
+        for invitation, project in invitations:
+            with DbSession.use(readonly=False) as db:
+                db.delete(invitation)
+
+            await notification_service.notify_project_invited(user, user, project, invitation)
+
+            model = {
+                "assigned_members": await project_service.get_assigned_users(project, as_api=True),
+                "invited_members": await self.get_invited_users(project, as_api=True),
+            }
+
+            await ProjectPublisher.assigned_users_updated(project, model)
 
     async def accept(self, user: User, token: str) -> Literal[False] | str:
         invitation = await self.__get_invitation_by_token(user, token)

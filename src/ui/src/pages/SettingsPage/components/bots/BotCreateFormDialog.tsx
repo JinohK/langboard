@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
 import { useRef, useState } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
@@ -13,6 +12,7 @@ import { isValidIpv4OrRnage, isValidURL } from "@/core/utils/StringUtils";
 import CopyInput from "@/components/CopyInput";
 import MultiSelect from "@/components/MultiSelect";
 import PasswordInput from "@/components/PasswordInput";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IBotCreateFormDialogProps {
     opened: bool;
@@ -21,7 +21,7 @@ export interface IBotCreateFormDialogProps {
 
 function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const [isValidating, setIsValidating] = useState(false);
     const [revealedToken, setRevealedToken] = useState<string>();
     const dataTransferRef = useRef(new DataTransfer());
@@ -101,7 +101,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                         [EHttpStatus.HTTP_409_CONFLICT]: {
                             after: (message) => {

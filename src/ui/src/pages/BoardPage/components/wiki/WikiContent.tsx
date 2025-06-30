@@ -4,6 +4,7 @@ import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
@@ -36,7 +37,8 @@ export function SkeletonWikiContent() {
 }
 
 const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
-    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor, navigate } = useBoardWiki();
+    const navigate = usePageNavigateRef();
+    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const isPublic = wiki.useField("is_public");

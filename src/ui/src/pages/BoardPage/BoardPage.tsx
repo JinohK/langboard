@@ -6,8 +6,10 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
 import useGetProject from "@/controllers/api/board/useGetProject";
 import { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
-const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps): JSX.Element => {
+const BoardPage = memo(({ projectUID, currentUser }: IBoardRelatedPageProps): JSX.Element => {
+    const navigate = usePageNavigateRef();
     const { data, error, isFetching } = useGetProject({ uid: projectUID });
 
     useEffect(() => {
@@ -27,7 +29,7 @@ const BoardPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPage
         handle(error);
     }, [error]);
 
-    return <>{!data || isFetching ? <SkeletonBoard /> : <BoardProject navigate={navigate} project={data.project} currentUser={currentUser} />}</>;
+    return <>{!data || isFetching ? <SkeletonBoard /> : <BoardProject project={data.project} currentUser={currentUser} />}</>;
 });
 
 export default BoardPage;

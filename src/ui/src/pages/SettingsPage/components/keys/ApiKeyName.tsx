@@ -3,8 +3,8 @@ import useUpdateSetting from "@/controllers/api/settings/useUpdateSetting";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { AppSettingModel } from "@/core/models";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
@@ -16,7 +16,7 @@ export interface IApiKeyNameProps {
 
 const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const name = apiKey.useField("setting_name");
     const { mutateAsync } = useUpdateSetting(apiKey, { interceptToast: true });
 
@@ -35,7 +35,7 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
                     const { handle } = setupApiErrorHandler(
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                             },
                         },
                         messageRef

@@ -1,13 +1,13 @@
 import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Button, Flex, Floating, Form, SubmitButton, Toast } from "@/components/base";
 import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface ISendResetLinkFormProps {
     signToken: string;
@@ -17,7 +17,7 @@ export interface ISendResetLinkFormProps {
 
 function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLinkFormProps): JSX.Element {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const location = useLocation();
     const { mutate } = useSendResetLink();
     const isResendRef = useRef(false);
@@ -42,12 +42,12 @@ function SendResetLinkForm({ signToken, emailToken, backToSignin }: ISendResetLi
             if (isResendRef.current) {
                 Toast.Add.success(t("accountRecovery.Resent link successfully."));
             } else {
-                navigate(location, { state: { isTwoSidedView: false } });
+                navigate(location, { state: { isTwoSidedView: false }, smooth: true });
             }
         },
         apiErrorHandlers: {
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => backToSignin(),
+                after: backToSignin,
             },
         },
         useDefaultBadRequestHandler: true,

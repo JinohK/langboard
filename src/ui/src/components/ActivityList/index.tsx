@@ -12,8 +12,8 @@ import { useTranslation } from "react-i18next";
 export interface IActivityListProps extends Pick<React.ComponentProps<typeof InfiniteScroller.Default>, "as"> {
     form: TGetActivitiesForm;
     currentUser: AuthUser.TModel;
-    infiniteScrollerClassName?: string;
-    style?: React.CSSProperties;
+    outerClassName?: string;
+    outerStyle?: React.CSSProperties;
     isUserView?: bool;
 }
 
@@ -52,6 +52,10 @@ function ActivityList({ form, ...props }: IActivityListProps) {
             form={form}
             limit={PAGE_LIMIT}
             prepareData={(models, data) => {
+                if (!data.references) {
+                    return;
+                }
+
                 for (let i = 0; i < models.length; ++i) {
                     models[i].references = data.references;
                 }
@@ -62,7 +66,7 @@ function ActivityList({ form, ...props }: IActivityListProps) {
     );
 }
 
-function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, isUserView = false }: Omit<IActivityListProps, "form">): JSX.Element {
+function ActivityListInner({ as, currentUser, outerClassName, outerStyle, isUserView = false }: Omit<IActivityListProps, "form">): JSX.Element {
     const [t] = useTranslation();
     const {
         models: activities,
@@ -83,7 +87,7 @@ function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, 
                     {t("activity.No activities")}
                 </Flex>
             )}
-            <Box id={listIdRef.current} className={cn(infiniteScrollerClassName, "overflow-y-auto")} onScroll={checkOutdatedOnScroll}>
+            <Box id={listIdRef.current} className={cn(outerClassName, "overflow-y-auto")} style={outerStyle} onScroll={checkOutdatedOnScroll}>
                 {isRefreshing && <Loading variant="secondary" size="4" my="2" />}
                 <InfiniteScroller.Default
                     as={as}
@@ -94,7 +98,6 @@ function ActivityListInner({ as, currentUser, infiniteScrollerClassName, style, 
                     hasMore={!isLastPage}
                     totalCount={activities.length}
                     rowClassName="w-full p-1.5"
-                    style={style}
                 >
                     {activities.map((activity) => (
                         <ActivityTimeline activity={activity} references={activity.references} key={createShortUUID()} />

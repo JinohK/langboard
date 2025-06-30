@@ -1,8 +1,8 @@
 import { Button, Table } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useDashboard } from "@/core/providers/DashboardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { formatTimerDuration } from "@/core/utils/StringUtils";
@@ -16,7 +16,7 @@ export interface ITrackingRowProps extends React.HTMLAttributes<HTMLTableRowElem
 
 function TrackingRow({ checkitem, className, ...props }: ITrackingRowProps): JSX.Element | null {
     const [t] = useTranslation();
-    const { navigate } = useDashboard();
+    const navigate = usePageNavigateRef();
     const projectUIDRef = useRef<string>("");
     const title = checkitem.useField("title");
     const rawStatus = checkitem.useField("status");
@@ -77,7 +77,7 @@ interface ITrackingRowCardTitleProps {
 }
 
 function TrackingRowCardTitle({ projectUIDRef }: ITrackingRowCardTitleProps) {
-    const { navigate } = useDashboard();
+    const navigate = usePageNavigateRef();
     const { model: checkitem } = ModelRegistry.ProjectCheckitem.useContext();
     const card = ProjectCard.Model.getModel(checkitem.card_uid)!;
     const title = card.useField("title");

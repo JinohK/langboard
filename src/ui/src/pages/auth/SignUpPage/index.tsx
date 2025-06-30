@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button } from "@/components/base";
 import { ISignUpForm } from "@/controllers/api/auth/useSignUp";
@@ -9,14 +9,14 @@ import AdditionalForm from "@/pages/auth/SignUpPage/AdditionalForm";
 import OptionalForm from "@/pages/auth/SignUpPage/OptionalForm";
 import Overview from "@/pages/auth/SignUpPage/Overview";
 import RequiredForm from "@/pages/auth/SignUpPage/RequiredForm";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function SignUpPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const [form, setForm] = useState<JSX.Element>();
     const initialErrorsRef = useRef<Record<string, string>>({});
     const values = location.state ?? {};
@@ -29,13 +29,13 @@ function SignUpPage(): JSX.Element {
         if (initialErrors) {
             initialErrorsRef.current = initialErrors;
         }
-        navigate(location, { replace: true, state: location.state });
-        navigate(`${nextUrl}?${searchParams.toString()}`, { state: location.state });
+        navigate(location, { replace: true, state: location.state, smooth: true });
+        navigate(`${nextUrl}?${searchParams.toString()}`, { state: location.state, smooth: true });
     };
 
     const backToSignIn = () => {
         const searchParams = new URLSearchParams(location.search);
-        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
+        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { smooth: true });
     };
 
     useEffect(() => {

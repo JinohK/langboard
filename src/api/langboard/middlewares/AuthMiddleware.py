@@ -36,7 +36,8 @@ class AuthMiddleware(AuthenticationMiddleware, FilterMiddleware):
             validation_result = await self._validate(headers)
             if isinstance(validation_result, int):
                 response = JsonResponse(status_code=validation_result)
-                response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=is_secure)
+                if validation_result != status.HTTP_422_UNPROCESSABLE_ENTITY:
+                    response.delete_cookie(Env.REFRESH_TOKEN_NAME, httponly=True, secure=is_secure)
                 await response(scope, receive, send)
                 return
 

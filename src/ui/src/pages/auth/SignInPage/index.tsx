@@ -1,5 +1,5 @@
-import { useEffect, useRef, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useLocation } from "react-router";
 import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
@@ -8,12 +8,12 @@ import { generateToken } from "@/core/utils/StringUtils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { Flex } from "@/components/base";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function SignInPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const location = useLocation();
     const [email, setEmail] = useState("");
     const [form, setForm] = useState<JSX.Element>();
@@ -32,8 +32,9 @@ function SignInPage(): JSX.Element {
 
             searchParams.set(QUERY_NAMES.SIGN_IN_TOKEN, token);
 
-            navigateRef.current(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
+            navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, {
                 replace: true,
+                smooth: true,
             });
 
             return;
@@ -41,7 +42,7 @@ function SignInPage(): JSX.Element {
 
         if (signTokenParam && emailTokenParam) {
             if (location.pathname !== ROUTES.SIGN_IN.PASSWORD) {
-                navigateRef.current(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { replace: true });
+                navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { replace: true, smooth: true });
                 return;
             }
 
@@ -59,7 +60,7 @@ function SignInPage(): JSX.Element {
                     },
                     onError: () => {
                         searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
-                        navigateRef.current(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
+                        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { smooth: true });
                     },
                 }
             );

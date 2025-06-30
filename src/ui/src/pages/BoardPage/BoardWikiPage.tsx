@@ -2,6 +2,7 @@ import useGetWikis from "@/controllers/api/wiki/useGetWikis";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BoardWikiProvider } from "@/core/providers/BoardWikiProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -13,8 +14,9 @@ export function SkeletonBoardWikiPage(): JSX.Element {
     return <SkeletonWikiList />;
 }
 
-const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
+const BoardWikiPage = memo(({ projectUID, currentUser }: IBoardRelatedPageProps) => {
     const socket = useSocket();
+    const navigate = usePageNavigateRef();
     const { data, isFetching, error } = useGetWikis({ project_uid: projectUID });
 
     useEffect(() => {
@@ -60,7 +62,6 @@ const BoardWikiPage = memo(({ navigate, projectUID, currentUser }: IBoardRelated
                 <SkeletonWikiList />
             ) : (
                 <BoardWikiProvider
-                    navigate={navigate}
                     projectUID={projectUID}
                     projectMembers={data.project_members}
                     projectBots={data.project_bots}

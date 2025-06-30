@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { AutoComplete, Box, Button, Dialog, Flex, Floating, Form, Input, SubmitButton, Switch, Toast } from "@/components/base";
 import { useRef } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateUserInSettings from "@/controllers/api/settings/users/useCreateUserInSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
@@ -11,6 +10,7 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
 import { User } from "@/core/models";
 import PasswordInput from "@/components/PasswordInput";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IUserCreateFormDialogProps {
     opened: bool;
@@ -19,7 +19,7 @@ export interface IUserCreateFormDialogProps {
 
 function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const { mutate } = useCreateUserInSettings();
     const { mutateAsync: checkExistsEmailMutateAsync } = useSignUpExistsEmail();
     const industryRef = useRef("");
@@ -91,7 +91,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
         useDefaultBadRequestHandler: true,
         apiErrorHandlers: {
             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
         },
     });

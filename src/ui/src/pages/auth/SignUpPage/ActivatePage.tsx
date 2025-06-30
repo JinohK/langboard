@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { QUERY_NAMES } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex } from "@/components/base";
@@ -9,12 +9,12 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 function ActivatePage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const location = useLocation();
     const { mutate } = useActivateUser();
     const [description, setDescription] = useState<JSX.Element | null>(null);
@@ -50,7 +50,7 @@ function ActivatePage(): JSX.Element {
                                 {t("auth.activate.Simply sign in with your email and password to get started.")}
                             </p>
                             <Flex justify="center" mt="8">
-                                <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>{t("auth.Sign in")}</Button>
+                                <Button onClick={() => navigate(ROUTES.SIGN_IN.EMAIL, { smooth: true })}>{t("auth.Sign in")}</Button>
                             </Flex>
                         </>
                     );
@@ -58,10 +58,10 @@ function ActivatePage(): JSX.Element {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { smooth: true }),
                         },
                         [EHttpStatus.HTTP_409_CONFLICT]: {
-                            after: () => navigate(ROUTES.SIGN_IN.EMAIL),
+                            after: () => navigate(ROUTES.SIGN_IN.EMAIL, { smooth: true }),
                         },
                     });
 

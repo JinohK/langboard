@@ -1,17 +1,16 @@
 import { Dialog } from "@/components/base";
-import { useRef } from "react";
 import ActivityList from "@/components/ActivityList";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ROUTES } from "@/core/routing/constants";
 import { useAuth } from "@/core/providers/AuthProvider";
 
 function WikiActivityDialog(): JSX.Element | null {
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
     const { currentUser } = useAuth();
 
     const close = () => {
-        navigateRef.current(ROUTES.BOARD.WIKI_PAGE(projectUID, wikiUID));
+        navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, wikiUID));
     };
 
     if (!wikiUID || !currentUser) {
@@ -25,7 +24,7 @@ function WikiActivityDialog(): JSX.Element | null {
                 <ActivityList
                     form={{ listType: "ActivityModel", type: "project_wiki", project_uid: projectUID, wiki_uid: wikiUID }}
                     currentUser={currentUser}
-                    infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
+                    outerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                 />
             </Dialog.Content>
         </Dialog.Root>

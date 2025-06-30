@@ -4,16 +4,16 @@ import UserAvatar from "@/components/UserAvatar";
 import { ROUTES } from "@/core/routing/constants";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { AuthUser } from "@/core/models";
-import { NavigateFunction } from "react-router-dom";
 import { useAuth } from "@/core/providers/AuthProvider";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 interface IHeaderUserMenuProps {
     currentUser: AuthUser.TModel;
-    navigateRef: React.RefObject<NavigateFunction>;
 }
 
-const HeaderUserMenu = memo(({ currentUser, navigateRef }: IHeaderUserMenuProps) => {
+const HeaderUserMenu = memo(({ currentUser }: IHeaderUserMenuProps) => {
     const { signOut } = useAuth();
+    const navigate = usePageNavigateRef();
     const [t] = useTranslation();
     const { close: closeSocket } = useSocket();
     const isAdmin = currentUser.useField("is_admin");
@@ -29,13 +29,13 @@ const HeaderUserMenu = memo(({ currentUser, navigateRef }: IHeaderUserMenuProps)
             className="mx-1"
         >
             <UserAvatar.List>
-                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigateRef.current(ROUTES.ACCOUNT.PROFILE)}>
+                <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate(ROUTES.ACCOUNT.PROFILE, { smooth: true })}>
                     {t("myAccount.My account")}
                 </UserAvatar.ListItem>
                 {isAdmin && (
                     <>
                         <UserAvatar.ListSeparator />
-                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigateRef.current(ROUTES.SETTINGS.ROUTE)}>
+                        <UserAvatar.ListItem className="cursor-pointer" onClick={() => navigate(ROUTES.SETTINGS.ROUTE, { smooth: true })}>
                             {t("settings.App settings")}
                         </UserAvatar.ListItem>
                     </>

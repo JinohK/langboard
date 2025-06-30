@@ -1,6 +1,6 @@
 import { memo, Suspense, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Navigate } from "react-router-dom";
+import { Navigate } from "react-router";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { Toast } from "@/components/base";
 import useIsProjectAvailable from "@/controllers/api/board/useIsProjectAvailable";
@@ -12,7 +12,7 @@ import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/chat/use
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
 import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
@@ -45,7 +45,7 @@ const BoardProxy = memo((): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { currentUser } = useAuth();
     const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
     const [isReady, setIsReady] = useState(false);
@@ -119,7 +119,7 @@ const BoardProxy = memo((): JSX.Element => {
         projectUID,
         callback: () => {
             Toast.Add.error(t("project.errors.Project closed."));
-            navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
+            navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
         },
     });
     const { on: onProjectDetailsChanged } = useBoardDetailsChangedHandlers({
@@ -155,10 +155,10 @@ const BoardProxy = memo((): JSX.Element => {
 
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
             network: {
                 after: () => {
@@ -201,7 +201,7 @@ const BoardProxy = memo((): JSX.Element => {
             name: t("board.Board"),
             onClick: () => {
                 setCurrentPage("board");
-                navigateRef.current(ROUTES.BOARD.MAIN(projectUID));
+                navigate(ROUTES.BOARD.MAIN(projectUID), { smooth: true });
             },
             active: currentPage === "board",
             hidden: !!selectCardViewType,
@@ -210,7 +210,7 @@ const BoardProxy = memo((): JSX.Element => {
             name: t("board.Wiki"),
             onClick: () => {
                 setCurrentPage("wiki");
-                navigateRef.current(ROUTES.BOARD.WIKI(projectUID));
+                navigate(ROUTES.BOARD.WIKI(projectUID), { smooth: true });
             },
             active: currentPage === "wiki",
             hidden: !!selectCardViewType,
@@ -218,7 +218,10 @@ const BoardProxy = memo((): JSX.Element => {
         {
             name: t("board.Activity"),
             onClick: () => {
-                navigateRef.current(ROUTES.BOARD.ACTIVITY(projectUID));
+                navigate({
+                    pathname: ROUTES.BOARD.ACTIVITY(projectUID),
+                    hash: location.pathname,
+                });
             },
             hidden: !!selectCardViewType,
         },
@@ -226,7 +229,7 @@ const BoardProxy = memo((): JSX.Element => {
             name: t("board.Settings"),
             onClick: () => {
                 setCurrentPage("settings");
-                navigateRef.current(ROUTES.BOARD.SETTINGS(projectUID));
+                navigate(ROUTES.BOARD.SETTINGS(projectUID), { smooth: true });
             },
             active: currentPage === "settings",
             hidden: !!selectCardViewType,
@@ -257,11 +260,7 @@ const BoardProxy = memo((): JSX.Element => {
             resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType || !!resizableSidebar.hidden } : undefined}
             className="!p-0"
         >
-            {isReady && currentUser ? (
-                <PageComponent navigate={navigateRef.current} projectUID={projectUID} currentUser={currentUser} />
-            ) : (
-                <SkeletonComponent />
-            )}
+            {isReady && currentUser ? <PageComponent projectUID={projectUID} currentUser={currentUser} /> : <SkeletonComponent />}
         </DashboardStyledLayout>
     );
 });

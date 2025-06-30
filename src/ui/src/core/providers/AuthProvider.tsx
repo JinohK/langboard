@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useRef } from "react";
+import { createContext, useContext, useEffect } from "react";
 import { APP_SHORT_NAME } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
 import { api, refresh } from "@/core/helpers/Api";
@@ -8,7 +8,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { cleanModels } from "@/core/models/Base";
 import { useTranslation } from "react-i18next";
 import useAuthStore from "@/core/stores/AuthStore";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { Progress } from "@/components/base";
 
 export interface IAuthContext {
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     const [_, i18n] = useTranslation();
     const { queryClient } = useQueryMutation();
     const { state, currentUser, pageLoaded, updateToken, removeToken } = useAuthStore();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
 
     useEffect(() => {
         if (state !== "loaded" || !currentUser) {
@@ -52,13 +52,18 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     }, [state]);
 
     useEffect(() => {
+        const shouldSkip =
+            location.pathname.startsWith(ROUTES.SIGN_IN.EMAIL) ||
+            location.pathname.startsWith(ROUTES.SIGN_UP.ROUTE) ||
+            location.pathname.startsWith(ROUTES.ACCOUNT_RECOVERY.NAME);
+
         switch (state) {
             case "initial":
                 refresh();
                 return;
             case "loaded":
-                if (!currentUser) {
-                    navigateRef.current(ROUTES.SIGN_IN.EMAIL);
+                if (!currentUser && !shouldSkip) {
+                    navigate(ROUTES.SIGN_IN.EMAIL);
                 }
                 return;
         }
@@ -78,7 +83,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
         cleanModels();
         removeToken();
         queryClient.clear();
-        navigateRef.current(ROUTES.SIGN_IN.EMAIL);
+        navigate(ROUTES.SIGN_IN.EMAIL);
     };
 
     return (

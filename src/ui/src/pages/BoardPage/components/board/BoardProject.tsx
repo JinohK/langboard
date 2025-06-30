@@ -6,20 +6,20 @@ import { ROUTES } from "@/core/routing/constants";
 import BoardFilter from "@/pages/BoardPage/components/board/BoardFilter";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { NavigateFunction } from "react-router-dom";
 import { BoardProvider } from "@/core/providers/BoardProvider";
 import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
 import { AuthUser, Project } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { Board, SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IBoardProps {
-    navigate: NavigateFunction;
     project: Project.TModel;
     currentUser: AuthUser.TModel;
 }
 
-const BoardProject = memo(({ navigate, project, currentUser }: IBoardProps) => {
+const BoardProject = memo(({ project, currentUser }: IBoardProps) => {
+    const navigate = usePageNavigateRef();
     const { data, error } = useGetCards({ project_uid: project.uid });
 
     useEffect(() => {
@@ -44,7 +44,7 @@ const BoardProject = memo(({ navigate, project, currentUser }: IBoardProps) => {
             {!data ? (
                 <SkeletonBoard />
             ) : (
-                <BoardProvider navigate={navigate} project={project} currentUser={currentUser}>
+                <BoardProvider project={project} currentUser={currentUser}>
                     <BoardResult />
                 </BoardProvider>
             )}

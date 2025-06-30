@@ -3,8 +3,8 @@ import PasswordInput from "@/components/PasswordInput";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 const InternalBotApiKey = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const apiKey = internalBot.useField("api_key");
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
     const inputRef = useRef<HTMLInputElement>(null);
@@ -40,7 +40,7 @@ const InternalBotApiKey = memo(() => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

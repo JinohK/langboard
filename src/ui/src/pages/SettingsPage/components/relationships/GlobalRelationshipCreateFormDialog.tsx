@@ -1,12 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
 import { useRef, useState } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateGlobalRelationship from "@/controllers/api/settings/relationships/useCreateGlobalRelationship";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IGlobalRelationshipCreateFormDialogProps {
     opened: bool;
@@ -15,7 +15,7 @@ export interface IGlobalRelationshipCreateFormDialogProps {
 
 function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelationshipCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const [isValidating, setIsValidating] = useState(false);
     const dataTransferRef = useRef(new DataTransfer());
     const parentNameInputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +81,7 @@ function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelati
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

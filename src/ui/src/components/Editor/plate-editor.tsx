@@ -65,7 +65,7 @@ function EditorWrapper({
     editorRef.current = editor;
 
     return (
-        <FocusScope trapped={false} loop={false} className="w-full">
+        <FocusScope trapped={false} loop={false} className="w-full outline-none">
             <Plate
                 editor={editor}
                 readOnly={readOnly}

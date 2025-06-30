@@ -2,9 +2,9 @@ import { Checkbox, Flex, Table, Toast, Tooltip } from "@/components/base";
 import useUpdateUserInSettings from "@/controllers/api/settings/users/useUpdateUserInSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 function UserActivation() {
     const [t] = useTranslation();
     const { model: user } = ModelRegistry.User.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const rawActivatedAt = user.useField("activated_at");
     const activtedAt = useUpdateDateDistance(rawActivatedAt);
     const { mutateAsync } = useUpdateUserInSettings(user, { interceptToast: true });
@@ -38,7 +38,7 @@ function UserActivation() {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

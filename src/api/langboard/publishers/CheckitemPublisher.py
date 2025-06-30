@@ -21,7 +21,7 @@ class CheckitemPublisher(BaseSocketPublisher):
             topic=SocketTopic.BoardCard,
             topic_id=topic_id,
             event=f"board:card:checkitem:created:{checklist.get_uid()}",
-            data_keys="checkitem",
+            data_keys=list(model.keys()),
         )
 
         await CheckitemPublisher.put_dispather(model, publish_model)

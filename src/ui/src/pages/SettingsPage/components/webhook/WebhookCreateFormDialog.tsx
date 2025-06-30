@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
 import { useRef, useState } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -9,6 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { isValidURL } from "@/core/utils/StringUtils";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IWebhookCreateFormDialogProps {
     opened: bool;
@@ -17,7 +17,7 @@ export interface IWebhookCreateFormDialogProps {
 
 function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const [isValidating, setIsValidating] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const urlInputRef = useRef<HTMLInputElement>(null);
@@ -77,7 +77,7 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

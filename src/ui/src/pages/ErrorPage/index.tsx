@@ -7,13 +7,13 @@ import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 function ErrorPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const { currentUser } = useAuth();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const code = window.location.pathname.split("/").pop();
     let errorCode = EHttpStatus[code as keyof typeof EHttpStatus];
     if (!errorCode) {

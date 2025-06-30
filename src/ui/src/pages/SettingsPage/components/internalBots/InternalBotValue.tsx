@@ -4,16 +4,16 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { InternalBotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 const InternalBotValue = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const platformRunningType = internalBot.useField("platform_running_type");
     const value = internalBot.useField("value");
     const valueType = useMemo(() => {
@@ -50,7 +50,7 @@ const InternalBotValue = memo(() => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

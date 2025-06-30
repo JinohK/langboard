@@ -11,6 +11,7 @@ import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { cn } from "@/core/utils/ComponentUtils";
 import useDashboardProjectUIColumnOrderChangedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectUIColumnOrderChangedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export const SkeletonProjectItem = memo(() => {
     const cards = [];
@@ -53,7 +54,8 @@ export interface IProjectItemProps extends React.ComponentPropsWithoutRef<typeof
 
 const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProjectItemProps): JSX.Element => {
     const [t] = useTranslation();
-    const { socket, navigate } = useDashboard();
+    const navigate = usePageNavigateRef();
+    const { socket } = useDashboard();
     const [isUpdating, setIsUpdating] = useState(false);
     const title = project.useField("title");
     const projectType = project.useField("project_type");

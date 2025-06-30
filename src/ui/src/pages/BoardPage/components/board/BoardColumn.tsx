@@ -55,7 +55,6 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
     const innerRef = useRef<HTMLDivElement | null>(null);
     const [state, setState] = useState<TColumnState>(COLUMN_IDLE);
     const order = column.useField("order");
-    const columnId = `board-column-${column.uid}`;
 
     useEffect(() => {
         const outer = outerFullHeightRef.current;
@@ -91,7 +90,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
     }, [column, order]);
 
     return (
-        <BoardAddCardProvider column={column} viewportId={columnId} toLastPage={() => {}}>
+        <BoardAddCardProvider column={column} viewportRef={scrollableRef} toLastPage={() => {}}>
             <Card.Root
                 ref={outerFullHeightRef}
                 className={cn(
@@ -101,7 +100,6 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
             >
                 <BoardColumnHeader isDragging={state.type !== "idle"} column={column} headerProps={{ ref: headerRef }} />
                 <ScrollArea.Root
-                    viewportId={columnId}
                     viewportRef={scrollableRef}
                     viewportClassName="!overflow-y-auto"
                     onScroll={() => {

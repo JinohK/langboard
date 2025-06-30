@@ -1,4 +1,5 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { InternalBotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
@@ -7,12 +8,13 @@ import InternalBotDetails from "@/pages/SettingsPage/components/internalBots/Int
 import InternalBotList from "@/pages/SettingsPage/components/internalBots/InternalBotList";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 function InternalBotsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating } = useAppSetting();
     const { botUID } = useParams();
     const [bot, setBot] = useState<InternalBotModel.TModel | null>(null);
 
@@ -26,7 +28,7 @@ function InternalBotsPage() {
         const targetBot = InternalBotModel.Model.getModel(botUID);
         if (!targetBot) {
             Toast.Add.error(t("errors.requests.NF3004"));
-            navigateRef.current(ROUTES.SETTINGS.INTERNAL_BOTS);
+            navigate(ROUTES.SETTINGS.INTERNAL_BOTS);
             return;
         }
 
@@ -34,7 +36,7 @@ function InternalBotsPage() {
     }, [botUID]);
 
     const openCreateDialog = () => {
-        navigateRef.current(ROUTES.SETTINGS.CREATE_INTERNAL_BOT);
+        navigate(ROUTES.SETTINGS.CREATE_INTERNAL_BOT);
     };
 
     return (

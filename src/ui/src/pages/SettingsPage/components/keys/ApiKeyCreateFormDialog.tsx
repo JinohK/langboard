@@ -1,13 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { Button, Dialog, Floating, SubmitButton, Toast } from "@/components/base";
 import { useRef, useState } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import CopyInput from "@/components/CopyInput";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IApiKeyCreateFormDialogProps {
     opened: bool;
@@ -16,7 +16,7 @@ export interface IApiKeyCreateFormDialogProps {
 
 function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const [isValidating, setIsValidating] = useState(false);
     const inputRef = useRef<HTMLInputElement>(null);
     const [revealedKey, setRevealedKey] = useState<string>();
@@ -49,7 +49,7 @@ function ApiKeyCreateFormDialog({ opened, setOpened }: IApiKeyCreateFormDialogPr
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

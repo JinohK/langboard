@@ -158,8 +158,7 @@ class BotService(BaseService):
                 trigger = BotTrigger(bot_id=bot.id, condition=condition, is_predefined=True)
                 db.insert(trigger)
 
-        model = {"conditions": [condition.value for condition in conditions]}
-        await BotPublisher.bot_condition_predefined(bot.get_uid(), model)
+        await BotPublisher.bot_condition_predefined(bot.get_uid(), conditions)
 
         return True
 
@@ -187,8 +186,7 @@ class BotService(BaseService):
                 trigger = BotTrigger(bot_id=bot.id, condition=condition)
                 db.insert(trigger)
 
-        model = {"condition": condition.value, "is_enabled": should_enable}
-        await BotPublisher.bot_condition_toggled(bot.get_uid(), model)
+        await BotPublisher.bot_condition_toggled(bot.get_uid(), condition, should_enable)
 
         return True
 

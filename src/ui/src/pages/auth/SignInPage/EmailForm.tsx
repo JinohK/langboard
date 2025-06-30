@@ -7,7 +7,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IEmailFormProps {
     signToken: string;
@@ -17,7 +17,7 @@ export interface IEmailFormProps {
 
 function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Element {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const { mutate } = useAuthEmail();
     const { errors, setErrors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "auth.errors",
@@ -38,7 +38,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
             searchParams.append(QUERY_NAMES.SIGN_IN_TOKEN, signToken);
             searchParams.append(QUERY_NAMES.EMAIL_TOKEN, data.token);
 
-            navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
+            navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { smooth: true });
         },
         apiErrorHandlers: {
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
@@ -78,7 +78,7 @@ function EmailForm({ signToken, setEmail, className }: IEmailFormProps): JSX.Ele
                         type="button"
                         variant="ghost"
                         disabled={isValidating}
-                        onClick={() => navigate(`${ROUTES.SIGN_UP.REQUIRED}?${new URLSearchParams(location.search).toString()}`)}
+                        onClick={() => navigate(`${ROUTES.SIGN_UP.REQUIRED}?${new URLSearchParams(location.search).toString()}`, { smooth: true })}
                     >
                         {t("auth.Create account")}
                     </Button>

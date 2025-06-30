@@ -3,8 +3,7 @@ import UserAvatarDefaultBotList from "@/components/UserAvatarDefaultList/BotList
 import { UserAvatarDefaultListProvider } from "@/components/UserAvatarDefaultList/Provider";
 import UserAvatarDefaultUserList from "@/components/UserAvatarDefaultList/UserList";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
-import { forwardRef, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { forwardRef } from "react";
 
 export interface IUserAvatarDefaultListProps extends React.ComponentPropsWithoutRef<typeof UserAvatar.List> {
     userOrBot: TUserLikeModel;
@@ -12,10 +11,8 @@ export interface IUserAvatarDefaultListProps extends React.ComponentPropsWithout
 }
 
 const UserAvatarDefaultList = forwardRef<HTMLDivElement, IUserAvatarDefaultListProps>(({ userOrBot, projectUID, ...props }, ref) => {
-    const navigateRef = useRef(useNavigate());
-
     return (
-        <UserAvatarDefaultListProvider navigate={navigateRef.current} userOrBot={userOrBot} projectUID={projectUID}>
+        <UserAvatarDefaultListProvider userOrBot={userOrBot} projectUID={projectUID}>
             <UserAvatar.List {...props} ref={ref}>
                 <DefaultList userOrBot={userOrBot} />
             </UserAvatar.List>

@@ -7,6 +7,7 @@ import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { TProjectTab } from "@/pages/DashboardPage/constants";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 interface IProjectPageProps {
     currentTab: TProjectTab;
@@ -16,7 +17,8 @@ interface IProjectPageProps {
 
 const ProjectPage = memo(({ currentTab, updateStarredProjects, scrollAreaUpdater }: IProjectPageProps): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
-    const { navigate, currentUser } = useDashboard();
+    const navigate = usePageNavigateRef();
+    const { currentUser } = useDashboard();
     const { data, isFetching, error } = useGetProjects();
 
     useEffect(() => {

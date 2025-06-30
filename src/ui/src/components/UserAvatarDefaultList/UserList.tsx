@@ -8,9 +8,8 @@ import useSearchFilters from "@/core/hooks/useSearchFilters";
 import { Project, User } from "@/core/models";
 import { BOARD_FILTER_KEYS, IFilterMap } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { useRef } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
 import { useUserAvatar } from "@/components/UserAvatar/Provider";
 
@@ -28,7 +27,7 @@ function UserAvatarDefaultUserList({ user }: IUserAvatarDefaultUserListProps): J
         unique: uniqueFilters,
         forceUpdate: forceUpdateFilters,
     } = useSearchFilters<IFilterMap>({ filterKeys: BOARD_FILTER_KEYS, searchKey: "filters" }, [user, project]);
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
 
     return (
         <>
@@ -50,7 +49,7 @@ function UserAvatarDefaultUserList({ user }: IUserAvatarDefaultUserListProps): J
 
                             uniqueFilters();
                             const newFiltersString = filtersToString();
-                            navigateRef.current({
+                            navigate({
                                 pathname: ROUTES.BOARD.MAIN(project.uid),
                                 search: `?filters=${newFiltersString}`,
                             });

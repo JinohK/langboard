@@ -40,6 +40,8 @@ class EmailService(BaseService):
         try:
             await fm.send_message(message)
         except Exception:
+            if Env.ENVIRONMENT == "local":
+                return True
             return False
 
         return True

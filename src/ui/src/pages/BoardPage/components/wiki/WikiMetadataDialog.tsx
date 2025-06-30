@@ -2,18 +2,18 @@ import { Box, Dialog } from "@/components/base";
 import { MetadataList } from "@/components/MetadataList";
 import MetadataAddButton from "@/components/MetadataList/MetadataAddButton";
 import { ROUTES } from "@/core/routing/constants";
-import { memo, useRef } from "react";
+import { memo } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 const WikiMetadataDialog = memo(() => {
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const [t] = useTranslation();
     const [projectUID, _, wikiUID] = location.pathname.split("/").slice(2);
     const errorsMap = () => ({});
 
     const close = () => {
-        navigateRef.current(ROUTES.BOARD.WIKI_PAGE(projectUID, wikiUID));
+        navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, wikiUID));
     };
 
     return (

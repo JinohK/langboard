@@ -29,23 +29,25 @@ class BaseRoleModel(BaseSqlModel):
         return {}
 
     def is_all_granted(self) -> bool:
-        if ALL_GRANTED in self.actions:
-            return True
-        if self.actions == [action.value for action in self.get_all_actions()]:
+        if ALL_GRANTED in self.actions or self.actions == [action.value for action in self.get_all_actions()]:
             return True
         return False
 
-    def is_granted(self, action: Enum | str):
+    def is_granted(self, actions: Enum | str | list[Enum | str] | list[Enum] | list[str]):
         if self.is_all_granted():
             return True
-        action = action if isinstance(action, str) else action.value
-        return action in self.actions
+        if not isinstance(actions, list):
+            actions = [actions]
+        actions = [action.value if isinstance(action, Enum) else action for action in actions]
 
-    def get_filterable_columns(self) -> list[str]:
-        if not isinstance(self, BaseRoleModel) and (not isinstance(self, type) or not issubclass(self, BaseRoleModel)):
-            return []
+        for action in actions:
+            if action not in self.actions:
+                return False
+        return True
 
-        return [field for field in self.model_fields if field not in BaseRoleModel.model_fields]
+    @classmethod
+    def get_filterable_columns(cls) -> list[str]:
+        return [field for field in cls.model_fields if field not in BaseRoleModel.model_fields]
 
     def set_default_actions(self) -> None:
         if not isinstance(self, BaseRoleModel):

@@ -139,10 +139,10 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             raise ValueError("user_id or bot_id must be provided.")
 
         query = SqlBuilder.select.table(self._model_class).where(target_id_column == target_id)
-        filterable_columns = self._model_class.get_filterable_columns(self._model_class)  # type: ignore
+        filterable_columns = self._model_class.get_filterable_columns()
         for arg, value in kwargs.items():
             if arg in filterable_columns and value is not None:
-                query = query.where(getattr(self._model_class, arg) == value)
+                query = query.where(self._model_class.column(arg) == value)
 
         role = None
         with DbSession.use(readonly=True) as db:

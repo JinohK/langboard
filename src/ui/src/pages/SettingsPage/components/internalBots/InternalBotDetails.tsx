@@ -1,4 +1,5 @@
 import { Breadcrumb, Flex } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { InternalBotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
@@ -23,7 +24,8 @@ export interface IInternalBotDetailsProps {
 const InternalBotDetails = memo(({ internalBot }: IInternalBotDetailsProps) => {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating } = useAppSetting();
     const displayName = internalBot.useField("display_name");
 
     const moveToList = () => {
@@ -31,7 +33,7 @@ const InternalBotDetails = memo(({ internalBot }: IInternalBotDetailsProps) => {
             return;
         }
 
-        navigateRef.current(ROUTES.SETTINGS.INTERNAL_BOTS);
+        navigate(ROUTES.SETTINGS.INTERNAL_BOTS, { smooth: true });
     };
 
     useEffect(() => {

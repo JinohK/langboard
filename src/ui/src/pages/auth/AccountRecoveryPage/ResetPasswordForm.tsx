@@ -1,13 +1,12 @@
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import PasswordInput from "@/components/PasswordInput";
 import { Button, Flex, Form, SubmitButton } from "@/components/base";
 import useRecoveryPassword from "@/controllers/api/auth/useRecoveryPassword";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
-import { ROUTES } from "@/core/routing/constants";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;
@@ -17,7 +16,7 @@ export interface IResetPasswordFormProps {
 function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormProps): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const { mutate } = useRecoveryPassword();
     const { errors, isValidating, handleSubmit, formRef } = useForm({
         errorLangPrefix: "accountRecovery.errors",
@@ -32,7 +31,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
         },
         apiErrorHandlers: {
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => backToSignin(),
+                after: backToSignin,
             },
         },
         useDefaultBadRequestHandler: true,
@@ -40,7 +39,7 @@ function ResetPasswordForm({ recoveryToken, backToSignin }: IResetPasswordFormPr
 
     if (!(location.state?.isTwoSidedView ?? true)) {
         const buttons = (
-            <Button type="button" onClick={() => navigate(ROUTES.SIGN_IN.EMAIL)}>
+            <Button type="button" onClick={backToSignin}>
                 {t("common.Back to Sign In")}
             </Button>
         );

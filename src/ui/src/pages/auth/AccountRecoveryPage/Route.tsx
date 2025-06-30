@@ -1,31 +1,30 @@
 import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { Outlet, RouteObject } from "react-router";
 import { ProtectedAuthRoute } from "@/core/routing/ProtectedAuthRoute";
 import { ROUTES } from "@/core/routing/constants";
 
 const AccountRecoveryPage = lazy(() => import("."));
 
-function AccountRecoveryRoute() {
-    return (
-        <Route path={ROUTES.ACCOUNT_RECOVERY.NAME} key="route-find-password">
-            <Route
-                index
-                element={
-                    <ProtectedAuthRoute>
-                        <AccountRecoveryPage />
-                    </ProtectedAuthRoute>
-                }
-            />
-            <Route
-                path={ROUTES.ACCOUNT_RECOVERY.RESET}
-                element={
-                    <ProtectedAuthRoute>
-                        <AccountRecoveryPage />
-                    </ProtectedAuthRoute>
-                }
-            />
-        </Route>
-    );
-}
+const routes: RouteObject[] = [
+    {
+        path: ROUTES.ACCOUNT_RECOVERY.NAME,
+        element: (
+            <ProtectedAuthRoute>
+                <AccountRecoveryPage />
+                <Outlet />
+            </ProtectedAuthRoute>
+        ),
+        children: [
+            {
+                index: true,
+                element: <></>,
+            },
+            {
+                path: ROUTES.ACCOUNT_RECOVERY.RESET,
+                element: <></>,
+            },
+        ],
+    },
+];
 
-export default AccountRecoveryRoute;
+export default routes;

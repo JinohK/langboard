@@ -3,13 +3,15 @@ import useDeleteProject from "@/controllers/api/board/settings/useDeleteProject"
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { deleteProjectModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const BoardSettingsOther = memo(() => {
-    const { project, navigate } = useBoardSettings();
+    const navigate = usePageNavigateRef();
+    const { project } = useBoardSettings();
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
     const [t] = useTranslation();

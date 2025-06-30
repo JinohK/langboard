@@ -2,6 +2,7 @@ import { Avatar, Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast 
 import useDeleteBot from "@/controllers/api/settings/bots/useDeleteBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -14,7 +15,8 @@ export interface IBotProps {
 
 const Bot = memo(({ bot }: IBotProps) => {
     const [t] = useTranslation();
-    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteBot(bot, { interceptToast: true });
     const [isOpened, setIsOpened] = useState(false);
     const name = bot.useField("name");
@@ -40,7 +42,7 @@ const Bot = memo(({ bot }: IBotProps) => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef
@@ -59,7 +61,7 @@ const Bot = memo(({ bot }: IBotProps) => {
     };
 
     const toBotDetails = () => {
-        navigateRef.current(ROUTES.SETTINGS.BOT_DETAILS(bot.uid));
+        navigate(ROUTES.SETTINGS.BOT_DETAILS(bot.uid), { smooth: true });
     };
 
     const changeOpenState = (opened: boolean) => {

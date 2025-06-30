@@ -3,8 +3,8 @@ import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpd
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo } from "react";
@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 const InternalBotDisplayName = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const displayName = internalBot.useField("display_name");
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
 
@@ -32,7 +32,7 @@ const InternalBotDisplayName = memo(() => {
                     const { handle } = setupApiErrorHandler(
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                             },
                         },
                         messageRef

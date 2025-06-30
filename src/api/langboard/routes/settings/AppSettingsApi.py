@@ -49,6 +49,19 @@ async def get_all_settings(service: Service = Service.scope()) -> JsonResponse:
     )
 
 
+@AppRouter.api.get(
+    "/settings/app/{setting_uid}",
+    tags=["AppSettings"],
+    responses=OpenApiSchema().suc({"setting": AppSetting}, 200).auth().forbidden().err(404, ApiErrorCode.NF3002).get(),
+)
+@AuthFilter.add("admin")
+async def get_setting(setting_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    setting = await service.app_setting.get_by_uid(setting_uid, as_api=True)
+    if not setting:
+        return JsonResponse(content=ApiErrorCode.NF3002, status_code=status.HTTP_404_NOT_FOUND)
+    return JsonResponse(content={"setting": setting})
+
+
 @AppRouter.api.post(
     "/settings/app",
     tags=["AppSettings"],

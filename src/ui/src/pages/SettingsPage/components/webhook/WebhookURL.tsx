@@ -3,8 +3,8 @@ import useUpdateSetting from "@/controllers/api/settings/useUpdateSetting";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 function WebhookURL() {
     const [t] = useTranslation();
     const { model: url } = ModelRegistry.AppSettingModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const urlValue = url.useField("setting_value");
     const { mutateAsync } = useUpdateSetting(url, { interceptToast: true });
 
@@ -31,7 +31,7 @@ function WebhookURL() {
                     const { handle } = setupApiErrorHandler(
                         {
                             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                             },
                         },
                         messageRef

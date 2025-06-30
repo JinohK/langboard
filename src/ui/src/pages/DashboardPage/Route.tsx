@@ -1,49 +1,69 @@
-import { lazy } from "react";
-import { Navigate, Outlet, Route } from "react-router-dom";
+import { Navigate, Outlet, RouteObject } from "react-router";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import ModalPage from "@/pages/DashboardPage/ModalPage";
+import DashboardProxy from "@/pages/DashboardPage";
 
-const DashboardProxy = lazy(() => import("./index"));
+const routes: RouteObject[] = [
+    {
+        path: ROUTES.DASHBOARD.ROUTE,
+        element: (
+            <AuthGuard>
+                <DashboardProxy />
+                <Outlet />
+            </AuthGuard>
+        ),
+        children: [
+            {
+                index: true,
+                element: <Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />,
+            },
+            {
+                path: ROUTES.DASHBOARD.CARDS,
+                element: <></>,
+            },
+            {
+                path: ROUTES.DASHBOARD.CARDS,
+                element: <></>,
+            },
+            {
+                path: ROUTES.DASHBOARD.CARDS,
+                element: <></>,
+            },
+            {
+                path: ROUTES.DASHBOARD.TRACKING,
+                element: <></>,
+            },
+            {
+                path: ROUTES.DASHBOARD.PROJECTS.TAB(":tabType"),
+                element: <></>,
+            },
+            ...createModalRoutes("cards"),
+            ...createModalRoutes("tracking"),
+            ...createModalRoutes("projects", ":tabType"),
+        ],
+    },
+];
 
-function DashboardRoute() {
-    const createModalRoutePath = (type: string, modal: string, tabName?: string) => {
-        if (tabName) {
-            return ROUTES.DASHBOARD.PROJECTS.TAB(`${tabName}/${modal}`);
-        } else {
-            return ROUTES.DASHBOARD.PAGE_TYPE(`${type}/${modal}`);
-        }
-    };
-
-    const createModalRoutes = (type: string, tabName?: string) => {
-        return (
-            <>
-                <Route path={createModalRoutePath(type, "new-project", tabName)} element={<ModalPage />} />
-                <Route path={createModalRoutePath(type, "my-activity", tabName)} element={<ModalPage />} />
-            </>
-        );
-    };
-
-    return (
-        <Route
-            path={ROUTES.DASHBOARD.ROUTE}
-            key="route-dashboard"
-            element={
-                <AuthGuard>
-                    <DashboardProxy />
-                    <Outlet />
-                </AuthGuard>
-            }
-        >
-            <Route index element={<Navigate to={ROUTES.DASHBOARD.PROJECTS.ALL} />} />
-            <Route path={ROUTES.DASHBOARD.CARDS} element={<></>} />
-            <Route path={ROUTES.DASHBOARD.TRACKING} element={<></>} />
-            <Route path={ROUTES.DASHBOARD.PROJECTS.TAB(":tabType")} element={<></>} />
-            {createModalRoutes("cards")}
-            {createModalRoutes("tracking")}
-            {createModalRoutes("projects", ":tabType")}
-        </Route>
-    );
+function createModalRoutes(type: string, tabName?: string): RouteObject[] {
+    return [
+        {
+            path: createModalRoutePath(type, "new-project", tabName),
+            element: <ModalPage />,
+        },
+        {
+            path: createModalRoutePath(type, "my-activity", tabName),
+            element: <ModalPage />,
+        },
+    ];
 }
 
-export default DashboardRoute;
+function createModalRoutePath(type: string, modal: string, tabName?: string): string {
+    if (tabName) {
+        return ROUTES.DASHBOARD.PROJECTS.TAB(`${tabName}/${modal}`);
+    } else {
+        return ROUTES.DASHBOARD.PAGE_TYPE(`${type}/${modal}`);
+    }
+}
+
+export default routes;

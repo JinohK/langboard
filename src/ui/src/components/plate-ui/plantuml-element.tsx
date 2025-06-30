@@ -1,7 +1,7 @@
 "use client";
 
 import { cn } from "@/core/utils/ComponentUtils";
-import { PlateElement, PlateElementProps } from "platejs/react";
+import { PlateElement, PlateElementProps, useReadOnly } from "platejs/react";
 import { Flex, IconComponent } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -11,6 +11,7 @@ import PlantUmlDialog from "@/components/plate-ui/plantuml-dialog";
 export function PlantUmlElement(props: PlateElementProps<TPlantUmlElement>) {
     const [t] = useTranslation();
     const { editor, element } = props;
+    const readOnly = useReadOnly();
     const [isDialogOpened, setIsDialogOpened] = useState(false);
     const { src } = usePlantUmlElement({ umlCode: element.umlCode });
 
@@ -19,9 +20,24 @@ export function PlantUmlElement(props: PlateElementProps<TPlantUmlElement>) {
     };
 
     const triggerClassNames = cn(
-        "cursor-pointer select-none transition-all hover:bg-primary/10",
+        "cursor-default select-none transition-all",
+        !readOnly && "cursor-pointer hover:bg-primary/10",
         element.umlCode ? "px-2 py-1" : "bg-muted p-3 pr-9"
     );
+
+    if (readOnly) {
+        return (
+            <PlateElement {...props} className="py-2.5">
+                <figure className="group relative" contentEditable={false}>
+                    {src ? (
+                        <Flex items="center" justify="center" rounded="sm" className={triggerClassNames}>
+                            <img src={src} alt="PlantUML" />
+                        </Flex>
+                    ) : null}
+                </figure>
+            </PlateElement>
+        );
+    }
 
     return (
         <>

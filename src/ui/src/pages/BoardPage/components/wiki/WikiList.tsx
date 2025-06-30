@@ -1,5 +1,6 @@
 import { Box, Button, Flex, IconComponent, Skeleton, Tabs } from "@/components/base";
 import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
 import WikiContent, { SkeletonWikiContent } from "@/pages/BoardPage/components/wiki/WikiContent";
@@ -26,7 +27,8 @@ export function SkeletonWikiList() {
 const WikiList = memo(() => {
     const [t] = useTranslation();
     const [wikiUID, setWikiUID] = useState(location.pathname.split("/")[4]);
-    const { projectUID, wikis, navigate, canAccessWiki, setCurrentEditor, modeType, setModeType, wikiTabListId } = useBoardWiki();
+    const navigate = usePageNavigateRef();
+    const { projectUID, wikis, canAccessWiki, setCurrentEditor, modeType, setModeType, wikiTabListId } = useBoardWiki();
     const paramsLastCheckedRef = useRef("");
     const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
 

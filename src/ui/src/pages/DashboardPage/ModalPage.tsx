@@ -2,10 +2,10 @@ import { ROUTES } from "@/core/routing/constants";
 import CreateProjectFormDialog from "@/pages/DashboardPage/components/CreateProjectFormDialog";
 import MyActivityDialog from "@/pages/DashboardPage/components/MyActivityDialog";
 import { memo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 const ModalPage = memo(() => {
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const [pageType, tabName, modalType] = location.pathname.split("/").slice(2);
     const [isOpened, setIsOpened] = useState(true);
 

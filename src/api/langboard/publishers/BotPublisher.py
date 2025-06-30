@@ -2,6 +2,7 @@ from typing import Any
 from core.routing import GLOBAL_TOPIC_ID, SocketTopic
 from core.utils.decorators import staticclass
 from models import Bot
+from models.BotTrigger import BotTriggerCondition
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 
 
@@ -66,18 +67,20 @@ class BotPublisher(BaseSocketPublisher):
         await BotPublisher.put_dispather({}, publish_model)
 
     @staticmethod
-    async def bot_condition_predefined(uid: str, model: dict[str, Any]):
+    async def bot_condition_predefined(uid: str, conditions: list[BotTriggerCondition]):
+        model = {"conditions": [condition.value for condition in conditions]}
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
             event=f"settings:bot:trigger-condition:predefined:{uid}",
-            data_keys="conditions",
+            data_keys=list(model.keys()),
         )
 
         await BotPublisher.put_dispather(model, publish_model)
 
     @staticmethod
-    async def bot_condition_toggled(uid: str, model: dict[str, Any]):
+    async def bot_condition_toggled(uid: str, condition: BotTriggerCondition, is_enabled: bool):
+        model = {"condition": condition.value, "is_enabled": is_enabled}
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,

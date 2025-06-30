@@ -77,15 +77,15 @@ function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAv
                 <UserAvatar.ListItem ref={triggerRef}>{t("common.avatarActions.View activities")}</UserAvatar.ListItem>
             </Popover.Trigger>
             <Popover.Content
-                className="z-[999999] w-auto sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md"
+                className="z-[999999] w-screen sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md"
                 side={side}
                 {...getAvatarHoverCardAttrs()}
             >
                 <ActivityList
                     form={{ listType: "ActivityModel", type: "project_assignee", assignee_uid: userOrBot.uid, project_uid: project.uid }}
                     currentUser={currentUser}
-                    infiniteScrollerClassName="max-h-[calc(var(--max-height)_-_theme(spacing.8))] px-4 pb-2.5"
-                    style={style as React.CSSProperties}
+                    outerClassName="max-h-[calc(var(--max-height)_-_theme(spacing.8))] px-4 pb-2.5 w-full"
+                    outerStyle={style as React.CSSProperties}
                     isUserView
                 />
             </Popover.Content>

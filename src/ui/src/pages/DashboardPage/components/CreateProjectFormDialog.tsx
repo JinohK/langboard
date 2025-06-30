@@ -6,7 +6,7 @@ import useForm from "@/core/hooks/form/useForm";
 import { Project } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface ICreateProjectFormDialogProps {
     opened: bool;
@@ -15,7 +15,7 @@ export interface ICreateProjectFormDialogProps {
 
 function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const { mutate } = useCreateProject();
     const projectTypeRef = useRef("");
     const projectTypeInputRef = useRef<HTMLInputElement>(null);

@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { IHeaderNavItem } from "@/components/Header/types";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
@@ -8,7 +8,7 @@ import { AccountSettingProvider } from "@/core/providers/AccountSettingProvider"
 import EmailPage, { SkeletonEmailPage } from "@/pages/AccountPage/EmailPage";
 import PasswordPage from "@/pages/AccountPage/PasswordPage";
 import ProfilePage from "@/pages/AccountPage/ProfilePage";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import GroupsPage, { SkeletonGroupsPage } from "@/pages/AccountPage/GroupsPage";
 import PreferencesPage from "@/pages/AccountPage/PreferencesPage";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 function AccountPage(): JSX.Element {
     const [t] = useTranslation();
     const { currentUser } = useAuth();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const location = useLocation();
 
     const headerNavs: Record<string, IHeaderNavItem> = {};
@@ -26,35 +26,35 @@ function AccountPage(): JSX.Element {
             icon: "user-pen",
             name: t("myAccount.Profile"),
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.PROFILE);
+                navigate(ROUTES.ACCOUNT.PROFILE, { smooth: true });
             },
         },
         [ROUTES.ACCOUNT.EMAILS.ROUTE]: {
             icon: "mail",
             name: t("myAccount.Emails"),
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.EMAILS.ROUTE);
+                navigate(ROUTES.ACCOUNT.EMAILS.ROUTE, { smooth: true });
             },
         },
         [ROUTES.ACCOUNT.PASSWORD]: {
             icon: "shield-alert",
             name: t("user.Password"),
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.PASSWORD);
+                navigate(ROUTES.ACCOUNT.PASSWORD, { smooth: true });
             },
         },
         [ROUTES.ACCOUNT.GROUPS]: {
             icon: "users",
             name: t("myAccount.Groups"),
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.GROUPS);
+                navigate(ROUTES.ACCOUNT.GROUPS, { smooth: true });
             },
         },
         [ROUTES.ACCOUNT.PREFERENCES]: {
             icon: "users",
             name: t("myAccount.Preferences"),
             onClick: () => {
-                navigate(ROUTES.ACCOUNT.PREFERENCES);
+                navigate(ROUTES.ACCOUNT.PREFERENCES, { smooth: true });
             },
         },
     };

@@ -186,6 +186,9 @@ class UserService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.update(user)
 
+        invitation_service = self._get_service_by_name("project_invitation")
+        await invitation_service.update_by_signed_up(user)
+
         UserActivityTask.activated(user)
 
     async def verify_subemail(self, subemail: UserEmail) -> None:

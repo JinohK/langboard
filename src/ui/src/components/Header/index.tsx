@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import CachedImage from "@/components/CachedImage";
 import HedaerNavItems from "@/components/Header/HedaerNavItems";
 import { IHeaderProps } from "@/components/Header/types";
@@ -7,7 +7,7 @@ import ThemeSwitcher from "@/components/ThemeSwitcher";
 import { Button, Flex, IconComponent, NavigationMenu, Separator, Sheet } from "@/components/base";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import HeaderUserMenu from "@/components/Header/HeaderUserMenu";
 import HeaderUserNotification from "@/components/Header/HeaderUserNotification";
 import UserPreferenceLanguageSwitcher from "@/components/LanguageSwitcher/UserPreference";
@@ -15,10 +15,10 @@ import UserPreferenceLanguageSwitcher from "@/components/LanguageSwitcher/UserPr
 function Header({ navs, title }: IHeaderProps) {
     const { currentUser } = useAuth();
     const [isOpened, setIsOpen] = useState(false);
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
 
     const toDashboard = () => {
-        navigateRef.current(ROUTES.DASHBOARD.PROJECTS.ALL);
+        navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { smooth: true });
     };
 
     const separator = <Separator className="h-5" orientation="vertical" />;
@@ -122,9 +122,9 @@ function Header({ navs, title }: IHeaderProps) {
                 {currentUser ? (
                     <>
                         {separator}
-                        <HeaderUserNotification currentUser={currentUser} navigateRef={navigateRef} />
+                        <HeaderUserNotification currentUser={currentUser} />
                         {separator}
-                        <HeaderUserMenu currentUser={currentUser} navigateRef={navigateRef} />
+                        <HeaderUserMenu currentUser={currentUser} />
                     </>
                 ) : null}
             </Flex>

@@ -3,6 +3,7 @@ import ComingSoon from "@/components/ComingSoon";
 import useDeleteSelectedSettings from "@/controllers/api/settings/useDeleteSelectedSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -13,16 +14,17 @@ import { useTranslation } from "react-i18next";
 function ApiKeysPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
+    const { isValidating, setIsValidating } = useAppSetting();
     const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
     const { mutate: deleteSelectedSettingsMutate } = useDeleteSelectedSettings();
+    const navigate = usePageNavigateRef();
 
     useEffect(() => {
         setPageAliasRef.current("API keys");
     }, []);
 
     const openCreateDialog = () => {
-        navigateRef.current(ROUTES.SETTINGS.CREATE_API_KEY);
+        navigate(ROUTES.SETTINGS.CREATE_API_KEY);
     };
 
     const deleteSelectedSettings = () => {
@@ -44,7 +46,7 @@ function ApiKeysPage() {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

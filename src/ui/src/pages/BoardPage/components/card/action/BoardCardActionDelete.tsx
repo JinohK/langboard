@@ -2,11 +2,11 @@ import { Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "
 import useDeleteCard from "@/controllers/api/card/useDeleteCard";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardCardActionDeleteProps extends ISharedBoardCardActionProps {}
@@ -16,7 +16,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isOpened, setIsOpened] = useState(false);
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { mutateAsync } = useDeleteCard({ interceptToast: true });
 
     const deleteCard = () => {
@@ -42,7 +42,7 @@ const BoardCardActionDelete = memo(({ buttonClassName }: IBoardCardActionDeleteP
             },
             success: () => {
                 setTimeout(() => {
-                    navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
+                    navigate(ROUTES.BOARD.MAIN(projectUID), { replace: true });
                 }, 0);
                 return t("successes.Card deleted successfully.");
             },

@@ -9,7 +9,7 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardSettingsCronBotSchedule from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotSchedule";
 import BoardSettingsCronBotScheduleAddButton from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleAddButton";
 import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export interface IBoardSettingsCronBotScheduleListProps {
     bot: BotModel.TModel;
@@ -19,6 +19,7 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
     const { socket, project } = useBoardSettings();
     const { mutateAsync, isLastPage, isFetchingRef } = useGetProjectBotSchedules(project.uid, bot.uid);
     const [copiedForm, setCopiedForm] = useState<IBotScheduleFormMap | undefined>(undefined);
+    const viewportRef = useRef<HTMLDivElement | null>(null);
     const schedules = BotSchedule.Model.useModels(
         (model) => model.bot_uid === bot.uid && model.filterable_table === "project" && model.filterable_uid === project.uid
     );
@@ -39,7 +40,6 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
         botUID: bot.uid,
     });
     useSwitchSocketHandlers({ socket, handlers: [botCronScheduledHandlers] });
-    const listId = `project-settings-bot-schedule-list-${bot.uid}`;
     const [isAddMode, setIsAddMode] = useState(false);
 
     useEffect(() => {
@@ -50,9 +50,9 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
 
     return (
         <Flex direction="col" gap="2">
-            <ScrollArea.Root viewportId={listId} mutable={schedules}>
+            <ScrollArea.Root viewportRef={viewportRef} mutable={schedules}>
                 <InfiniteScroller.NoVirtual
-                    scrollable={() => document.getElementById(listId)}
+                    scrollable={() => viewportRef.current}
                     loadMore={nextPage}
                     hasMore={!isLastPage}
                     loader={

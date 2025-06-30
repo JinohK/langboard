@@ -3,29 +3,25 @@ import { AuthUser, Project } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createContext, useContext, useEffect } from "react";
-import { NavigateFunction } from "react-router-dom";
 
 export interface IDashboardContext {
-    navigate: NavigateFunction;
     currentUser: AuthUser.TModel;
     socket: ISocketContext;
 }
 
 interface IDashboardProps {
-    navigate: NavigateFunction;
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
 
 const initialContext = {
-    navigate: () => {},
     currentUser: {} as AuthUser.TModel,
     socket: {} as ISocketContext,
 };
 
 const DashboardContext = createContext<IDashboardContext>(initialContext);
 
-export const DashboardProvider = ({ navigate, currentUser, children }: IDashboardProps): React.ReactNode => {
+export const DashboardProvider = ({ currentUser, children }: IDashboardProps): React.ReactNode => {
     const socket = useSocket();
     const projects = Project.Model.useModels(() => true);
 
@@ -72,7 +68,6 @@ export const DashboardProvider = ({ navigate, currentUser, children }: IDashboar
     return (
         <DashboardContext.Provider
             value={{
-                navigate,
                 socket,
                 currentUser,
             }}

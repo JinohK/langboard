@@ -13,9 +13,6 @@ class GlobalRelationshipType extends BaseModel<Interface> {
     static get MODEL_NAME() {
         return "GlobalRelationshipType" as const;
     }
-    get MODEL_NAME() {
-        return GlobalRelationshipType.MODEL_NAME;
-    }
 
     constructor(model: Record<string, unknown>) {
         super(model);

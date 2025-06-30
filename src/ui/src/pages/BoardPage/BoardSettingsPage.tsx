@@ -8,6 +8,7 @@ import useGetProjectDetails from "@/controllers/api/board/useGetProjectDetails";
 import BoardSettingsList from "@/pages/BoardPage/components/settings/BoardSettingsList";
 import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
 import BoardSettingsUserList from "@/pages/BoardPage/components/settings/BoardSettingsUserList";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export function SkeletonBoardSettingsPage(): JSX.Element {
     return (
@@ -25,8 +26,9 @@ export function SkeletonBoardSettingsPage(): JSX.Element {
     );
 }
 
-const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRelatedPageProps) => {
+const BoardSettingsPage = memo(({ projectUID, currentUser }: IBoardRelatedPageProps) => {
     const { data, error } = useGetProjectDetails({ uid: projectUID });
+    const navigate = usePageNavigateRef();
 
     useEffect(() => {
         if (!error) {
@@ -49,7 +51,7 @@ const BoardSettingsPage = memo(({ navigate, projectUID, currentUser }: IBoardRel
         <>
             <BoardSettingsUserList currentUser={currentUser} projectUID={projectUID} />
             {data && (
-                <BoardSettingsProvider navigate={navigate} project={data.project} currentUser={currentUser}>
+                <BoardSettingsProvider project={data.project} currentUser={currentUser}>
                     <BoardSettingsList />
                 </BoardSettingsProvider>
             )}

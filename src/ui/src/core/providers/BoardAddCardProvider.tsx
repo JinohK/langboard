@@ -20,7 +20,7 @@ export interface IBoardAddCardContext {
 
 interface IBoardAddCardProps {
     column: ProjectColumn.TModel;
-    viewportId: string;
+    viewportRef: React.RefObject<HTMLDivElement | null>;
     toLastPage: () => void;
     children: React.ReactNode;
 }
@@ -38,7 +38,7 @@ const initialContext = {
 
 const BoardAddCardContext = createContext<IBoardAddCardContext>(initialContext);
 
-export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children }: IBoardAddCardProps): React.ReactNode => {
+export const BoardAddCardProvider = ({ column, viewportRef, toLastPage, children }: IBoardAddCardProps): React.ReactNode => {
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
@@ -114,7 +114,11 @@ export const BoardAddCardProvider = ({ column, viewportId, toLastPage, children 
     });
 
     const scrollToBottom = () => {
-        const viewport = document.getElementById(viewportId)!;
+        const viewport = viewportRef.current;
+        if (!viewport) {
+            return;
+        }
+
         viewport.scrollTo({ top: viewport.scrollHeight });
     };
 

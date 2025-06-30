@@ -1,4 +1,4 @@
-import { memo, useRef, useState } from "react";
+import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Button, DropdownMenu, Flex, IconComponent } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/chat/useClearProjectChatMessages";
@@ -6,7 +6,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import Conversation from "@/pages/BoardPage/components/chat/Conversation";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { ChatMessageModel } from "@/core/models";
 import ChatInput from "@/pages/BoardPage/components/chat/ChatInput";
@@ -14,7 +14,7 @@ import ChatInput from "@/pages/BoardPage/components/chat/ChatInput";
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID } = useBoardChat();
     const [t] = useTranslation();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { mutate } = useClearProjectChatMessages();
     const [height, setHeight] = useState(0);
 
@@ -28,7 +28,7 @@ const ChatSidebar = memo((): JSX.Element => {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

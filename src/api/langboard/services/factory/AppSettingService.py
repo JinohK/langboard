@@ -19,11 +19,11 @@ class AppSettingService(BaseService):
         return "app_setting"
 
     @overload
-    async def get_by_type(self, setting_type: AppSettingType, as_api: Literal[False]) -> AppSetting | None: ...
+    async def get_by_uid(self, setting_uid: str, as_api: Literal[False]) -> AppSetting | None: ...
     @overload
-    async def get_by_type(self, setting_type: AppSettingType, as_api: Literal[True]) -> dict[str, Any] | None: ...
-    async def get_by_type(self, setting_type: AppSettingType, as_api: bool) -> AppSetting | dict[str, Any] | None:
-        setting = ServiceHelper.get_by(AppSetting, "setting_type", setting_type)
+    async def get_by_uid(self, setting_uid: str, as_api: Literal[True]) -> dict[str, Any] | None: ...
+    async def get_by_uid(self, setting_uid: str, as_api: bool) -> AppSetting | dict[str, Any] | None:
+        setting = ServiceHelper.get_by(AppSetting, "id", SnowflakeID.from_short_code(setting_uid))
         if not setting:
             return None
         if as_api:
@@ -78,8 +78,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(setting)
 
-        model = {"setting": setting.api_response()}
-        await AppSettingPublisher.setting_created(model)
+        await AppSettingPublisher.setting_created(setting)
 
         return setting
 

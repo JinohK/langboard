@@ -1,4 +1,5 @@
 import { Breadcrumb, Flex } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
@@ -24,7 +25,8 @@ export interface IBotDetailsProps {
 const BotDetails = memo(({ bot }: IBotDetailsProps) => {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating } = useAppSetting();
     const name = bot.useField("name");
 
     const moveToList = () => {
@@ -32,7 +34,7 @@ const BotDetails = memo(({ bot }: IBotDetailsProps) => {
             return;
         }
 
-        navigateRef.current(ROUTES.SETTINGS.BOTS);
+        navigate(ROUTES.SETTINGS.BOTS, { smooth: true });
     };
 
     useEffect(() => {

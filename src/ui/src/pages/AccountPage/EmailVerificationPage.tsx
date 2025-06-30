@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { QUERY_NAMES } from "@/constants";
 import { Toast } from "@/components/base";
 import useVerifyNewEmail from "@/controllers/api/account/useVerifyNewEmail";
@@ -8,7 +8,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function EmailVerificationPage() {
@@ -16,7 +16,7 @@ function EmailVerificationPage() {
     const [t] = useTranslation();
     const { updatedUser } = useAuth();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const { mutate } = useVerifyNewEmail();
 
     useEffect(() => {

@@ -1,19 +1,20 @@
 from typing import Any
 from core.routing import GLOBAL_TOPIC_ID, SocketTopic
 from core.utils.decorators import staticclass
-from models import User, UserProfile
+from models import AppSetting, User, UserProfile
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 
 
 @staticclass
 class AppSettingPublisher(BaseSocketPublisher):
     @staticmethod
-    async def setting_created(model: dict[str, Any]):
+    async def setting_created(setting: AppSetting):
+        model = {"uid": setting.get_uid()}
         publish_model = SocketPublishModel(
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
             event="settings:created",
-            data_keys="setting",
+            data_keys=list(model.keys()),
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)
@@ -46,7 +47,7 @@ class AppSettingPublisher(BaseSocketPublisher):
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
             event="settings:deleted",
-            data_keys="uids",
+            data_keys=list(model.keys()),
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)
@@ -78,7 +79,7 @@ class AppSettingPublisher(BaseSocketPublisher):
             topic=SocketTopic.AppSettings,
             topic_id=GLOBAL_TOPIC_ID,
             event="user:deleted",
-            data_keys="uids",
+            data_keys=list(model.keys()),
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)
@@ -89,7 +90,6 @@ class AppSettingPublisher(BaseSocketPublisher):
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
             event="global-relationship:created",
-            data_keys="global_relationships:created",
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)
@@ -122,7 +122,7 @@ class AppSettingPublisher(BaseSocketPublisher):
             topic=SocketTopic.Global,
             topic_id=GLOBAL_TOPIC_ID,
             event="global-relationship:deleted",
-            data_keys="uids",
+            data_keys=list(model.keys()),
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)

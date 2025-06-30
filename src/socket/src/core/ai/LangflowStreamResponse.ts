@@ -58,7 +58,7 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                         return;
                     }
 
-                    const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
+                    const parsedMessage = parseLangflowResponse(jsonChunk);
                     if (TypeUtils.isString(parsedMessage)) {
                         await onMessage(parsedMessage);
                     }
@@ -108,18 +108,27 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
 
                         bufferedChunks.splice(0);
 
-                        const parsedMessage = parseLangflowResponse(jsonChunk, result.data);
-                        if (!parsedMessage) {
+                        const parsedMessage = parseLangflowResponse(jsonChunk);
+                        if (TypeUtils.isUndefined(parsedMessage)) {
                             continue;
                         }
 
-                        if (parsedMessage === true) {
-                            await onEnd();
+                        if (TypeUtils.isString(parsedMessage)) {
+                            await onMessage(parsedMessage);
+                            continue;
+                        }
+
+                        if (TypeUtils.isObject(parsedMessage) && parsedMessage.error) {
+                            if (!signal?.aborted) {
+                                await onError?.(new Error(`Langflow stream error: ${parsedMessage.error}`));
+                            }
                             onEndCallback?.();
                             return;
                         }
 
-                        await onMessage(parsedMessage);
+                        await onEnd();
+                        onEndCallback?.();
+                        return;
                     }
                 })
                 .on("end", endStream)
@@ -142,7 +151,7 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
     };
 };
 
-const parseLangflowResponse = (response: Record<string, any>, stream: NodeJS.ReadableStream): string | true | undefined => {
+const parseLangflowResponse = (response: Record<string, any>): string | true | { error: any } | undefined => {
     if (!response.event || !response.data) {
         return undefined;
     }
@@ -161,11 +170,9 @@ const parseLangflowResponse = (response: Record<string, any>, stream: NodeJS.Rea
                 return data.chunk;
             }
             break;
+        case "error":
+            return { error: data };
         case "end":
-            stream.removeAllListeners("data");
-            stream.removeAllListeners("end");
-            stream.removeAllListeners("error");
-            stream.readable = false;
             return true;
     }
 

@@ -1,17 +1,22 @@
 import { ROUTES } from "@/core/routing/constants";
 import Redirect from "@/pages/HomePage/Redirect";
-import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { RouteObject } from "react-router";
+import HomePage from "@/pages/HomePage";
 
-const HomePage = lazy(() => import("./index"));
+const routes: RouteObject[] = [
+    {
+        path: "/",
+        children: [
+            {
+                index: true,
+                element: <HomePage />,
+            },
+            {
+                path: ROUTES.REDIRECT,
+                element: <Redirect />,
+            },
+        ],
+    },
+];
 
-function HomeRoute() {
-    return (
-        <Route path="/" key="route-home">
-            <Route index element={<HomePage />} />
-            <Route path={ROUTES.REDIRECT} element={<Redirect />} />
-        </Route>
-    );
-}
-
-export default HomeRoute;
+export default routes;

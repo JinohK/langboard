@@ -1,19 +1,19 @@
 import { Dialog } from "@/components/base";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
 import { memo, useRef } from "react";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useParams } from "react-router";
 
 const BoardCardPage = memo(() => {
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { currentUser } = useAuth();
     const { projectUID, cardUID } = useParams();
     const { selectCardViewType } = useBoardRelationshipController();
-    const viewportId = "board-card-dialog";
     const viewportRef = useRef<HTMLDivElement | null>(null);
 
     if (!projectUID || !cardUID) {
@@ -21,7 +21,7 @@ const BoardCardPage = memo(() => {
     }
 
     const close = () => {
-        navigateRef.current(ROUTES.BOARD.MAIN(projectUID));
+        navigate(ROUTES.BOARD.MAIN(projectUID));
     };
 
     return (
@@ -32,18 +32,11 @@ const BoardCardPage = memo(() => {
                         className={cn("max-w-[100vw] px-4 py-4 pb-0 sm:max-w-screen-sm sm:px-6 lg:max-w-screen-md", !!selectCardViewType && "hidden")}
                         aria-describedby=""
                         withCloseButton={false}
-                        viewportId={viewportId}
                         viewportRef={viewportRef}
                         overlayClassName={selectCardViewType ? "hidden" : ""}
                         disableOverlayClick={!!selectCardViewType}
                     >
-                        <BoardCard
-                            projectUID={projectUID}
-                            cardUID={cardUID}
-                            currentUser={currentUser}
-                            viewportId={viewportId}
-                            viewportRef={viewportRef}
-                        />
+                        <BoardCard projectUID={projectUID} cardUID={cardUID} currentUser={currentUser} viewportRef={viewportRef} />
                     </Dialog.Content>
                 </Dialog.Root>
             )}

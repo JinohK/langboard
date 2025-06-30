@@ -12,6 +12,7 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import MultiSelectAssignee, { TSaveHandler } from "@/components/MultiSelectAssignee";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.TModel;
@@ -32,7 +33,8 @@ export function SkeletonWikiPrivateOption() {
 
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
-    const { projectUID, projectBots, projectMembers, currentUser, navigate } = useBoardWiki();
+    const navigate = usePageNavigateRef();
+    const { projectUID, projectBots, projectMembers, currentUser } = useBoardWiki();
     const isPublic = wiki.useField("is_public");
     const forbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);

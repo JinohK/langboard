@@ -1,15 +1,17 @@
-import { lazy } from "react";
-import { Route } from "react-router-dom";
+import { RouteObject } from "react-router";
 import { ROUTES } from "@/core/routing/constants";
+import ErrorPage from "@/pages/ErrorPage";
 
-const ErrorPage = lazy(() => import("./index"));
+const routes: RouteObject[] = [
+    {
+        path: ROUTES.ERROR("*").replace("/*", ""),
+        children: [
+            {
+                path: ROUTES.ERROR("*"),
+                element: <ErrorPage />,
+            },
+        ],
+    },
+];
 
-function ErrorRoute() {
-    return (
-        <Route path={ROUTES.ERROR("*").replace("/*", "")} key="route-error">
-            <Route path={ROUTES.ERROR("*")} element={<ErrorPage />} />
-        </Route>
-    );
-}
-
-export default ErrorRoute;
+export default routes;

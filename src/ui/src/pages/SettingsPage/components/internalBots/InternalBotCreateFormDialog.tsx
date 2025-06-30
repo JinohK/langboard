@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
 import { useMemo, useRef, useState } from "react";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
@@ -12,6 +11,7 @@ import { isValidURL } from "@/core/utils/StringUtils";
 import useCreateInternalBot from "@/controllers/api/settings/internalBots/useCreateInternalBot";
 import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
 import PasswordInput from "@/components/PasswordInput";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IInternalBotCreateFormDialogProps {
     opened: bool;
@@ -20,7 +20,7 @@ export interface IInternalBotCreateFormDialogProps {
 
 function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFormDialogProps): JSX.Element {
     const [t] = useTranslation();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const [isValidating, setIsValidating] = useState(false);
     const dataTransferRef = useRef(new DataTransfer());
     const inputsRef = useRef({
@@ -109,7 +109,7 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

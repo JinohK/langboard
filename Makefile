@@ -8,6 +8,7 @@ FLOWS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).flows.yaml
 UI_DIR := src/ui
 API_DIR := src/api
 FLOWS_DIR := src/flows
+SOCKET_DIR := src/socket
 GREEN := \033[0;32m
 RED := \033[0;31m
 CYAN := \033[0;36m
@@ -56,11 +57,17 @@ clean_python_cache: ## clean Python cache
 	find . -type f -name '.*~' -exec rm -f {} +
 	@printf "$(GREEN)Python cache cleaned.$(NC)"
 
-clean_yarn_cache: ## clean Yarn cache
+clean_ui_cache: ## clean Yarn cache
 	@echo "Cleaning yarn cache..."
 	cd $(UI_DIR) && yarn cache clean --force
 	rm -rf $(UI_DIR)/node_modules $(UI_DIR)/build
 	@printf "$(GREEN)Yarn cache and ui directories cleaned.$(NC)"
+
+clean_socket_cache: ## clean Socket cache
+	@echo "Cleaning socket cache..."
+	cd $(SOCKET_DIR) && yarn cache clean --force
+	rm -rf $(SOCKET_DIR)/node_modules $(SOCKET_DIR)/dist
+	@printf "$(GREEN)Socket cache and directories cleaned.$(NC)"
 
 format: ## run code formatters
 	poetry run ruff check . --fix
@@ -68,6 +75,7 @@ format: ## run code formatters
 	cd $(FLOWS_DIR) && uv run ruff check . --fix
 	cd $(FLOWS_DIR) && uv run ruff format .
 	cd $(UI_DIR) && yarn run format
+	cd $(SOCKET_DIR) && yarn run format
 
 lint: ## run linters
 	poetry run ruff check .
@@ -86,13 +94,30 @@ install_flows: ## install flows dependencies
 	@echo 'Installing flows dependencies'
 	cd $(FLOWS_DIR) && uv venv && uv pip install .
 
-build_ui: ## build the ui static files
-	cd $(UI_DIR) && CI='' yarn run build
+install_socket: ## install socket dependencies
+	@echo 'Installing socket dependencies'
+	cd $(SOCKET_DIR) && yarn install
 
-init: check_tools clean_python_cache clean_yarn_cache ## initialize the project
+dev_ui: ## run the UI in development mode
+	cd $(UI_DIR) && yarn run dev
+
+dev_api: ## run the API in development mode
+	langboard run -w
+
+dev_flows: ## run the Flows in development mode
+	cd $(FLOWS_DIR) && uv run flows run -w
+
+dev_socket: ## run the Socket in development mode
+	cd $(SOCKET_DIR) && nodemon dist/index.js
+
+dev_socket_build: ## build the Socket in development mode
+	cd $(SOCKET_DIR) && yarn run build -w
+
+init: check_tools clean_python_cache clean_ui_cache clean_socket_cache ## initialize the project
 	make install_api
 	make install_ui
 	make install_flows
+	make install_socket
 	@printf "$(GREEN)All requirements are installed.$(NC)"
 
 start_docker_dev: ## run the development environment in Docker

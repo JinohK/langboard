@@ -2,13 +2,14 @@ import { createContext, memo, useContext, useEffect, useMemo, useRef } from "rea
 import { AuthUser, GlobalRelationshipType, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import TypeUtils from "@/core/utils/TypeUtils";
-import { NavigateFunction, NavigateOptions, To } from "react-router-dom";
+import { To } from "react-router";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import useSearchFilters, { ISearchFilterMap } from "@/core/hooks/useSearchFilters";
+import { IPageNavigateOptions, usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IFilterMap extends ISearchFilterMap {
     keyword?: string[];
@@ -30,7 +31,7 @@ export interface IBoardContext {
     globalRelationshipTypes: GlobalRelationshipType.TModel[];
     hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     filters: IFilterMap;
-    navigateWithFilters: (to?: To, options?: NavigateOptions) => void;
+    navigateWithFilters: (to?: To, options?: IPageNavigateOptions) => void;
     filterMember: (member: User.TModel) => bool;
     filterLabel: (label: ProjectLabel.TModel) => bool;
     filterCard: (card: ProjectCard.TModel) => bool;
@@ -41,7 +42,6 @@ export interface IBoardContext {
 }
 
 interface IBoardProviderProps {
-    navigate: NavigateFunction;
     project: Project.TModel;
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
@@ -69,7 +69,8 @@ const initialContext = {
 
 const BoardContext = createContext<IBoardContext>(initialContext);
 
-export const BoardProvider = memo(({ navigate, project, currentUser, children }: IBoardProviderProps): React.ReactNode => {
+export const BoardProvider = memo(({ project, currentUser, children }: IBoardProviderProps): React.ReactNode => {
+    const navigate = usePageNavigateRef();
     const socket = useSocket();
     const { selectCardViewType } = useBoardRelationshipController();
     const [t] = useTranslation();
@@ -115,7 +116,7 @@ export const BoardProvider = memo(({ navigate, project, currentUser, children }:
         navigate(ROUTES.DASHBOARD.PROJECTS.ALL);
     }, [members]);
 
-    const navigateWithFilters = (to?: To, options?: NavigateOptions) => {
+    const navigateWithFilters = (to?: To, options?: IPageNavigateOptions) => {
         uniqueFilters();
         const newFiltersString = filtersToString();
 

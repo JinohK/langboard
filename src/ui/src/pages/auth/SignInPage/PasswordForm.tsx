@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { QUERY_NAMES } from "@/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton } from "@/components/base";
@@ -10,7 +10,7 @@ import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IPasswordformProps {
     signToken: string;
@@ -23,7 +23,7 @@ export interface IPasswordformProps {
 function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPasswordformProps): JSX.Element {
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const [shouldShowPassword, setShouldShowPassword] = useState(false);
     const { mutate } = useSignIn();
     const { signIn } = useAuth();
@@ -45,7 +45,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
 
             const searchParams = new URLSearchParams(location.search);
             const redirectUrl = searchParams.get(QUERY_NAMES.REDIRECT) ?? ROUTES.AFTER_SIGN_IN;
-            signIn(data.access_token, () => navigate(decodeURIComponent(redirectUrl)));
+            signIn(data.access_token, () => navigate(decodeURIComponent(redirectUrl), { smooth: true }));
         },
         apiErrorHandlers: {
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
@@ -67,7 +67,7 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
             },
             [EHttpStatus.HTTP_423_LOCKED]: {
                 after: () => {
-                    navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email } });
+                    navigate(ROUTES.SIGN_UP.COMPLETE, { state: { email }, smooth: true });
                 },
             },
         },
@@ -78,13 +78,13 @@ function PasswordForm({ signToken, emailToken, email, setEmail, className }: IPa
         setEmail("");
         const searchParams = new URLSearchParams(location.search);
         searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
-        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`);
+        navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { smooth: true });
     };
 
     const toFindPassword = () => {
         const searchParams = new URLSearchParams(location.search);
 
-        navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`, { state: { email } });
+        navigate(`${ROUTES.ACCOUNT_RECOVERY.NAME}?${searchParams.toString()}`, { state: { email }, smooth: true });
     };
 
     return (

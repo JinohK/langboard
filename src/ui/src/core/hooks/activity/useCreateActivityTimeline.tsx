@@ -2,7 +2,7 @@
 import { Avatar, Box, Flex, IconComponent, Skeleton, Tooltip } from "@/components/base";
 import { CollapsibleVersionHistoryPlate } from "@/components/Editor/version-history-plate";
 import UserAvatar from "@/components/UserAvatar";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ActivityModel, AuthUser, ProjectCard } from "@/core/models";
 import { IBotInActivityHistory, IChangesInActivityHistory, IUserInActivityHistory } from "@/core/models/activities/base.type";
@@ -32,7 +32,7 @@ interface IBaseActivityComponentProps {
 
 const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bool) => {
     const [t] = useTranslation();
-    const navigateRef = React.useRef(useNavigate());
+    const navigate = usePageNavigateRef();
 
     const SkeletonActivity = React.memo(({ ref }: { ref?: React.Ref<HTMLDivElement> }) => (
         <Flex direction="col" gap="1" p="2" ref={ref}>
@@ -73,7 +73,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 break;
         }
 
-        if (subFilterableType && references && !references[subFilterableType]) {
+        if (subFilterableType && references && !activityReferences[subFilterableType]) {
             activityReferences[subFilterableType] = { uid: activity.sub_filterable_uid! };
         }
 
@@ -308,11 +308,11 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
 
                 newElements.push(
                     <Flex items="center" gap="3" key={createShortUUID()}>
-                        <Box>{t(i18nKey)}</Box>
-                        <Flex items="center" gap="1.5">
-                            {beforeElement}
-                            <IconComponent icon="arrow-right" />
-                            {afterElement}
+                        <Box weight="semibold">{t(i18nKey)}</Box>
+                        <Flex items="center" gap="2" maxW="full">
+                            <span className="max-w-[calc(50%_-_theme(spacing.5))]">{beforeElement}</span>
+                            <IconComponent icon="arrow-right" size="6" />
+                            <span className="max-w-[calc(50%_-_theme(spacing.5))]">{afterElement}</span>
                         </Flex>
                     </Flex>
                 );
@@ -342,7 +342,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 textSize="sm"
                 cursor={moveUrl ? "pointer" : "default"}
                 className={cn("bg-muted text-muted-foreground", !!moveUrl && "transition-all hover:bg-primary hover:text-primary-foreground")}
-                onClick={moveUrl ? () => navigateRef.current(moveUrl) : undefined}
+                onClick={moveUrl ? () => navigate(moveUrl) : undefined}
                 style={style}
             >
                 {children}

@@ -1,9 +1,9 @@
 import { Button, Flex } from "@/components/base";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { memo, useRef } from "react";
+import { memo } from "react";
 
 export interface IBoardCardActionRelationshipItemProps {
     type: ProjectCardRelationship.TRelationship;
@@ -11,7 +11,7 @@ export interface IBoardCardActionRelationshipItemProps {
 }
 
 const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCardActionRelationshipItemProps) => {
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { projectUID, card } = useBoardCard();
     const isParent = type === "parents";
     const relationshipType = relationship.relationship_type;
@@ -21,7 +21,7 @@ const BoardCardActionRelationshipItem = memo(({ type, relationship }: IBoardCard
     const name = relationshipType.useField(isParent ? "parent_name" : "child_name");
 
     const toRelatedCard = () => {
-        navigateRef.current(ROUTES.BOARD.CARD(projectUID, targetCardUID));
+        navigate(ROUTES.BOARD.CARD(projectUID, targetCardUID));
     };
 
     return (

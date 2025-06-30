@@ -21,7 +21,7 @@ function MyActivityDialog({ opened, setOpened }: IMyActivityDialogProps): JSX.El
                 <ActivityList
                     form={{ listType: "ActivityModel", type: "user", user_uid: currentUser.uid }}
                     currentUser={currentUser}
-                    infiniteScrollerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
+                    outerClassName="max-h-[calc(100vh_-_theme(spacing.48))] px-4 pb-2.5"
                     isUserView
                 />
             </Dialog.Content>

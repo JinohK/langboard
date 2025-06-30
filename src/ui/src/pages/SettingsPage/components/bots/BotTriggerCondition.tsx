@@ -2,9 +2,9 @@ import { Box, Checkbox, Flex, Label, Toast } from "@/components/base";
 import useToggleBotTriggerCondition from "@/controllers/api/settings/bots/useToggleBotTriggerCondition";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { CATEGORIZED_BOT_TRIGGER_CONDITIONS, EBotTriggerCondition } from "@/core/models/bot.type";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useMemo, useState } from "react";
@@ -18,7 +18,7 @@ export interface IBotTriggerConditionProps {
 function BotTriggerCondition({ category, conditionType }: IBotTriggerConditionProps) {
     const [t] = useTranslation();
     const { model: bot } = ModelRegistry.BotModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const conditions = bot.useField("conditions");
     const condition = useMemo(() => conditions?.[conditionType], [conditions]);
     const [isValidating, setIsValidating] = useState(false);
@@ -40,7 +40,7 @@ function BotTriggerCondition({ category, conditionType }: IBotTriggerConditionPr
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

@@ -1,8 +1,8 @@
 import { Button, Table } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { ProjectCard } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useDashboard } from "@/core/providers/DashboardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { formatTimerDuration } from "@/core/utils/StringUtils";
@@ -14,7 +14,7 @@ export interface ICardRowProps extends React.HTMLAttributes<HTMLTableRowElement>
 }
 
 function CardRow({ card, ...props }: ICardRowProps): JSX.Element | null {
-    const { navigate } = useDashboard();
+    const navigate = usePageNavigateRef();
     const title = card.useField("title");
     const columnName = card.useField("column_name");
     const archivedAt = card.useField("archived_at");

@@ -2,6 +2,7 @@ import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteSelectedGlobalRelationships from "@/controllers/api/settings/relationships/useDeleteSelectedGlobalRelationships";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -12,7 +13,8 @@ import { useTranslation } from "react-i18next";
 function GlobalRelationshipsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating, setIsValidating } = useAppSetting();
     const [selectedGlobalRelationships, setSelectedGlobalRelationships] = useState<string[]>([]);
     const { mutate: deleteSelectedGlobalRelationshipsMutate } = useDeleteSelectedGlobalRelationships();
 
@@ -39,7 +41,7 @@ function GlobalRelationshipsPage() {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 
@@ -53,7 +55,7 @@ function GlobalRelationshipsPage() {
     };
 
     const openCreateDialog = () => {
-        navigateRef.current(ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP);
+        navigate(ROUTES.SETTINGS.CREATE_GLOBAL_RELATIONSHIP);
     };
 
     return (

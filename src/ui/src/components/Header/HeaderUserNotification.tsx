@@ -9,6 +9,7 @@ import useReadAllUserNotificationsHandlers from "@/controllers/socket/notificati
 import useReadUserNotificationHandlers from "@/controllers/socket/notification/useReadUserNotificationHandlers";
 import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { AuthUser, User, UserNotification } from "@/core/models";
@@ -18,16 +19,14 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { memo, useCallback, useMemo, useReducer, useState } from "react";
+import { memo, useCallback, useMemo, useReducer, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
-import { NavigateFunction } from "react-router-dom";
 
 interface IHeaderUserNotificationProps {
-    navigateRef: React.RefObject<NavigateFunction>;
     currentUser: AuthUser.TModel;
 }
 
-const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNotificationProps) => {
+const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationProps) => {
     const [t] = useTranslation();
     const socket = useSocket();
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
@@ -123,19 +122,18 @@ const HeaderUserNotification = memo(({ navigateRef, currentUser }: IHeaderUserNo
                         </Button>
                     </Flex>
                 </Flex>
-                <HeaderUserNotificationList navigateRef={navigateRef} isOnlyUnread={isOnlyUnread} updater={[updated, forceUpdate]} />
+                <HeaderUserNotificationList isOnlyUnread={isOnlyUnread} updater={[updated, forceUpdate]} />
             </Popover.Content>
         </Popover.Root>
     );
 });
 
 interface IHeaderUserNotificationListProps {
-    navigateRef: React.RefObject<NavigateFunction>;
     isOnlyUnread: bool;
     updater: [number, React.DispatchWithoutAction];
 }
 
-function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHeaderUserNotificationListProps) {
+function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotificationListProps) {
     const [t] = useTranslation();
     const [updated] = updater;
     const flatNotifications = UserNotification.Model.useModels(() => true);
@@ -148,17 +146,17 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
     );
     const PAGE_SIZE = 5;
     const { items: notifications, nextPage, hasMore } = useInfiniteScrollPager({ allItems: filteredNotifications, size: PAGE_SIZE, updater });
-    const listId = "header-user-notification-list";
+    const viewportRef = useRef<HTMLDivElement | null>(null);
 
     return (
-        <ScrollArea.Root viewportId={listId} mutable={updated}>
+        <ScrollArea.Root viewportRef={viewportRef} mutable={updated}>
             {!notifications.length && (
                 <Flex items="center" justify="center" maxH="80" minH="80">
                     {t("notification.No notifications received.")}
                 </Flex>
             )}
             <InfiniteScroller.NoVirtual
-                scrollable={() => document.getElementById(listId)}
+                scrollable={() => viewportRef.current}
                 loadMore={nextPage}
                 hasMore={hasMore}
                 loader={
@@ -175,7 +173,7 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
                 <AnimatedList.Root>
                     {notifications.map((notification) => (
                         <AnimatedList.Item key={notification.uid}>
-                            <HeaderUserNotificationItem navigateRef={navigateRef} notification={notification} updater={updater} />
+                            <HeaderUserNotificationItem notification={notification} updater={updater} />
                         </AnimatedList.Item>
                     ))}
                 </AnimatedList.Root>
@@ -185,14 +183,14 @@ function HeaderUserNotificationList({ navigateRef, isOnlyUnread, updater }: IHea
 }
 
 interface IHeaderUserNotificationItemProps {
-    navigateRef: React.RefObject<NavigateFunction>;
     notification: UserNotification.TModel;
     updater: [number, React.DispatchWithoutAction];
 }
 
-const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }: IHeaderUserNotificationItemProps) => {
+const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserNotificationItemProps) => {
     const [_, forceUpdate] = updater;
     const [t] = useTranslation();
+    const navigate = usePageNavigateRef();
     const { send: sendReadUserNotification } = useReadUserNotificationHandlers();
     const { send: sendDeleteUserNotification } = useDeleteUserNotificationHandlers();
     const readAt = notification.useField("read_at");
@@ -231,7 +229,7 @@ const HeaderUserNotificationItem = memo(({ navigateRef, notification, updater }:
     const movePage = () => {
         const route = getRoute(notification);
         readNotification(false);
-        navigateRef.current(route);
+        navigate(route);
     };
 
     return (

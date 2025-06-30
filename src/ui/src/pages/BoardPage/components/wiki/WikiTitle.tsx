@@ -3,6 +3,7 @@ import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -15,7 +16,8 @@ export interface IWikiTitleProps {
 }
 
 const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
-    const { navigate, projectUID } = useBoardWiki();
+    const navigate = usePageNavigateRef();
+    const { projectUID } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title", { interceptToast: true });
     const title = wiki.useField("title");

@@ -13,12 +13,12 @@ import BoardCardAttachmentList, { SkeletonBoardCardAttachmentList } from "@/page
 import BoardCardTitle, { SkeletonBoardCardTitle } from "@/pages/BoardPage/components/card/BoardCardTitle";
 import BoardCommentForm, { SkeletonBoardCommentForm } from "@/pages/BoardPage/components/card/comment/BoardCommentForm";
 import BoardCommentList, { SkeletonBoardCommentList } from "@/pages/BoardPage/components/card/comment/BoardCommentList";
-import { forwardRef, memo, useEffect, useRef } from "react";
+import { forwardRef, memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import BoardCardMemberList from "@/pages/BoardPage/components/card/BoardCardMemberList";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
 import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
@@ -29,22 +29,21 @@ export interface IBoardCardProps {
     projectUID: string;
     cardUID: string;
     currentUser: AuthUser.TModel;
-    viewportId: string;
     viewportRef: React.RefObject<HTMLDivElement | null>;
 }
 
-const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId, viewportRef }: IBoardCardProps): JSX.Element => {
+const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportRef }: IBoardCardProps): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
     const { data: cardData, isFetching, error } = useGetCardDetails({ project_uid: projectUID, card_uid: cardUID });
     const [t] = useTranslation();
     const socket = useSocket();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const { on: onCardDeletedHandlers } = useCardDeletedHandlers({
         projectUID,
         cardUID,
         callback: () => {
             Toast.Add.error(t("successes.Card deleted."));
-            navigateRef.current(ROUTES.BOARD.MAIN(projectUID), { replace: true });
+            navigate(ROUTES.BOARD.MAIN(projectUID), { replace: true });
         },
     });
 
@@ -55,10 +54,10 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId, viewport
 
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 
@@ -86,7 +85,7 @@ const BoardCard = memo(({ projectUID, cardUID, currentUser, viewportId, viewport
                 <SkeletonBoardCard />
             ) : (
                 <BoardCardProvider projectUID={projectUID} card={cardData.card} currentUser={currentUser} viewportRef={viewportRef}>
-                    <BoardCardResult viewportId={viewportId} />
+                    <BoardCardResult />
                 </BoardCardProvider>
             )}
         </>
@@ -154,7 +153,7 @@ export function SkeletonBoardCard(): JSX.Element {
     );
 }
 
-function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
+function BoardCardResult(): JSX.Element {
     const { card, setCurrentEditor } = useBoardCard();
     const attachments = card.useForeignField("attachments");
     const checklists = card.useForeignField("checklists");
@@ -201,7 +200,7 @@ function BoardCardResult({ viewportId }: { viewportId: string }): JSX.Element {
                         </BoardCardSection>
                     )}
                     <BoardCardSection title="card.Comments">
-                        <BoardCommentList key={`board-card-comment-list-${card.uid}`} viewportId={viewportId} />
+                        <BoardCommentList key={`board-card-comment-list-${card.uid}`} />
                     </BoardCardSection>
                 </Flex>
                 <Box w="full" maxW={{ sm: "40" }}>

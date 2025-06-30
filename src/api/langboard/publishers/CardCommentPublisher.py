@@ -18,7 +18,7 @@ class CardCommentPublisher(BaseSocketPublisher):
             topic=SocketTopic.Board,
             topic_id=project.get_uid(),
             event=f"board:card:comment:added:{card.get_uid()}",
-            data_keys="comment",
+            data_keys=list(model.keys()),
         )
 
         await CardCommentPublisher.put_dispather(model, publish_model)

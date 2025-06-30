@@ -177,6 +177,7 @@ export const API_ROUTES = {
     SETTINGS: {
         IS_AVAILABLE: "/settings/available",
         GET_ALL: "/settings/all",
+        GET: "/settings/app/{uid}",
         CREATE: "/settings/app",
         UPDATE: "/settings/app/{uid}",
         DELETE: "/settings/app/{uid}",

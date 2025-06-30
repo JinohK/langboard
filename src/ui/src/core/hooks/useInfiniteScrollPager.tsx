@@ -24,8 +24,10 @@ function useInfiniteScrollPager<T>({ allItems, size, updater }: IUseInfiniteScro
         }
 
         return new Promise<bool>((resolve) => {
-            setPage(next);
-            resolve(true);
+            setTimeout(() => {
+                setPage(next);
+                resolve(true);
+            }, 500);
         });
     };
 

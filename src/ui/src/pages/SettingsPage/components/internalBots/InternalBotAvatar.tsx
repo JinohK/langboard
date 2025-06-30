@@ -3,8 +3,8 @@ import { Flex, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -13,7 +13,7 @@ const InternalBotAvatar = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
     const avatar = internalBot.useField("avatar");
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const dataTransferRef = useRef<DataTransfer>(new DataTransfer());
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
@@ -68,7 +68,7 @@ const InternalBotAvatar = memo(() => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

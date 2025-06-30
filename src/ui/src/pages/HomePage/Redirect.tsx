@@ -1,11 +1,11 @@
 import { QUERY_NAMES } from "@/constants";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ROUTES } from "@/core/routing/constants";
 import { useEffect } from "react";
-import { To } from "react-router-dom";
+import { To } from "react-router";
 
 function Redirect(): JSX.Element {
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
 
     useEffect(() => {
         const params = new URLSearchParams(window.location.search);

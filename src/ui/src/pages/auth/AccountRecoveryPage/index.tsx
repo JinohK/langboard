@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Box, Button } from "@/components/base";
@@ -10,14 +10,14 @@ import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
 function AccountRecoveryPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
     const location = useLocation();
-    const navigate = useNavigate();
+    const navigate = usePageNavigateRef();
     const [email, setEmail] = useState<string | null>(location.state?.email);
     const [[form, description], setPage] = useState<[JSX.Element | null, string]>([null, ""]);
     const { mutate: validateRecoveryTokenMutate } = useValidateRecoveryToken();
@@ -25,7 +25,7 @@ function AccountRecoveryPage(): JSX.Element {
 
     const backToSignin = () => {
         const searchParams = new URLSearchParams(location.search);
-        navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`);
+        navigate(`${ROUTES.SIGN_IN.PASSWORD}?${searchParams.toString()}`, { smooth: true });
     };
 
     useEffect(() => {
@@ -38,7 +38,7 @@ function AccountRecoveryPage(): JSX.Element {
         if (location.pathname === ROUTES.ACCOUNT_RECOVERY.RESET) {
             if (!recoveryTokenParam) {
                 searchParams.delete(QUERY_NAMES.RECOVERY_TOKEN);
-                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true, smooth: true });
                 return;
             }
 
@@ -52,7 +52,7 @@ function AccountRecoveryPage(): JSX.Element {
                             }
                         },
                         onError: () => {
-                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true });
+                            navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true, smooth: true });
                         },
                     }
                 );
@@ -64,7 +64,7 @@ function AccountRecoveryPage(): JSX.Element {
         if (!signTokenParam || signTokenParam.length !== SIGN_IN_TOKEN_LENGTH || !emailTokenParam) {
             searchParams.delete(QUERY_NAMES.SIGN_IN_TOKEN);
             searchParams.delete(QUERY_NAMES.EMAIL_TOKEN);
-            navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true });
+            navigate(`${ROUTES.SIGN_IN.EMAIL}?${searchParams.toString()}`, { replace: true, smooth: true });
             return;
         }
 

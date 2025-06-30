@@ -4,9 +4,9 @@ import { Box, Skeleton, Tabs } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { makeReactKey } from "@/core/utils/StringUtils";
 import ProjectList, { SkeletonProjectList } from "@/pages/DashboardPage/components/ProjectList";
-import { useDashboard } from "@/core/providers/DashboardProvider";
 import { PROJECT_TABS, TProjectTab, TProjectTabRoute } from "@/pages/DashboardPage/constants";
 import { Project } from "@/core/models";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export function SkeletonProjecTabs() {
     return (
@@ -31,7 +31,7 @@ interface IProjectTabsProps {
 }
 
 const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarredProjects, scrollAreaUpdater }: IProjectTabsProps) => {
-    const { navigate } = useDashboard();
+    const navigate = usePageNavigateRef();
     const [updatedStarredProjects, updateStarredProjects] = useReducer((x) => x + 1, 0);
     const [t] = useTranslation();
     const projects = Project.Model.useModels(

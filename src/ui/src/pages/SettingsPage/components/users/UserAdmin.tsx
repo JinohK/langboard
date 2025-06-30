@@ -2,8 +2,8 @@ import { Checkbox, Flex, Table, Toast } from "@/components/base";
 import useUpdateUserInSettings from "@/controllers/api/settings/users/useUpdateUserInSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 function UserAdmin() {
     const [t] = useTranslation();
     const { model: user } = ModelRegistry.User.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const isAdmin = user.useField("is_admin");
     const { mutateAsync } = useUpdateUserInSettings(user, { interceptToast: true });
     const [isValidating, setIsValidating] = useState(false);
@@ -34,7 +34,7 @@ function UserAdmin() {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

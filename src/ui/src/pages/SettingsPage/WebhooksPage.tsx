@@ -2,6 +2,7 @@ import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteSelectedSettings from "@/controllers/api/settings/useDeleteSelectedSettings";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -12,7 +13,8 @@ import { useTranslation } from "react-i18next";
 function WebhooksPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating, setIsValidating } = useAppSetting();
     const [selectedWebhooks, setSelectedWebhooks] = useState<string[]>([]);
     const { mutate: deleteSelectedSettingsMutate } = useDeleteSelectedSettings();
 
@@ -21,7 +23,7 @@ function WebhooksPage() {
     }, []);
 
     const openCreateDialog = () => {
-        navigateRef.current(ROUTES.SETTINGS.CREATE_WEBHOOK);
+        navigate(ROUTES.SETTINGS.CREATE_WEBHOOK);
     };
 
     const deleteSelectedSettings = () => {
@@ -43,7 +45,7 @@ function WebhooksPage() {
                 onError: (error) => {
                     const { handle } = setupApiErrorHandler({
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     });
 

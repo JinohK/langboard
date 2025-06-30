@@ -20,7 +20,7 @@ class CardAttachmentPublisher(BaseSocketPublisher):
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
             event="board:card:attachment:uploaded",
-            data_keys="attachment",
+            data_keys=list(model.keys()),
         )
 
         await CardAttachmentPublisher.put_dispather(model, publish_model)
@@ -32,7 +32,7 @@ class CardAttachmentPublisher(BaseSocketPublisher):
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
             event="board:card:attachment:order:changed",
-            data_keys=["uid", "order"],
+            data_keys=list(model.keys()),
         )
 
         await CardAttachmentPublisher.put_dispather(model, publish_model)
@@ -44,7 +44,7 @@ class CardAttachmentPublisher(BaseSocketPublisher):
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
             event=f"board:card:attachment:name:changed:{card_attachment.get_uid()}",
-            data_keys="name",
+            data_keys=list(model.keys()),
         )
 
         await CardAttachmentPublisher.put_dispather(model, publish_model)
@@ -56,7 +56,7 @@ class CardAttachmentPublisher(BaseSocketPublisher):
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
             event="board:card:attachment:deleted",
-            data_keys="uid",
+            data_keys=list(model.keys()),
         )
 
         await CardAttachmentPublisher.put_dispather(model, publish_model)

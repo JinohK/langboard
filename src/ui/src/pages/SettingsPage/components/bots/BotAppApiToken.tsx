@@ -3,8 +3,8 @@ import CopyInput from "@/components/CopyInput";
 import useGenerateNewBotApiToken from "@/controllers/api/settings/bots/useGenerateNewBotApiToken";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 const BotAppApiToken = memo(() => {
     const [t] = useTranslation();
     const { model: bot } = ModelRegistry.BotModel.useContext();
-    const { navigateRef } = useAppSetting();
+    const navigate = usePageNavigateRef();
     const appApiToken = bot.useField("app_api_token");
     const { mutateAsync } = useGenerateNewBotApiToken(bot, { interceptToast: true });
     const [isValidating, setIsValidating] = useState(false);
@@ -33,7 +33,7 @@ const BotAppApiToken = memo(() => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef

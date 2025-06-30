@@ -4,18 +4,14 @@ import useGetCardComments from "@/controllers/api/card/comment/useGetCardComment
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createShortUUID } from "@/core/utils/StringUtils";
 import BoardComment, { SkeletonBoardComment } from "@/pages/BoardPage/components/card/comment/BoardComment";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-
-export interface IBoardCommentListProps {
-    viewportId: string;
-}
 
 export function SkeletonBoardCommentList() {
     return (
@@ -31,10 +27,10 @@ export function SkeletonBoardCommentList() {
     );
 }
 
-function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
+function BoardCommentList(): JSX.Element {
     const { projectUID, card } = useBoardCard();
     const { data: commentsData, error, isFetching } = useGetCardComments({ project_uid: projectUID, card_uid: card.uid });
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
 
     useEffect(() => {
         if (!error) {
@@ -43,23 +39,21 @@ function BoardCommentList({ viewportId }: IBoardCommentListProps): JSX.Element {
 
         const { handle } = setupApiErrorHandler({
             [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
             },
             [EHttpStatus.HTTP_404_NOT_FOUND]: {
-                after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
+                after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND), { replace: true }),
             },
         });
 
         handle(error);
     }, [error]);
 
-    return <>{!commentsData || isFetching ? <SkeletonBoardCommentList /> : <BoardCommentListResult viewportId={viewportId} />}</>;
+    return <>{!commentsData || isFetching ? <SkeletonBoardCommentList /> : <BoardCommentListResult />}</>;
 }
 
-interface IBoardCommentListResultProps extends IBoardCommentListProps {}
-
-function BoardCommentListResult({ viewportId }: IBoardCommentListResultProps): JSX.Element {
-    const { card } = useBoardCard();
+function BoardCommentListResult(): JSX.Element {
+    const { card, viewportRef } = useBoardCard();
     const [t] = useTranslation();
     const PAGE_SIZE = 10;
     const flatComments = ProjectCardComment.Model.useModels((model) => model.card_uid === card.uid);
@@ -78,7 +72,7 @@ function BoardCommentListResult({ viewportId }: IBoardCommentListResultProps): J
 
     return (
         <InfiniteScroller.NoVirtual
-            scrollable={() => document.getElementById(viewportId)}
+            scrollable={() => viewportRef.current}
             loadMore={nextPage}
             loader={<SkeletonBoardComment key={createShortUUID()} />}
             hasMore={hasMore}

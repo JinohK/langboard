@@ -1,4 +1,5 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
@@ -7,12 +8,13 @@ import BotDetails from "@/pages/SettingsPage/components/bots/BotDetails";
 import BotList from "@/pages/SettingsPage/components/bots/BotList";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useParams } from "react-router-dom";
+import { useParams } from "react-router";
 
 function BotsPage() {
     const { setPageAliasRef } = usePageHeader();
     const [t] = useTranslation();
-    const { navigateRef, isValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating } = useAppSetting();
     const { botUID } = useParams();
     const [bot, setBot] = useState<BotModel.TModel | null>(null);
 
@@ -26,7 +28,7 @@ function BotsPage() {
         const bot = BotModel.Model.getModel(botUID);
         if (!bot) {
             Toast.Add.error(t("errors.requests.NF3001"));
-            navigateRef.current(ROUTES.SETTINGS.BOTS);
+            navigate(ROUTES.SETTINGS.BOTS);
             return;
         }
 
@@ -34,7 +36,7 @@ function BotsPage() {
     }, [botUID]);
 
     const openCreateDialog = () => {
-        navigateRef.current(ROUTES.SETTINGS.CREATE_BOT);
+        navigate(ROUTES.SETTINGS.CREATE_BOT);
     };
 
     return (

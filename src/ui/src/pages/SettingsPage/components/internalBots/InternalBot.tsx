@@ -2,6 +2,7 @@ import { Avatar, Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast 
 import useDeleteInternalBot from "@/controllers/api/settings/internalBots/useDeleteInternalBot";
 import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { InternalBotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -14,7 +15,8 @@ export interface IInternalBotProps {
 
 const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
     const [t] = useTranslation();
-    const { navigateRef, isValidating, setIsValidating } = useAppSetting();
+    const navigate = usePageNavigateRef();
+    const { isValidating, setIsValidating } = useAppSetting();
     const { mutateAsync } = useDeleteInternalBot(internalBot, { interceptToast: true });
     const [isOpened, setIsOpened] = useState(false);
     const displayName = internalBot.useField("display_name");
@@ -41,7 +43,7 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
                 const { handle } = setupApiErrorHandler(
                     {
                         [EHttpStatus.HTTP_403_FORBIDDEN]: {
-                            after: () => navigateRef.current(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
+                            after: () => navigate(ROUTES.ERROR(EHttpStatus.HTTP_403_FORBIDDEN), { replace: true }),
                         },
                     },
                     messageRef
@@ -60,7 +62,7 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
     };
 
     const toInternalBotDetails = () => {
-        navigateRef.current(ROUTES.SETTINGS.INTERNAL_BOT_DETAILS(internalBot.uid));
+        navigate(ROUTES.SETTINGS.INTERNAL_BOT_DETAILS(internalBot.uid), { smooth: true });
     };
 
     const changeOpenState = (opened: boolean) => {

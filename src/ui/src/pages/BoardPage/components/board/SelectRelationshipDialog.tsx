@@ -46,7 +46,7 @@ const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelatio
 
     return (
         <Dialog.Root open={isOpened} onOpenChange={changeIsOpenedWithoutSave}>
-            <Dialog.Content aria-describedby="" withCloseButton={false} viewportId="select-relationship-dialog">
+            <Dialog.Content aria-describedby="" withCloseButton={false}>
                 <Dialog.Title hidden />
                 <Dialog.Description hidden />
                 <Flex items="center" justify="between" textSize="base" weight="semibold" className="border-b" pb="3">

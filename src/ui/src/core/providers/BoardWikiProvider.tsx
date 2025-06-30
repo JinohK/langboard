@@ -2,18 +2,17 @@ import { Toast } from "@/components/base";
 import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
 import useBoardWikiProjectBotsUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectBotsUpdatedHandlers";
 import useBoardWikiProjectUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectUsersUpdatedHandlers";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavigateFunction } from "react-router-dom";
 
 export type TBoardWikiMode = "reorder" | "delete" | "view";
 
 export interface IBoardWikiContext {
-    navigate: NavigateFunction;
     projectUID: string;
     socket: ISocketContext;
     wikis: ProjectWiki.TModel[];
@@ -29,7 +28,6 @@ export interface IBoardWikiContext {
 }
 
 interface IBoardWikiProps {
-    navigate: NavigateFunction;
     projectUID: string;
     projectMembers: User.TModel[];
     projectBots: BotModel.TModel[];
@@ -38,7 +36,6 @@ interface IBoardWikiProps {
 }
 
 const initialContext = {
-    navigate: () => {},
     projectUID: "",
     socket: {} as ISocketContext,
     wikis: [],
@@ -56,7 +53,6 @@ const initialContext = {
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
 
 export const BoardWikiProvider = ({
-    navigate,
     projectUID,
     projectMembers: flatProjectMembers,
     projectBots: flatProjectBots,
@@ -64,6 +60,7 @@ export const BoardWikiProvider = ({
     children,
 }: IBoardWikiProps): React.ReactNode => {
     const socket = useSocket();
+    const navigate = usePageNavigateRef();
     const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
     const [projectBots, setProjectBots] = useState(flatProjectBots);
@@ -148,7 +145,6 @@ export const BoardWikiProvider = ({
     return (
         <BoardWikiContext.Provider
             value={{
-                navigate,
                 projectUID,
                 socket,
                 wikis,

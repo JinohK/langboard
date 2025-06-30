@@ -1,5 +1,5 @@
 import { Box, Button, Flex, IconComponent, Tooltip } from "@/components/base";
-import { useNavigate } from "react-router-dom";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { Project, ProjectCheckitem } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -83,7 +83,7 @@ interface IBoardCardSubCheckitemDisplayProps {
 
 const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }: IBoardCardSubCheckitemDisplayProps) => {
     const { projectUID, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
-    const navigateRef = useRef(useNavigate());
+    const navigate = usePageNavigateRef();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const [isTitleOpened, setIsTitleOpened] = useState(false);
@@ -100,7 +100,7 @@ const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }:
             return;
         }
 
-        navigateRef.current(ROUTES.BOARD.CARD(projectUID, cardifiedCard.uid));
+        navigate(ROUTES.BOARD.CARD(projectUID, cardifiedCard.uid));
     };
 
     return (

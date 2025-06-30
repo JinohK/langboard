@@ -32,7 +32,7 @@ const BoardCardActionActivity = memo(({ buttonClassName }: IBoardCardActionActiv
                     <ActivityList
                         form={{ listType: "ActivityModel", type: "card", project_uid: projectUID, card_uid: card.uid }}
                         currentUser={currentUser}
-                        infiniteScrollerClassName="max-h-[min(70vh,calc(var(--radix-popper-available-height)_-_theme(spacing.4)))] p-3"
+                        outerClassName="max-h-[min(70vh,calc(var(--radix-popper-available-height)_-_theme(spacing.4)))] p-3"
                     />
                 </Box>
             </Popover.Content>
