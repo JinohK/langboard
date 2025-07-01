@@ -48,8 +48,10 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
             const bufferedChunks: string[] = [];
             const textDecoder = new TextDecoder();
 
-            const endStream = async () => {
-                if (!signal?.aborted && bufferedChunks.length) {
+            let isEndedGracefully = false;
+            const endStream = async (error?: Error) => {
+                isEndedGracefully = true;
+                if (!signal?.aborted && !error && bufferedChunks.length) {
                     const allString = bufferedChunks.splice(0).join("");
                     let jsonChunk: Record<string, any>;
                     try {
@@ -66,7 +68,13 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
 
                 bufferedChunks.splice(0);
 
-                await onEnd();
+                if (error) {
+                    if (!signal?.aborted) {
+                        await onError?.(error);
+                    }
+                } else {
+                    await onEnd();
+                }
                 onEndCallback?.();
 
                 result.data.removeAllListeners("data");
@@ -119,25 +127,23 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                         }
 
                         if (TypeUtils.isObject(parsedMessage) && parsedMessage.error) {
-                            if (!signal?.aborted) {
-                                await onError?.(new Error(`Langflow stream error: ${parsedMessage.error}`));
-                            }
-                            onEndCallback?.();
-                            return;
+                            await endStream(new Error(`Langflow stream error: ${parsedMessage.error}`));
+                            break;
                         }
 
-                        await onEnd();
-                        onEndCallback?.();
-                        return;
+                        await endStream();
+                        break;
                     }
                 })
                 .on("end", endStream)
-                .on("error", async (error) => {
-                    if (!signal?.aborted) {
-                        await onError?.(error);
+                .on("error", endStream)
+                .on("close", async () => {
+                    result.data.removeAllListeners("close");
+                    if (isEndedGracefully) {
+                        return;
                     }
 
-                    onEndCallback?.();
+                    await endStream();
                 });
         } catch (error) {
             Logger.error(error);

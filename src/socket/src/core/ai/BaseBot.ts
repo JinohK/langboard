@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createLangflowRequestModel, parseLangflowResponse } from "@/core/ai/LangflowHelper";
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
-import { TBigIntString } from "@/core/db/BaseModel";
+import { ILangflowRequestModel } from "@/core/ai/types";
 import { api } from "@/core/helpers/Api";
 import EHttpStatus from "@/core/server/EHttpStatus";
 import Logger from "@/core/utils/Logger";
@@ -9,16 +9,6 @@ import { convertSafeEnum } from "@/core/utils/StringUtils";
 import InternalBot, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 import fs from "fs";
-
-export interface ILangflowRequestModel {
-    message: string;
-    projectUID: string;
-    userId: TBigIntString;
-    inputType?: string;
-    outputType?: string;
-    sessionId?: string;
-    tweaks?: Record<string, Record<string, any>>;
-}
 
 abstract class BaseBot {
     static get BOT_TYPE(): EInternalBotType {

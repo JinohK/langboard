@@ -28,7 +28,7 @@ import { SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import useBoardAssignedInternalBotChangedHandlers from "@/controllers/socket/board/useBoardAssignedInternalBotChangedHandlers";
 import useInternalBotUpdatedHandlers from "@/controllers/socket/global/useInternalBotUpdatedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { Project } from "@/core/models";
+import { InternalBotModel, Project } from "@/core/models";
 
 const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -70,17 +70,6 @@ const BoardProxy = memo((): JSX.Element => {
         projectUID,
         callback: (result) => {
             if (result.available) {
-                const project = Project.Model.getModel(projectUID);
-                if (project) {
-                    const existingBots = [...project.internal_bots];
-                    const targetBotIndex = existingBots.findIndex((bot) => bot.bot_type === result.bot.bot_type);
-                    if (targetBotIndex !== -1 && existingBots[targetBotIndex].uid !== result.bot.uid) {
-                        existingBots.splice(targetBotIndex, 1);
-                    }
-                    existingBots.push(result.bot);
-                    project.internal_bots = existingBots;
-                }
-
                 setResizableSidebar(() => ({
                     children: (
                         <Suspense>
@@ -133,12 +122,33 @@ const BoardProxy = memo((): JSX.Element => {
     });
     const { on: onBoardAssignedInternalBotChanged } = useBoardAssignedInternalBotChangedHandlers({
         projectUID,
-        callback: () => {
+        callback: (data) => {
+            const internalBot = InternalBotModel.Model.getModel(data.internal_bot_uid);
+            const project = Project.Model.getModel(projectUID);
+            if (internalBot && project) {
+                const existingBots = [...project.internal_bots];
+                const targetBotIndex = existingBots.findIndex((bot) => bot.bot_type === internalBot.bot_type);
+                if (targetBotIndex !== -1 && existingBots[targetBotIndex].uid !== internalBot.uid) {
+                    existingBots.splice(targetBotIndex, 1);
+                }
+                existingBots.push(internalBot);
+                project.internal_bots = existingBots;
+            }
+
+            if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
+                return;
+            }
+
             sendIsBoardChatAvailable({});
         },
     });
     const internalBotUpdatedHandlers = useInternalBotUpdatedHandlers({
-        callback: () => {
+        callback: (data) => {
+            const internalBot = InternalBotModel.Model.getModel(data.uid);
+            if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
+                return;
+            }
+
             sendIsBoardChatAvailable({});
         },
     });

@@ -9,7 +9,7 @@ import { createNameInitials } from "@/core/utils/StringUtils";
 import { UserAvatarProvider, useUserAvatar } from "@/components/UserAvatar/Provider";
 import UserAvatarTrigger, { TriggerVariants } from "@/components/UserAvatar/Trigger";
 import { IUserAvatarProps } from "@/components/UserAvatar/types";
-import { isModel } from "@/core/models/ModelRegistry";
+import UserLikeComponent from "@/components/UserLikeComponent";
 
 const Root = memo(({ userOrBot, customTrigger, ...props }: IUserAvatarProps): JSX.Element => {
     let trigger;
@@ -19,18 +19,9 @@ const Root = memo(({ userOrBot, customTrigger, ...props }: IUserAvatarProps): JS
         trigger = <UserAvatarTrigger {...props} userOrBot={userOrBot} />;
     }
 
-    let root;
-    if (isModel(userOrBot, "User")) {
-        root = <UserRoot {...props} user={userOrBot} trigger={trigger} />;
-    } else if (isModel(userOrBot, "BotModel")) {
-        root = <BotRoot {...props} bot={userOrBot} trigger={trigger} />;
-    } else {
-        root = <></>;
-    }
-
     return (
         <UserAvatarProvider userOrBot={userOrBot} {...props}>
-            {root}
+            <UserLikeComponent userOrBot={userOrBot} userComp={UserRoot} botComp={BotRoot} props={{ ...props, trigger }} />
         </UserAvatarProvider>
     );
 });
@@ -60,7 +51,7 @@ function UserRoot(props: IUserAvatarRootProps & { user: User.TModel }) {
             initials={initials}
             listAlign={listAlign}
             avatarUrl={userAvatar}
-            avatarFallback={isPresentableUnknownUser ? <IconComponent icon="user" className="h-[80%] w-[80%]" /> : initials}
+            avatarFallback={isPresentableUnknownUser ? <IconComponent icon="user" className="size-[80%]" /> : initials}
             cardTitle={
                 <Card.Title className={cn("ml-24 pt-6", isPresentableUnknownUser ? "pt-10" : "")}>
                     {firstname} {lastname}
@@ -90,7 +81,7 @@ function BotRoot(props: IUserAvatarRootProps & { bot: BotModel.TModel }) {
             initials={initials}
             listAlign={listAlign}
             avatarUrl={botAvatar}
-            avatarFallback={<IconComponent icon="bot" className="h-[80%] w-[80%]" />}
+            avatarFallback={<IconComponent icon="bot" className="size-[80%]" />}
             cardTitle={
                 <Card.Title className="ml-24 pt-6">
                     {botName}

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { ILangflowRequestModel } from "@/core/ai/BaseBot";
 import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
+import { ILangflowRequestModel } from "@/core/ai/types";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { DATA_TEXT_FORMAT_DESCRIPTIONS } from "@/core/utils/EditorUtils";
 import { generateToken } from "@/core/utils/StringUtils";
@@ -101,7 +101,9 @@ export const createLangflowRequestModel = ({ internalBot, headers, requestModel,
                     oneTimeToken,
                     "user",
                     { uid: new SnowflakeID(requestModel.userId).toShortCode() },
-                    requestModel.projectUID
+                    requestModel.projectUID,
+                    [],
+                    requestModel.restData
                 ).toTweaks(),
             },
         },

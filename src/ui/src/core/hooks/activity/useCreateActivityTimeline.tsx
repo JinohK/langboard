@@ -170,12 +170,12 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         let names;
         switch (userOrBot.type) {
             case "bot":
-                fallback = <IconComponent icon="bot" className="h-[80%] w-[80%]" />;
+                fallback = <IconComponent icon="bot" className="size-[80%]" />;
                 initials = createNameInitials(userOrBot.name, "");
                 names = userOrBot.name;
                 break;
             case "unknown":
-                fallback = <IconComponent icon="user" className="h-[80%] w-[80%]" />;
+                fallback = <IconComponent icon="user" className="size-[80%]" />;
                 initials = "";
                 names = t("common.Unknown User");
                 break;

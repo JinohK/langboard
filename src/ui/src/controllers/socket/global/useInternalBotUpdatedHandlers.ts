@@ -6,12 +6,12 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { InternalBotModel } from "@/core/models";
 import { format } from "@/core/utils/StringUtils";
 
-export interface IInternalBotUpdatedRawResponse {
+export interface IInternalBotUpdatedResponse {
     uid: string;
 }
 
-const useInternalBotUpdatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) => {
-    return useSocketHandler<{}, IInternalBotUpdatedRawResponse>({
+const useInternalBotUpdatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<IInternalBotUpdatedResponse>) => {
+    return useSocketHandler({
         topic: ESocketTopic.Global,
         eventKey: "internal-bot-updated",
         onProps: {
@@ -24,7 +24,7 @@ const useInternalBotUpdatedHandlers = ({ callback }: IBaseUseSocketHandlersProps
                 }).then((res) => {
                     InternalBotModel.Model.fromOne(res.data.internal_bot, true);
                 });
-                return {};
+                return data;
             },
         },
     });

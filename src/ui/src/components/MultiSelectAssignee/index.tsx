@@ -17,7 +17,8 @@ import { useTranslation } from "react-i18next";
 import { IUserAvatarListProps, UserAvatarList } from "@/components/UserAvatarList";
 import { TIconProps } from "@/components/base/IconComponent";
 import { createShortUUID } from "@/core/utils/StringUtils";
-import { ModelRegistry, TUserLikeModelName, TUserLikeModel, isModel } from "@/core/models/ModelRegistry";
+import { ModelRegistry, TUserLikeModelName, TUserLikeModel } from "@/core/models/ModelRegistry";
+import UserLikeComponent from "@/components/UserLikeComponent";
 
 type TBaseAssigneeSelectItem = {
     assigneeModelName: TUserLikeModelName;
@@ -301,46 +302,41 @@ function FormTagContent({
         return props.value;
     }
 
-    const Comp = isModel(model, "BotModel") ? MultiSelectBotTagContent : MultiSelectUserTagContent;
-
     if (props.isNew) {
         return props.value;
     }
 
-    return <Comp assignee={assignee as any} {...props} />;
+    return <UserLikeComponent userOrBot={assignee} userComp={MultiSelectUserTagContent} botComp={MultiSelectBotTagContent} props={{ ...props }} />;
 }
 
 function MultiSelectBotTagContent({
-    assignee,
+    bot,
     label,
     readOnly,
     ...props
-}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { assignee: BotModel.TModel; label?: string; readOnly: bool } & Record<
-        string,
-        unknown
-    >) {
-    const name = assignee.useField("name");
-    const botUname = assignee.useField("bot_uname");
+}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { bot: BotModel.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
+    const name = bot.useField("name");
+    const botUname = bot.useField("bot_uname");
 
     return (
-        <UserAvatar.Root userOrBot={assignee} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>
-            <UserAvatarDefaultList userOrBot={assignee} {...props} />
+        <UserAvatar.Root userOrBot={bot} customTrigger={<>{label ?? `${name} (${botUname})`}</>}>
+            <UserAvatarDefaultList userOrBot={bot} {...props} />
         </UserAvatar.Root>
     );
 }
 
 function MultiSelectUserTagContent({
-    assignee,
+    user,
     label,
     readOnly,
     ...props
-}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { assignee: User.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
-    const firstname = assignee.useField("firstname");
-    const lastname = assignee.useField("lastname");
+}: Omit<TAssigneeSelecItem, keyof TBaseAssigneeSelectItem> & { user: User.TModel; label?: string; readOnly: bool } & Record<string, unknown>) {
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
 
     return (
-        <UserAvatar.Root userOrBot={assignee} customTrigger={label ?? `${firstname} ${lastname}`}>
-            <UserAvatarDefaultList userOrBot={assignee} {...props} />
+        <UserAvatar.Root userOrBot={user} customTrigger={label ?? `${firstname} ${lastname}`}>
+            <UserAvatarDefaultList userOrBot={user} {...props} />
         </UserAvatar.Root>
     );
 }

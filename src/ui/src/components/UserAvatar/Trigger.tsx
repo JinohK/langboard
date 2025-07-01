@@ -9,7 +9,7 @@ import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import { useUserAvatar } from "@/components/UserAvatar/Provider";
 import { IUserAvatarProps } from "@/components/UserAvatar/types";
-import { isModel } from "@/core/models/ModelRegistry";
+import UserLikeComponent from "@/components/UserLikeComponent";
 
 export const TriggerVariants = tv(
     {
@@ -28,16 +28,7 @@ export const TriggerVariants = tv(
 interface IBaseTriggerProps extends Omit<IUserAvatarProps, "listAlign" | "customTrigger"> {}
 
 const UserAvatarTrigger = memo(({ userOrBot, ...props }: IBaseTriggerProps) => {
-    let trigger;
-    if (isModel(userOrBot, "User")) {
-        trigger = <UserTrigger {...props} user={userOrBot} />;
-    } else if (isModel(userOrBot, "BotModel")) {
-        trigger = <BotTrigger {...props} bot={userOrBot} />;
-    } else {
-        trigger = <></>;
-    }
-
-    return trigger;
+    return <UserLikeComponent userOrBot={userOrBot} userComp={UserTrigger} botComp={BotTrigger} props={props} />;
 });
 
 function UserTrigger({ user, children, ...props }: Omit<IBaseTriggerProps, "userOrBot"> & { user: User.TModel }) {
@@ -64,7 +55,7 @@ function UserTrigger({ user, children, ...props }: Omit<IBaseTriggerProps, "user
             {...props}
             initials={initials}
             avatarUrl={avatarUrl}
-            avatarFallback={isPresentableUnknownUser || isDeletedUser ? <IconComponent icon="user" className="h-[80%] w-[80%]" /> : initials}
+            avatarFallback={isPresentableUnknownUser || isDeletedUser ? <IconComponent icon="user" className="size-[80%]" /> : initials}
             hoverable={!!children && !isDeletedUser}
             names={names}
             children={children}
@@ -82,7 +73,7 @@ function BotTrigger({ bot, children, ...props }: Omit<IBaseTriggerProps, "userOr
             {...props}
             initials={initials}
             avatarUrl={avatarUrl}
-            avatarFallback={<IconComponent icon="bot" className="h-[80%] w-[80%]" />}
+            avatarFallback={<IconComponent icon="bot" className="size-[80%]" />}
             hoverable={!!children}
             names={botName}
             children={children}

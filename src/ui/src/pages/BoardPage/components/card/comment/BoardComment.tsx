@@ -2,10 +2,11 @@ import { Box, Flex, Skeleton } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
+import UserLikeComponent from "@/components/UserLikeComponent";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
 import { BotModel, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
-import { isModel, ModelRegistry, TUserLikeModel } from "@/core/models/ModelRegistry";
+import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCommentFooter from "@/pages/BoardPage/components/card/comment/BoardCommentFooter";
@@ -123,7 +124,12 @@ function BoardCommentHeader(): JSX.Element {
     return (
         <Flex gap="2" items="center">
             <span className="text-sm font-bold">
-                <BoardCommentUserLikeHeader author={author} />
+                <UserLikeComponent
+                    userOrBot={author}
+                    userComp={BoardCommentUserHeader}
+                    botComp={BoardCommentBotHeader}
+                    customNullReturn={<Skeleton className="h-4 w-24" />}
+                />
             </span>
             <span className="text-xs text-accent-foreground/50">
                 {commentedAt}
@@ -133,19 +139,9 @@ function BoardCommentHeader(): JSX.Element {
     );
 }
 
-function BoardCommentUserLikeHeader({ author }: { author: TUserLikeModel }): JSX.Element {
-    if (isModel(author, "User")) {
-        return <BoardCommentUserHeader author={author} />;
-    } else if (isModel(author, "BotModel")) {
-        return <BoardCommentBotHeader author={author} />;
-    } else {
-        return <Skeleton className="h-4 w-24" />;
-    }
-}
-
-function BoardCommentUserHeader({ author }: { author: User.TModel }): JSX.Element {
-    const firstname = author.useField("firstname");
-    const lastname = author.useField("lastname");
+function BoardCommentUserHeader({ user }: { user: User.TModel }): JSX.Element {
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
 
     return (
         <>
@@ -154,8 +150,8 @@ function BoardCommentUserHeader({ author }: { author: User.TModel }): JSX.Elemen
     );
 }
 
-function BoardCommentBotHeader({ author }: { author: BotModel.TModel }): JSX.Element {
-    const name = author.useField("name");
+function BoardCommentBotHeader({ bot }: { bot: BotModel.TModel }): JSX.Element {
+    const name = bot.useField("name");
 
     return <>{name}</>;
 }

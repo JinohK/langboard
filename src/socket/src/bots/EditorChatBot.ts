@@ -19,6 +19,7 @@ class EditorChatBot extends BaseBot {
                 inputType: "chat",
                 outputType: "chat",
                 tweaks: { Prompt: { prompt: data.system } },
+                restData: data.rest_data,
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
             true
@@ -36,6 +37,7 @@ class EditorChatBot extends BaseBot {
                 inputType: "chat",
                 outputType: "chat",
                 tweaks: { Prompt: { prompt: data.system } },
+                restData: data.rest_data,
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
             true

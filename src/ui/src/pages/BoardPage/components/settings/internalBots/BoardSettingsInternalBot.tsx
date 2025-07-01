@@ -3,22 +3,27 @@ import useChangeProjectInternalBot from "@/controllers/api/board/settings/useCha
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { InternalBotModel } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-interface IBoardSettingsInternalBottProps {
-    internalBot: InternalBotModel.TModel;
+interface IBoardSettingsInternalBotProps {
+    botType: InternalBotModel.EInternalBotType;
 }
 
-const BoardSettingsInternalBot = memo(({ internalBot }: IBoardSettingsInternalBottProps) => {
+const BoardSettingsInternalBot = memo(({ botType }: IBoardSettingsInternalBotProps) => {
     const [t] = useTranslation();
     const { project } = useBoardSettings();
-    const internalBots = InternalBotModel.Model.useModels((model) => model.bot_type === internalBot.bot_type);
+    const internalBots = InternalBotModel.Model.useModels((model) => model.bot_type === botType);
+    const projectInternalBots = project.useForeignField("internal_bots");
+    const currentInternalBot = useMemo(
+        () => projectInternalBots.find((model) => model.bot_type === botType) ?? internalBots[0],
+        [projectInternalBots, botType]
+    );
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useChangeProjectInternalBot(project.uid);
 
     const handleValueChange = (value: string) => {
-        if (isValidating || value === internalBot.uid) {
+        if (isValidating || value === currentInternalBot.uid) {
             return;
         }
 
@@ -49,9 +54,9 @@ const BoardSettingsInternalBot = memo(({ internalBot }: IBoardSettingsInternalBo
     return (
         <Box>
             <Box weight="semibold" textSize="base">
-                {t(`internalBot.botTypes.${internalBot.bot_type}`)}
+                {t(`internalBot.botTypes.${botType}`)}
             </Box>
-            <Select.Root value={internalBot.uid} onValueChange={handleValueChange}>
+            <Select.Root value={currentInternalBot.uid} onValueChange={handleValueChange}>
                 <Select.Trigger>
                     <Select.Value />
                 </Select.Trigger>
@@ -67,7 +72,11 @@ const BoardSettingsInternalBot = memo(({ internalBot }: IBoardSettingsInternalBo
     );
 });
 
-const BoardSettingsInternalBotItem = memo(({ internalBot }: IBoardSettingsInternalBottProps) => {
+interface IBoardSettingsInternalBotItemProps {
+    internalBot: InternalBotModel.TModel;
+}
+
+const BoardSettingsInternalBotItem = memo(({ internalBot }: IBoardSettingsInternalBotItemProps) => {
     const displayName = internalBot.useField("display_name");
     const avatar = internalBot.useField("avatar");
 
@@ -76,7 +85,7 @@ const BoardSettingsInternalBotItem = memo(({ internalBot }: IBoardSettingsIntern
             <Avatar.Root size="xs">
                 <Avatar.Image src={avatar} />
                 <Avatar.Fallback>
-                    <IconComponent icon="bot" className="h-[80%] w-[80%]" />
+                    <IconComponent icon="bot" className="size-[80%]" />
                 </Avatar.Fallback>
             </Avatar.Root>
             <span className="truncate">{displayName}</span>

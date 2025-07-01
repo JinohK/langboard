@@ -8,7 +8,7 @@ import { createShortUUID } from "@/core/utils/StringUtils";
 import { PlateEditor } from "platejs/react";
 import type { TMentionableUser } from "@/components/plate-ui/mention-node";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
-import { isModel } from "@/core/models/ModelRegistry";
+import UserLikeComponent from "@/components/UserLikeComponent";
 
 const onSelectItem = getMentionOnSelectItem();
 
@@ -20,19 +20,21 @@ export interface IMentionInputComboboxItem {
 }
 
 export const MentionInputComboboxItem = ({ userOrBot, ...props }: IMentionInputComboboxItem) => {
-    if (isModel(userOrBot, "User")) {
-        return <MentionInputComboboxUserItem userOrBot={userOrBot} {...props} />;
-    } else if (isModel(userOrBot, "BotModel")) {
-        return <MentionInputComboboxBotItem userOrBot={userOrBot} {...props} />;
-    } else {
-        return null;
-    }
+    return (
+        <UserLikeComponent
+            userOrBot={userOrBot}
+            userComp={MentionInputComboboxUserItem}
+            botComp={MentionInputComboboxBotItem}
+            props={props}
+            shouldReturnNull
+        />
+    );
 };
 
-const MentionInputComboboxUserItem = ({ userOrBot, ...props }: IMentionInputComboboxItem & { userOrBot: User.TModel }) => {
-    const firstname = userOrBot.useField("firstname");
-    const lastname = userOrBot.useField("lastname");
-    const username = userOrBot.useField("username");
+const MentionInputComboboxUserItem = ({ user, ...props }: Omit<IMentionInputComboboxItem, "userOrBot"> & { user: User.TModel }) => {
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
+    const username = user.useField("username");
 
     return (
         <MentionInputComboboxItemInner
@@ -40,16 +42,24 @@ const MentionInputComboboxUserItem = ({ userOrBot, ...props }: IMentionInputComb
             value={`${firstname} ${lastname} ${username}`}
             username={username}
             names={`${firstname} ${lastname}`}
-            userOrBot={userOrBot}
+            userOrBot={user as TMentionableUser}
         />
     );
 };
 
-const MentionInputComboboxBotItem = ({ userOrBot, ...props }: IMentionInputComboboxItem & { userOrBot: BotModel.TModel }) => {
-    const name = userOrBot.useField("name");
-    const username = userOrBot.useField("bot_uname");
+const MentionInputComboboxBotItem = ({ bot, ...props }: Omit<IMentionInputComboboxItem, "userOrBot"> & { bot: BotModel.TModel }) => {
+    const name = bot.useField("name");
+    const username = bot.useField("bot_uname");
 
-    return <MentionInputComboboxItemInner {...props} value={`${name} ${username}`} username={username} names={name} userOrBot={userOrBot} />;
+    return (
+        <MentionInputComboboxItemInner
+            {...props}
+            value={`${name} ${username}`}
+            username={username}
+            names={name}
+            userOrBot={bot as TMentionableUser}
+        />
+    );
 };
 
 interface IMentionInputComboboxItemInnerProps extends IMentionInputComboboxItem {
