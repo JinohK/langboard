@@ -1,5 +1,4 @@
 import { Navigate, Outlet, RouteObject } from "react-router";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import BoardProxy from "@/pages/BoardPage";
@@ -9,6 +8,7 @@ import BoardActivityDialog from "@/pages/BoardPage/components/board/BoardActivit
 import WikiActivityDialog from "@/pages/BoardPage/components/wiki/WikiActivityDialog";
 import WikiMetadataDialog from "@/pages/BoardPage/components/wiki/WikiMetadataDialog";
 import BoardInvitationPage from "@/pages/BoardPage/BoardInvitationPage";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const routes: RouteObject[] = [
     {

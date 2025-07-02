@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useMemo } from "react";
 import { AuthUser } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { API_ROUTES } from "@/controllers/constants";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
@@ -127,13 +127,13 @@ export const EditorDataProvider = ({
     const uploadPath = useMemo(() => {
         switch (editorType) {
             case "card-description":
-                return format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "card-comment":
-                return format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "card-new-comment":
-                return format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "wiki-content":
-                return format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: form.project_uid, wiki_uid: form.wiki_uid });
+                return Utils.String.format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: form.project_uid, wiki_uid: form.wiki_uid });
             default:
         }
     }, [editorType, form]);

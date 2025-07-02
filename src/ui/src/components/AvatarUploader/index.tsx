@@ -5,8 +5,8 @@ import { VariantProps } from "tailwind-variants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Avatar, Box, Dock, Flex, Form, IconComponent, Input, Tooltip } from "@/components/base";
 import { AvatarVariants } from "@/components/base/Avatar";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface IBaseAvatarUploaderProps {
     name?: string;
@@ -94,7 +94,7 @@ function AvatarUploader({
         onDrop: handleUpload,
         onFileDialogCancel: () => handleUpload([]),
     });
-    const [bgColor, textColor] = isBot ? ["", ""] : new ColorGenerator(userInitials).generateAvatarColor();
+    const [bgColor, textColor] = isBot ? ["", ""] : new Utils.Color.Generator(userInitials).generateAvatarColor();
 
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,

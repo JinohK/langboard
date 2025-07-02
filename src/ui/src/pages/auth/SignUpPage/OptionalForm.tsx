@@ -4,7 +4,7 @@ import AvatarUploader from "@/components/AvatarUploader";
 import { Button, Flex, Form, Input, SubmitButton } from "@/components/base";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
-import { createNameInitials } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
 
@@ -52,7 +52,7 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
     return (
         <Form.Root className="mt-11 flex flex-col gap-4 xs:mt-0" onSubmit={handleSubmit} ref={formRef}>
             <AvatarUploader
-                userInitials={createNameInitials(values.firstname, values.lastname)}
+                userInitials={Utils.String.getInitials(values.firstname, values.lastname)}
                 initialAvatarUrl={(values as unknown as Record<string, string>).avatarUrl ?? undefined}
                 dataTransferRef={dataTransferRef}
                 avatarUrlRef={avatarUrlRef}

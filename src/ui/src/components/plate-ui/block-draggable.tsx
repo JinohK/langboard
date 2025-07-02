@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-
 import { cn } from "@/core/utils/ComponentUtils";
 import { DndPlugin, useDraggable, useDropLine } from "@platejs/dnd";
 import { BlockSelectionPlugin } from "@platejs/selection/react";

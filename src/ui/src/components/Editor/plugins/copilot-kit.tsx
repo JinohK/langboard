@@ -4,10 +4,8 @@
 import type { TElement } from "platejs";
 import { CopilotPlugin } from "@platejs/ai/react";
 import { serializeMd, stripMarkdown } from "@platejs/markdown";
-import TypeUtils from "@/core/utils/TypeUtils";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import { generateToken } from "@/core/utils/StringUtils";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 import { GhostText } from "@/components/plate-ui/ghost-text";
 import { IUseChat } from "@/components/Editor/useChat";
 import { MarkdownKit } from "@/components/Editor/plugins/markdown-kit";
@@ -31,12 +29,12 @@ export const createCopilotKit = ({ socket, eventKey, events, commonEventData }: 
                             status: EHttpStatus.HTTP_400_BAD_REQUEST,
                         });
 
-                        if (!TypeUtils.isString(init?.body)) {
+                        if (!Utils.Type.isString(init?.body)) {
                             return badResponse;
                         }
 
                         const body = JSON.parse(init.body);
-                        const key = generateToken(8);
+                        const key = Utils.String.Token.generate(8);
                         const receiveEventWithKey = `${events.receive}:${key}`;
                         const copilotEventKey = `plate-copilot-${eventKey}-${key}`;
 

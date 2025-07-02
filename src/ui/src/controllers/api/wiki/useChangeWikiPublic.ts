@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IChangeWikiPublicForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useChangeWikiPublic = (options?: TMutationOptions<IChangeWikiPublicForm>) 
     const { mutate } = useQueryMutation();
 
     const changeWikiPublic = async (params: IChangeWikiPublicForm) => {
-        const url = format(API_ROUTES.BOARD.WIKI.CHANGE_PUBLIC, {
+        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CHANGE_PUBLIC, {
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });

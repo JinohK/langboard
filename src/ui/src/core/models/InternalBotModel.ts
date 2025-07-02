@@ -1,8 +1,7 @@
 import useInternalBotSettingDefaultChangedHandlers from "@/controllers/socket/settings/internalBots/useInternalBotSettingDefaultChangedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertSafeEnum, convertServerFileURL } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export enum EInternalBotType {
     ProjectChat = "project_chat",
@@ -46,19 +45,19 @@ class InternalBotModel extends BaseModel<Interface> {
 
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
-            model.avatar = convertServerFileURL(model.avatar);
+            model.avatar = Utils.String.convertServerFileURL(model.avatar);
         }
 
-        if (TypeUtils.isString(model.bot_type)) {
-            model.bot_type = convertSafeEnum(EInternalBotType, model.bot_type);
+        if (Utils.Type.isString(model.bot_type)) {
+            model.bot_type = Utils.String.convertSafeEnum(EInternalBotType, model.bot_type);
         }
 
-        if (TypeUtils.isString(model.platform)) {
-            model.platform = convertSafeEnum(EInternalBotPlatform, model.platform);
+        if (Utils.Type.isString(model.platform)) {
+            model.platform = Utils.String.convertSafeEnum(EInternalBotPlatform, model.platform);
         }
 
-        if (TypeUtils.isString(model.platform_running_type)) {
-            model.platform_running_type = convertSafeEnum(EInternalBotPlatformRunningType, model.platform_running_type);
+        if (Utils.Type.isString(model.platform_running_type)) {
+            model.platform_running_type = Utils.String.convertSafeEnum(EInternalBotPlatformRunningType, model.platform_running_type);
         }
 
         return model;

@@ -2,9 +2,8 @@
 import { memo } from "react";
 import { Avatar, Flex, IconComponent } from "@/components/base";
 import { BotModel, User } from "@/core/models";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createNameInitials } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useTranslation } from "react-i18next";
 import { tv } from "tailwind-variants";
 import { useUserAvatar } from "@/components/UserAvatar/Provider";
@@ -37,7 +36,7 @@ function UserTrigger({ user, children, ...props }: Omit<IBaseTriggerProps, "user
     const firstname = user.useField("firstname");
     const lastname = user.useField("lastname");
     const avatarUrl = user.useField("avatar");
-    const initials = createNameInitials(firstname, lastname);
+    const initials = Utils.String.getInitials(firstname, lastname);
     const isDeletedUser = user.isDeletedUser(userType);
     const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
 
@@ -66,7 +65,7 @@ function UserTrigger({ user, children, ...props }: Omit<IBaseTriggerProps, "user
 function BotTrigger({ bot, children, ...props }: Omit<IBaseTriggerProps, "userOrBot"> & { bot: BotModel.TModel }) {
     const botName = bot.useField("name");
     const avatarUrl = bot.useField("avatar");
-    const initials = createNameInitials(botName);
+    const initials = Utils.String.getInitials(botName);
 
     return (
         <Trigger
@@ -102,7 +101,7 @@ function Trigger({
 }: ITriggerProps): React.ReactNode {
     const { isOpened, setIsOpened } = useUserAvatar();
 
-    const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+    const [bgColor, textColor] = new Utils.Color.Generator(initials).generateAvatarColor();
 
     const styles: Record<string, string> = {
         "--avatar-bg": bgColor,

@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AppSettingModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateSettingForm {
     setting_name?: string;
@@ -15,7 +15,7 @@ const useUpdateSetting = (setting: AppSettingModel.TModel, options?: TMutationOp
     const { mutate } = useQueryMutation();
 
     const updateSetting = async (params: IUpdateSettingForm) => {
-        const url = format(API_ROUTES.SETTINGS.UPDATE, { uid: setting.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.UPDATE, { uid: setting.uid });
         const res = await api.put(
             url,
             {

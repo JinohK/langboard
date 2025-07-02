@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { IStreamCallbackMap, useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { TDefaultEvents, TEventName } from "@/core/stores/SocketStore";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBaseUseSocketStreamHandlersProps {
     callbacks: IStreamCallbackMap<any, any, any>;
@@ -23,7 +23,7 @@ const useSocketStreamHandler = (props: IBaseUseSocketStreamHandlerProps) => {
     const socket = useSocketOutsideProvider();
     const { onProps, eventKey } = props;
     const on = () => {
-        const eventName = onProps.params ? format(onProps.name, onProps.params) : onProps.name;
+        const eventName = onProps.params ? Utils.String.format(onProps.name, onProps.params) : onProps.name;
         const { callbacks } = onProps;
         socket.stream({
             topic: props.topic as never,

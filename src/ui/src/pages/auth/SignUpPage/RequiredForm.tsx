@@ -6,9 +6,9 @@ import { Flex, Floating, Form, SubmitButton } from "@/components/base";
 import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { setInitialErrorsWithFocusingElement } from "@/pages/auth/SignUpPage/utils";
+import { Utils } from "@langboard/core/utils";
 
 function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps): JSX.Element {
     const [t] = useTranslation();
@@ -26,9 +26,9 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
         mutateOnSuccess: (data) => {
             if (data.exists) {
                 setErrors({ email: "auth.errors.invalid.email-exists" });
-                if (TypeUtils.isElement(focusComponentRef.current)) {
+                if (Utils.Type.isElement(focusComponentRef.current)) {
                     focusComponentRef.current.focus();
-                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                } else if (Utils.Type.isString(focusComponentRef.current)) {
                     formRef.current?.[focusComponentRef.current]?.focus();
                 }
                 return;

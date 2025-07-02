@@ -1,4 +1,4 @@
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useEffect, useRef } from "react";
 
 export interface IUseHoverEffectProps {
@@ -18,14 +18,14 @@ const useHoverEffect = ({ isOpened, setIsOpened, scopeAttr, expectedScopeValue, 
 
         hoverTimeoutRef.current = setTimeout(() => {
             setIsOpened(true);
-            if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
+            if (!Utils.Type.isNullOrUndefined(hoverTimeoutRef.current)) {
                 clearTimeout(hoverTimeoutRef.current);
                 hoverTimeoutRef.current = null;
             }
         }, delay);
     }, [isOpened]);
     const onPointerLeave = () => {
-        if (!TypeUtils.isNullOrUndefined(hoverTimeoutRef.current)) {
+        if (!Utils.Type.isNullOrUndefined(hoverTimeoutRef.current)) {
             clearTimeout(hoverTimeoutRef.current);
             hoverTimeoutRef.current = null;
         }
@@ -44,7 +44,7 @@ const useHoverEffect = ({ isOpened, setIsOpened, scopeAttr, expectedScopeValue, 
                 if (!outTimeout) {
                     outTimeout = setTimeout(() => {
                         setIsOpened(false);
-                        if (!TypeUtils.isNullOrUndefined(outTimeout)) {
+                        if (!Utils.Type.isNullOrUndefined(outTimeout)) {
                             clearTimeout(outTimeout);
                             outTimeout = undefined!;
                         }
@@ -62,7 +62,7 @@ const useHoverEffect = ({ isOpened, setIsOpened, scopeAttr, expectedScopeValue, 
         window.addEventListener("mouseover", mouseOutHandler);
         return () => {
             window.removeEventListener("mouseover", mouseOutHandler);
-            if (!TypeUtils.isNullOrUndefined(outTimeout)) {
+            if (!Utils.Type.isNullOrUndefined(outTimeout)) {
                 clearTimeout(outTimeout);
                 outTimeout = undefined!;
             }

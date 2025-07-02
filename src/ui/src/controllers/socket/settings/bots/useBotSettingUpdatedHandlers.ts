@@ -1,9 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
-import { StringCase } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 
 export interface IBotSettingUpdatedRawResponse {
     api_url?: string;
@@ -30,8 +29,8 @@ const useBotSettingUpdatedHandlers = ({ callback, bot }: IUseBotSettingUpdatedHa
             responseConverter: (data) => {
                 Object.entries(data).forEach(([key, value]) => {
                     if (key === "api_auth_type") {
-                        if (TypeUtils.isString(value)) {
-                            value = BotModel.EAPIAuthType[new StringCase(value).toPascal() as keyof typeof BotModel.EAPIAuthType];
+                        if (Utils.Type.isString(value)) {
+                            value = BotModel.EAPIAuthType[new Utils.String.Case(value).toPascal() as keyof typeof BotModel.EAPIAuthType];
                         }
                     }
 

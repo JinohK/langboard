@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteCardCheckitemForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useDeleteCardCheckitem = (options?: TMutationOptions<IDeleteCardCheckitemF
     const { mutate } = useQueryMutation();
 
     const deleteCheckitem = async (params: IDeleteCardCheckitemForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECKITEM.DELETE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKITEM.DELETE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checkitem_uid: params.checkitem_uid,

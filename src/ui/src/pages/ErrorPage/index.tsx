@@ -1,13 +1,13 @@
 import { Button, Flex, Separator } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
-import TypeUtils from "@/core/utils/TypeUtils";
 import getErrorMessage from "@/pages/ErrorPage/getErrorMessage";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 
 function ErrorPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();
@@ -20,7 +20,7 @@ function ErrorPage(): JSX.Element {
         errorCode = EHttpStatus.HTTP_404_NOT_FOUND;
     }
 
-    if (!TypeUtils.isNumber(errorCode)) {
+    if (!Utils.Type.isNumber(errorCode)) {
         errorCode = EHttpStatus[errorCode as keyof typeof EHttpStatus];
     }
 

@@ -1,6 +1,5 @@
 import { memo, useEffect } from "react";
 import { Box, Flex, Skeleton } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
@@ -9,6 +8,7 @@ import BoardSettingsList from "@/pages/BoardPage/components/settings/BoardSettin
 import { BoardSettingsProvider } from "@/core/providers/BoardSettingsProvider";
 import BoardSettingsUserList from "@/pages/BoardPage/components/settings/BoardSettingsUserList";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export function SkeletonBoardSettingsPage(): JSX.Element {
     return (

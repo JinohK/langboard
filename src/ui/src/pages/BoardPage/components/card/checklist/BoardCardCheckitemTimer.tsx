@@ -3,7 +3,7 @@ import { add as addDate, intervalToDuration, differenceInSeconds } from "date-fn
 import { Box, Button, Flex, IconComponent, Popover, Toast } from "@/components/base";
 import { ProjectCheckitem } from "@/core/models";
 import { useTranslation } from "react-i18next";
-import { formatTimerDuration } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import useChangeCardCheckitemStatus from "@/controllers/api/card/checkitem/useChangeCardCheckitemStatus";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
@@ -62,7 +62,7 @@ const BoardCardCheckitemTimer = memo(() => {
             <Popover.Trigger asChild>
                 <Button variant="ghost" size="sm" className="gap-2 px-2" title={t("card.Manage timer")}>
                     {(!!accumulatedSeconds || status === ProjectCheckitem.ECheckitemStatus.Started) && (
-                        <Box textSize={{ initial: "xs", sm: "sm" }}>{formatTimerDuration(duration)}</Box>
+                        <Box textSize={{ initial: "xs", sm: "sm" }}>{Utils.String.formatTimerDuration(duration)}</Box>
                     )}
                     <IconComponent icon="hammer" size="4" />
                 </Button>

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { createRequire } from "module";
 import { Terminal } from "terminal-kit";
 const require = createRequire(import.meta.url);
@@ -15,7 +15,7 @@ function wrapWithDate(term: Terminal) {
         get(target, prop) {
             const value = (target as any)[prop];
 
-            if (TypeUtils.isFunction(value)) {
+            if (Utils.Type.isFunction(value)) {
                 return (...args: any[]) => {
                     target.dim(getDatePrefix());
                     return value.apply(target, args);

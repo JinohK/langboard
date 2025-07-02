@@ -1,8 +1,8 @@
 import { api } from "@/core/helpers/Api";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useEditorData } from "@/core/providers/EditorDataProvider";
-import { convertServerFileURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { AxiosProgressEvent } from "axios";
 import * as React from "react";
 import { useTranslation } from "react-i18next";
@@ -32,7 +32,7 @@ export function useUploadFile() {
         formData.append("attachment", file);
 
         try {
-            const uploadURL = convertServerFileURL(uploadPath);
+            const uploadURL = Utils.String.convertServerFileURL(uploadPath);
             const result = await api.post(uploadURL, formData, {
                 onUploadProgress: (progressEvent: AxiosProgressEvent) => {
                     const total = progressEvent.total ?? 0;
@@ -44,7 +44,7 @@ export function useUploadFile() {
             const { name, url } = result.data;
             const uploadedFile = {
                 name,
-                url: convertServerFileURL(url as string),
+                url: Utils.String.convertServerFileURL(url as string),
             };
 
             setUploadedFile(uploadedFile);

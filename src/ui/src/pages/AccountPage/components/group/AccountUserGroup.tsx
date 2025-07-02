@@ -5,9 +5,9 @@ import useUpdateUserGroupAssignedEmails from "@/controllers/api/account/useUpdat
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { User, UserGroup } from "@/core/models";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
 import AccountUserGroupDeleteButton from "@/pages/AccountPage/components/group/AccountUserGroupDeleteButton";
 import AccountUserGroupName from "@/pages/AccountPage/components/group/AccountUserGroupName";
+import { Utils } from "@langboard/core/utils";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -51,7 +51,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
 
         mutate(
             {
-                emails: values.map((u) => (TypeUtils.isString(u) ? u : u.email)),
+                emails: values.map((u) => (Utils.Type.isString(u) ? u : u.email)),
             },
             {
                 onSuccess: () => {

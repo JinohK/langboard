@@ -16,8 +16,8 @@ import { BOARD_CARD_CHECK_DND_SETTINGS, BOARD_CARD_CHECK_DND_SYMBOL_SET } from "
 import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
 import { TColumnState } from "@/core/helpers/dnd/types";
 import { COLUMN_IDLE } from "@/core/helpers/dnd/createDndColumnEvents";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useRowReordered from "@/core/hooks/useRowReordered";
+import { Utils } from "@langboard/core/utils";
 
 export interface IBoardCardChecklistProps {
     checklist: ProjectChecklist.TModel;
@@ -66,7 +66,7 @@ const BoardCardChecklist = memo(({ checklist, checkitemsMap }: IBoardCardCheckli
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;
 

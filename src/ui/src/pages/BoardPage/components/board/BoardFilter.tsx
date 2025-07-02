@@ -3,7 +3,7 @@ import UserAvatar from "@/components/UserAvatar";
 import { IFilterMap, useBoard } from "@/core/providers/BoardProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import BoardLabelListItem from "@/pages/BoardPage/components/board/BoardLabelListItem";
 import { CheckedState } from "@radix-ui/react-checkbox";
 import { useMemo } from "react";
@@ -100,7 +100,7 @@ function BoardFilter() {
                                                     member.isValidUser() && !project.invited_member_uids.includes(member.uid) && filterMember(member)
                                             )
                                             .map((member) => (
-                                                <BoardFilterItem key={createShortUUID()} name="members" value={member.email}>
+                                                <BoardFilterItem key={Utils.String.Token.shortUUID()} name="members" value={member.email}>
                                                     <UserAvatar.Root userOrBot={member} withNameProps={{ className: "gap-1" }} avatarSize="xs" />
                                                 </BoardFilterItem>
                                             ))
@@ -112,7 +112,7 @@ function BoardFilter() {
                             <Label>{t("board.filters.Labels")}</Label>
                             <Flex direction="col" pt="1">
                                 {filteredLabels.slice(0, 2).map((label) => (
-                                    <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
+                                    <BoardFilterItem key={Utils.String.Token.shortUUID()} name="labels" value={label.uid}>
                                         <BoardLabelListItem label={label} />
                                     </BoardFilterItem>
                                 ))}
@@ -123,7 +123,7 @@ function BoardFilter() {
                                         filterName="labels"
                                         createFilterItems={() =>
                                             filteredLabels.slice(2).map((label) => (
-                                                <BoardFilterItem key={createShortUUID()} name="labels" value={label.uid}>
+                                                <BoardFilterItem key={Utils.String.Token.shortUUID()} name="labels" value={label.uid}>
                                                     <BoardLabelListItem label={label} />
                                                 </BoardFilterItem>
                                             ))
@@ -151,7 +151,7 @@ function BoardFilter() {
                                             )
                                             .filter((card) => filterCard(card))
                                             .map((card) => (
-                                                <BoardFilterItem key={createShortUUID()} name={relationship} value={card.uid}>
+                                                <BoardFilterItem key={Utils.String.Token.shortUUID()} name={relationship} value={card.uid}>
                                                     <span>{card.title}</span>
                                                 </BoardFilterItem>
                                             ))

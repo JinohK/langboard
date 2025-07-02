@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateProjectUserRolesForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useUpdateProjectUserRoles = (userUID: string, options?: TMutationOptions<I
     const { mutate } = useQueryMutation();
 
     const updateProjectUserRoles = async (params: IUpdateProjectUserRolesForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.UPDATE_USER_ROLES, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.UPDATE_USER_ROLES, {
             uid: params.project_uid,
             user_uid: userUID,
         });

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface IToggleStarProjectForm {
     uid: string;
@@ -12,7 +12,7 @@ const useToggleStarProject = (options?: TMutationOptions<IToggleStarProjectForm>
     const { mutate } = useQueryMutation();
 
     const toggleStarProject = async (params: IToggleStarProjectForm) => {
-        const url = format(API_ROUTES.DASHBOARD.TOGGLE_STAR_PROJECT, {
+        const url = Utils.String.format(API_ROUTES.DASHBOARD.TOGGLE_STAR_PROJECT, {
             uid: params.uid,
         });
 

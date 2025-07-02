@@ -3,7 +3,7 @@ import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IReactCardCommentForm {
     project_uid: string;
@@ -16,7 +16,7 @@ const useReactCardComment = (options?: TMutationOptions<IReactCardCommentForm>) 
     const { mutate } = useQueryMutation();
 
     const reactCardComment = async (params: IReactCardCommentForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.COMMENT.REACT, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.COMMENT.REACT, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             comment_uid: params.comment_uid,

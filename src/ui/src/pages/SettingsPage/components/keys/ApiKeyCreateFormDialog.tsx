@@ -4,10 +4,10 @@ import { useRef, useState } from "react";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import CopyInput from "@/components/CopyInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IApiKeyCreateFormDialogProps {
     opened: bool;

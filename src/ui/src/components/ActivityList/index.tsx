@@ -5,7 +5,7 @@ import useCreateActivityTimeline from "@/core/hooks/activity/useCreateActivityTi
 import { ActivityModel, AuthUser } from "@/core/models";
 import { RefreshableListProvider, useRefreshableList } from "@/core/providers/RefreshableListProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import React, { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -94,13 +94,13 @@ function ActivityListInner({ as, currentUser, outerClassName, outerStyle, isUser
                     row={Box}
                     scrollable={() => document.getElementById(listIdRef.current)}
                     loadMore={nextPage}
-                    loader={<SkeletonActivity key={createShortUUID()} />}
+                    loader={<SkeletonActivity key={Utils.String.Token.shortUUID()} />}
                     hasMore={!isLastPage}
                     totalCount={activities.length}
                     rowClassName="w-full p-1.5"
                 >
                     {activities.map((activity) => (
-                        <ActivityTimeline activity={activity} references={activity.references} key={createShortUUID()} />
+                        <ActivityTimeline activity={activity} references={activity.references} key={Utils.String.Token.shortUUID()} />
                     ))}
                 </InfiniteScroller.Default>
             </Box>

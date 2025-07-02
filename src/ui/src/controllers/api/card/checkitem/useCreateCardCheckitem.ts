@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateCardCheckitemForm {
     project_uid: string;
@@ -15,7 +15,7 @@ const useCreateCardCheckitem = (options?: TMutationOptions<ICreateCardCheckitemF
     const { mutate } = useQueryMutation();
 
     const createCheckitem = async (params: ICreateCardCheckitemForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECKITEM.CREATE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKITEM.CREATE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checklist_uid: params.checklist_uid,

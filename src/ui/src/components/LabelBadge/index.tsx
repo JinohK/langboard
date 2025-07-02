@@ -1,6 +1,6 @@
 import { Box, Flex, Tooltip } from "@/components/base";
 import { IModelMap, TPickedModel } from "@/core/models/ModelRegistry";
-import { getTextColorFromHex } from "@/core/utils/ColorUtils";
+import { Utils } from "@langboard/core/utils";
 import { memo } from "react";
 
 interface ILabelModel {
@@ -34,7 +34,7 @@ export const LabelBadge = memo(({ name, color, textColor, description, noTooltip
                 left="0"
                 style={{
                     backgroundColor: currentColor,
-                    color: textColor ?? getTextColorFromHex(currentColor),
+                    color: textColor ?? Utils.Color.getTextColorFromHex(currentColor),
                 }}
             />
             <Flex

@@ -4,10 +4,10 @@ import { useLocation } from "react-router";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Button, Flex, Floating, Form, SubmitButton, Toast } from "@/components/base";
 import useSendResetLink from "@/controllers/api/auth/useSendResetLink";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface ISendResetLinkFormProps {
     signToken: string;

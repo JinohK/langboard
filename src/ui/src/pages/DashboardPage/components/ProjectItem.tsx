@@ -2,7 +2,7 @@ import { memo, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, Flex, Skeleton } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { Project } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectItemColumn from "@/pages/DashboardPage/components/ProjectItemColumn";
@@ -37,7 +37,7 @@ export const SkeletonProjectItem = memo(() => {
             <Card.Content></Card.Content>
             <Card.Footer className="flex items-center gap-1.5">
                 {cards.map((card) => (
-                    <Flex direction="col" items="center" gap="0.5" minW="5" key={createShortUUID()}>
+                    <Flex direction="col" items="center" gap="0.5" minW="5" key={Utils.String.Token.shortUUID()}>
                         {card.subcards}
                         {card.color}
                     </Flex>
@@ -95,7 +95,7 @@ const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProject
                 <Card.Content></Card.Content>
                 <Card.Footer className="flex items-center gap-1.5">
                     {columns.map((column) => (
-                        <ProjectItemColumn key={createShortUUID()} column={column} />
+                        <ProjectItemColumn key={Utils.String.Token.shortUUID()} column={column} />
                     ))}
                 </Card.Footer>
             </ModelRegistry.Project.Provider>

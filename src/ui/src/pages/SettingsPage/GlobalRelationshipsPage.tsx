@@ -1,12 +1,12 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteSelectedGlobalRelationships from "@/controllers/api/settings/relationships/useDeleteSelectedGlobalRelationships";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import GlobalRelationshipList from "@/pages/SettingsPage/components/relationships/GlobalRelationshipList";
+import { EHttpStatus } from "@langboard/core/enums";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 

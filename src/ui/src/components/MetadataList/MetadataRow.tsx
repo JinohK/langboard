@@ -4,7 +4,7 @@ import { TMetadataForm } from "@/controllers/api/metadata/types";
 import useDeleteMetadata from "@/controllers/api/metadata/useDeleteMetadata";
 import useSaveMetadata from "@/controllers/api/metadata/useSaveMetadata";
 import setupApiErrorHandler, { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
-import { isJsonString } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -114,7 +114,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
         handleInput();
 
         const curValue = valueInputRef.current.value;
-        const isJson = isJsonString(curValue);
+        const isJson = Utils.String.isJsonString(curValue);
         const newValue = isJson ? JSON.stringify(JSON.parse(curValue)) : curValue;
         valueInputRef.current.value = newValue;
         setCurrentValue(newValue);
@@ -125,7 +125,7 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
             keyInputRef.current.value = keyName;
         }
 
-        const isJson = isJsonString(value);
+        const isJson = Utils.String.isJsonString(value);
         const newValue = isJson ? JSON.stringify(JSON.parse(value)) : value;
         if (valueInputRef.current) {
             valueInputRef.current.value = newValue;

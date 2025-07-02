@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCardComment } from "@/core/models";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardCommentAddedRawResponse {
     comment: ProjectCardComment.IStore;
@@ -25,7 +25,7 @@ const useCardCommentAddedHandlers = ({ callback, projectUID, cardUID }: IUseCard
             responseConverter: (data) => {
                 const card = ProjectCard.Model.getModel(cardUID);
                 if (card) {
-                    if (TypeUtils.isNumber(card.count_comment)) {
+                    if (Utils.Type.isNumber(card.count_comment)) {
                         card.count_comment = card.count_comment + 1;
                     }
                 }

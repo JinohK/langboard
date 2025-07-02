@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardCheckitemCardifiedRawResponse {
     card: ProjectCard.Interface;

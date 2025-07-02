@@ -7,7 +7,7 @@ import { BotModel, Project, User } from "@/core/models";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -41,7 +41,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const save = (items: (string | User.TModel)[]) => {
         const promise = updateProjectAssignedUsersMutateAsync({
             uid: project.uid,
-            emails: items.map((item) => (TypeUtils.isString(item) ? item : item.email)),
+            emails: items.map((item) => (Utils.Type.isString(item) ? item : item.email)),
         });
 
         Toast.Add.promise(promise, {
@@ -89,7 +89,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             showableAssignees={showableAssignees}
             originalAssignees={selectedAssignees}
             createSearchText={(item: string | TUserLikeModel) => {
-                if (TypeUtils.isString(item)) {
+                if (Utils.Type.isString(item)) {
                     return item;
                 }
 
@@ -105,7 +105,7 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 }
             }}
             createLabel={(item: string | TUserLikeModel) => {
-                if (TypeUtils.isString(item)) {
+                if (Utils.Type.isString(item)) {
                     return item;
                 }
 

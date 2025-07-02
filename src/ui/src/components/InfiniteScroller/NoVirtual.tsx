@@ -1,7 +1,7 @@
 import { Box } from "@/components/base";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
 import useInfiniteScrollerLoaderObserver from "@/components/InfiniteScroller/useInfiniteScrollerLoaderObserver";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { forwardRef, memo } from "react";
 
 export interface INoVirtualInfiniteScrollerProps extends Omit<TSharedInfiniteScrollerProps<React.ReactElement>, "loaderClassName"> {
@@ -26,7 +26,7 @@ const NoVirtualInfiniteScroller = memo(
             return (
                 <Comp {...props} ref={ref}>
                     {items.map((item, index) => (hasMore && index === items.length - 1 ? null : item))}
-                    <Box key={createShortUUID()} className={hasMore ? "" : "hidden"} ref={setLoaderRef}>
+                    <Box key={Utils.String.Token.shortUUID()} className={hasMore ? "" : "hidden"} ref={setLoaderRef}>
                         {loader}
                     </Box>
                 </Comp>

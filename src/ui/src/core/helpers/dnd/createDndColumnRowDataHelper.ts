@@ -1,10 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { TColumnData, TColumnState, TRowDroppableTargetData, TRowData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateDndColumnRowHelperProps {
     symbolSet: TColumnRowSymbolSet;
@@ -59,7 +59,7 @@ const createDndColumnRowDataHelper = <
         };
         // optimization - don't update state if we don't need to.
         setColumnState?.((current) => {
-            if (TypeUtils.isShallowEqual(proposed, current)) {
+            if (Utils.Object.isShallowEqual(proposed, current)) {
                 return current;
             }
             return proposed;

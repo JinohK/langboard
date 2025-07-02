@@ -2,7 +2,7 @@
 import { getDatetimeType } from "@/core/db/DbType";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { BaseEntity, DeepPartial, Column, InsertResult, SaveOptions, PrimaryColumn } from "typeorm";
-import { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity";
+import type { QueryDeepPartialEntity } from "typeorm/query-builder/QueryPartialEntity.js";
 
 export type TBigIntString = string;
 

@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useReducer, useRef } from "react";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { APP_NAME } from "@/constants";
-import TypeUtils from "@/core/utils/TypeUtils";
 
 export interface IPageHeaderContext {
     setPageAliasRef: React.RefObject<(alias?: string | string[]) => void>;
@@ -31,7 +30,7 @@ export const PageHeaderProvider = ({ children }: IPageHeaderProps): React.ReactN
         document.title = title;
     };
     const setPageAliasRef = useRef((alias?: string | string[]) => {
-        const appName = new StringCase(APP_NAME).toPascal();
+        const appName = new Utils.String.Case(APP_NAME).toPascal();
 
         if (!alias) {
             if (!pageAliasMap.current[location.pathname]) {
@@ -44,7 +43,7 @@ export const PageHeaderProvider = ({ children }: IPageHeaderProps): React.ReactN
             return;
         }
 
-        if (TypeUtils.isString(alias)) {
+        if (Utils.Type.isString(alias)) {
             alias = [alias];
         }
 

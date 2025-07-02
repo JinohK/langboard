@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getBot } from "@/core/ai/BaseBot";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/server/ESocketTopic";
 import ISocketClient from "@/core/server/ISocketClient";
 import InternalBot, { EInternalBotType } from "@/models/InternalBot";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 import formidable from "formidable";
 
 class BotRunner {

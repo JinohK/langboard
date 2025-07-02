@@ -1,12 +1,12 @@
 import { Box, Flex, IconComponent, Input, Table, Toast } from "@/components/base";
 import useUpdateSetting from "@/controllers/api/settings/useUpdateSetting";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { useTranslation } from "react-i18next";
 
 function WebhookName() {

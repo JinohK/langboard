@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUnassignProjectAssigneeForm {
     project_uid: string;
@@ -15,7 +15,7 @@ const useUnassignProjectAssignee = (options?: TMutationOptions<IUnassignProjectA
     const { mutate } = useQueryMutation();
 
     const unassignProjectAssignee = async (params: IUnassignProjectAssigneeForm) => {
-        const url = format(API_ROUTES.BOARD.UNASSIGN_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.UNASSIGN_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

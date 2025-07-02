@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardAssignedInternalBotChangedResponse {
     internal_bot_uid: string;

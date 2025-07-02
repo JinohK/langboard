@@ -2,12 +2,12 @@ import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
 import { useMemo, useRef, useState } from "react";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import AvatarUploader from "@/components/AvatarUploader";
 import { InternalBotModel } from "@/core/models";
-import { isValidURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import useCreateInternalBot from "@/controllers/api/settings/internalBots/useCreateInternalBot";
 import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
 import PasswordInput from "@/components/PasswordInput";
@@ -66,7 +66,7 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
                 if (!focusableInput) {
                     focusableInput = input;
                 }
-            } else if (key === "url" && !isValidURL(value)) {
+            } else if (key === "url" && !Utils.String.isValidURL(value)) {
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.invalid.internal_bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;

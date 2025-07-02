@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IIsProjectAssigneeForm {
     project_uid: string;
@@ -18,7 +18,7 @@ const useIsProjectAssignee = (options?: TMutationOptions<IIsProjectAssigneeForm,
     const { mutate } = useQueryMutation();
 
     const isProjectAssignee = async (params: IIsProjectAssigneeForm) => {
-        const url = format(API_ROUTES.BOARD.IS_PROJECT_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.IS_PROJECT_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateCardAssignedUsersForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useUpdateCardAssignedUsers = (options?: TMutationOptions<IUpdateCardAssign
     const { mutate } = useQueryMutation();
 
     const updateCardAssignedUsers = async (params: IUpdateCardAssignedUsersForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.UPDATE_ASSIGNED_USERS, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.UPDATE_ASSIGNED_USERS, {
             uid: params.project_uid,
             card_uid: params.card_uid,
         });

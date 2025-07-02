@@ -3,7 +3,7 @@ import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 import { memo, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -58,7 +58,7 @@ const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelatio
                             const relationshipName = isParent ? relationship.parent_name : relationship.child_name;
                             return (
                                 <Button
-                                    key={createShortUUID()}
+                                    key={Utils.String.Token.shortUUID()}
                                     type="button"
                                     variant="ghost"
                                     title={relationshipName}

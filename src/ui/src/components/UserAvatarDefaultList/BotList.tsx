@@ -4,7 +4,7 @@ import UserAvatarDefaultUnassignAction from "@/components/UserAvatarDefaultList/
 import UserAvatarDefaultViewActivitiesAction from "@/components/UserAvatarDefaultList/actions/ViewActivitiesAction";
 import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
 import { BotModel, Project } from "@/core/models";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface IUserAvatarDefaultUserListProps {
     bot: BotModel.TModel;
@@ -15,7 +15,7 @@ function UserAvatarDefaultBotList({ bot }: IUserAvatarDefaultUserListProps): JSX
 
     return (
         <>
-            {project && (hasRoleAction(Project.ERoleAction.Update) || currentUser?.is_admin) && TypeUtils.isBool(isBotDisabled) && !!bot && (
+            {project && (hasRoleAction(Project.ERoleAction.Update) || currentUser?.is_admin) && Utils.Type.isBool(isBotDisabled) && !!bot && (
                 <UserAvatarDefaultBotToggleAction bot={bot} project={project} />
             )}
             {project && (

@@ -15,9 +15,8 @@ import { IProjectColumnActivityHistory } from "@/core/models/activities/project.
 import { IProjectLabelActivityHistory } from "@/core/models/activities/project.label.activity.type";
 import { IProjectWikiActivityHistory } from "@/core/models/activities/project.wiki.activity.type";
 import { ROUTES } from "@/core/routing/constants";
-import { ColorGenerator, getTextColorFromHex } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createNameInitials, createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import React from "react";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -171,7 +170,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         switch (userOrBot.type) {
             case "bot":
                 fallback = <IconComponent icon="bot" className="size-[80%]" />;
-                initials = createNameInitials(userOrBot.name, "");
+                initials = Utils.String.getInitials(userOrBot.name, "");
                 names = userOrBot.name;
                 break;
             case "unknown":
@@ -180,12 +179,12 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 names = t("common.Unknown User");
                 break;
             case "user":
-                fallback = initials = createNameInitials(userOrBot.firstname, userOrBot.lastname);
+                fallback = initials = Utils.String.getInitials(userOrBot.firstname, userOrBot.lastname);
                 names = `${userOrBot.firstname} ${userOrBot.lastname}`;
                 break;
         }
 
-        const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+        const [bgColor, textColor] = new Utils.Color.Generator(initials).generateAvatarColor();
 
         const styles: Record<string, string> = {
             "--avatar-bg": bgColor,
@@ -258,7 +257,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                             }}
                             oldValue={before}
                             newValue={after}
-                            key={createShortUUID()}
+                            key={Utils.String.Token.shortUUID()}
                         />
                     );
                     return;
@@ -292,12 +291,12 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         break;
                     case "color":
                         beforeElement = (
-                            <ActivityBadge style={{ backgroundColor: before ?? "#000", color: getTextColorFromHex(before ?? "#000") }}>
+                            <ActivityBadge style={{ backgroundColor: before ?? "#000", color: Utils.Color.getTextColorFromHex(before ?? "#000") }}>
                                 {changes.before?.name ?? history.label?.name ?? "color"}
                             </ActivityBadge>
                         );
                         afterElement = (
-                            <ActivityBadge style={{ backgroundColor: after ?? "#000", color: getTextColorFromHex(after ?? "#000") }}>
+                            <ActivityBadge style={{ backgroundColor: after ?? "#000", color: Utils.Color.getTextColorFromHex(after ?? "#000") }}>
                                 {changes.after?.name ?? history.label?.name ?? "color"}
                             </ActivityBadge>
                         );
@@ -307,7 +306,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 }
 
                 newElements.push(
-                    <Flex items="center" gap="3" key={createShortUUID()}>
+                    <Flex items="center" gap="3" key={Utils.String.Token.shortUUID()}>
                         <Box weight="semibold">{t(i18nKey)}</Box>
                         <Flex items="center" gap="2" maxW="full">
                             <span className="max-w-[calc(50%_-_theme(spacing.5))]">{beforeElement}</span>
@@ -367,7 +366,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                 moveUrl={moveURL}
                 style={{
                     backgroundColor: label.color,
-                    color: getTextColorFromHex(label.color),
+                    color: Utils.Color.getTextColorFromHex(label.color),
                 }}
             >
                 {label.name}

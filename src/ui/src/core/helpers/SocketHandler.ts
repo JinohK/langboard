@@ -1,7 +1,7 @@
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { TDefaultEvents, TEventName } from "@/core/stores/SocketStore";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBaseUseSocketHandlersProps<TResponse> {
     callback?: (data: TResponse) => void;
@@ -72,7 +72,7 @@ const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknow
             return () => {};
         }
 
-        const eventName = onProps.params ? format(onProps.name, onProps.params) : onProps.name;
+        const eventName = onProps.params ? Utils.String.format(onProps.name, onProps.params) : onProps.name;
         const event = (data: TResponse | TRawResponse) => {
             let newData;
             if (onProps.responseConverter) {
@@ -108,7 +108,7 @@ const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknow
             return;
         }
 
-        const eventName = sendProps.params ? format(sendProps.name, sendProps.params) : sendProps.name;
+        const eventName = sendProps.params ? Utils.String.format(sendProps.name, sendProps.params) : sendProps.name;
         socket.send({
             topic: props.topic as never,
             topicId: props.topicId,

@@ -4,7 +4,7 @@ import SidebarNavItems from "@/components/Sidebar/SidebarNavItems";
 import { ISidebarProps } from "@/components/Sidebar/types";
 import { Box, Button, Floating, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Actions" }: ISidebarProps) {
     const [t] = useTranslation();
@@ -45,9 +45,9 @@ function Sidebar({ navs, main, floatingIcon = "plus", floatingTitle = "common.Ac
             </Box>
             <Floating.Button.Root>
                 <Floating.Button.Content>
-                    <SidebarNavItems key={createUUID()} isFloating navs={navs} />
+                    <SidebarNavItems key={Utils.String.Token.uuid()} isFloating navs={navs} />
                 </Floating.Button.Content>
-                <Floating.Button.Trigger key={createUUID()} icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
+                <Floating.Button.Trigger key={Utils.String.Token.uuid()} icon={floatingIcon} title={t(floatingTitle)} titleSide="right" />
             </Floating.Button.Root>
         </>
     );

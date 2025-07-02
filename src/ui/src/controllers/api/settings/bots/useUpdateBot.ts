@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateBotForm {
     bot_name?: string;
@@ -21,7 +21,7 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
     const { mutate } = useQueryMutation();
 
     const updateBot = async (params: IUpdateBotForm) => {
-        const url = format(API_ROUTES.SETTINGS.BOTS.UPDATE, { bot_uid: bot.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.BOTS.UPDATE, { bot_uid: bot.uid });
         const formData = new FormData();
         Object.entries(params).forEach(([key, value]) => {
             if (!value) {

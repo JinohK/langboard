@@ -3,7 +3,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface Interface extends IBaseModel {
     card_uid: string;
@@ -33,7 +33,7 @@ class ProjectCardComment extends BaseModel<IStore> {
     }
 
     public static convertModel(model: Interface): Interface {
-        if (TypeUtils.isString(model.commented_at)) {
+        if (Utils.Type.isString(model.commented_at)) {
             model.commented_at = new Date(model.commented_at);
         }
         return model;

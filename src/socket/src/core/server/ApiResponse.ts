@@ -1,7 +1,6 @@
-import EApiErrorCode from "@/core/server/ApiErrorCode";
-import EHttpStatus from "@/core/server/EHttpStatus";
+import { EApiErrorCode, EHttpStatus } from "@langboard/core/enums";
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const JsonResponse = (content: any, statusCode: EHttpStatus = EHttpStatus.HTTP_200_OK) => {
     return {
         type: "json",

@@ -1,4 +1,4 @@
-enum EHttpStatus {
+export enum EHttpStatus {
     HTTP_100_CONTINUE = 100,
     HTTP_101_SWITCHING_PROTOCOLS = 101,
     HTTP_102_PROCESSING = 102,
@@ -63,5 +63,3 @@ enum EHttpStatus {
     HTTP_510_NOT_EXTENDED = 510,
     HTTP_511_NETWORK_AUTHENTICATION_REQUIRED = 511,
 }
-
-export default EHttpStatus;

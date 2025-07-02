@@ -1,7 +1,6 @@
 import { createContext, memo, useContext, useEffect, useMemo, useRef } from "react";
 import { AuthUser, GlobalRelationshipType, Project, ProjectCard, ProjectCardRelationship, ProjectColumn, ProjectLabel, User } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { To } from "react-router";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -10,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import useSearchFilters, { ISearchFilterMap } from "@/core/hooks/useSearchFilters";
 import { IPageNavigateOptions, usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { Utils } from "@langboard/core/utils";
 
 export interface IFilterMap extends ISearchFilterMap {
     keyword?: string[];
@@ -120,7 +120,7 @@ export const BoardProvider = memo(({ project, currentUser, children }: IBoardPro
         uniqueFilters();
         const newFiltersString = filtersToString();
 
-        if (TypeUtils.isString(to)) {
+        if (Utils.Type.isString(to)) {
             to = { pathname: to };
         } else {
             to = { ...to };

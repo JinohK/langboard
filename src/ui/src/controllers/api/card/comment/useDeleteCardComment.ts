@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteCardCommentForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useDeleteCardComment = (options?: TMutationOptions<IDeleteCardCommentForm>
     const { mutate } = useQueryMutation();
 
     const deleteCardComment = async (params: IDeleteCardCommentForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.COMMENT.UPDATE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.COMMENT.UPDATE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             comment_uid: params.comment_uid,

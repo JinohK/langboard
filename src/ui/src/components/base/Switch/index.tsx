@@ -6,7 +6,7 @@ import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { tv, type VariantProps } from "tailwind-variants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { motion } from "framer-motion";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export const SwitchVariants = tv(
     {
@@ -67,7 +67,7 @@ export interface SwitchProps extends React.ComponentPropsWithoutRef<typeof Switc
 
 const Switch = React.forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchProps>(
     ({ className, variant, size, label, description, error, animated = true, id, ...props }, ref) => {
-        const switchId = React.useRef(id ?? createShortUUID());
+        const switchId = React.useRef(id ?? Utils.String.Token.shortUUID());
 
         const switchElement = (
             <SwitchPrimitive.Root ref={ref} id={switchId.current} className={cn(SwitchVariants({ variant, size }), className)} {...props}>

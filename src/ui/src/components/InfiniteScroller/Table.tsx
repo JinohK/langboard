@@ -2,7 +2,7 @@ import React, { cloneElement, forwardRef, isValidElement } from "react";
 import { useVirtualizer, VirtualItem, Virtualizer } from "@tanstack/react-virtual";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Box, ScrollArea, Table } from "@/components/base";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { composeRefs } from "@/core/utils/ComponentUtils";
@@ -61,7 +61,7 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
                     <Table.FlexHeader className={headerClassName}>
                         <Table.FlexRow>
                             {columns.map((column) => (
-                                <Table.FlexHead key={createShortUUID()} className={column.className}>
+                                <Table.FlexHead key={Utils.String.Token.shortUUID()} className={column.className}>
                                     {column.name}
                                 </Table.FlexHead>
                             ))}
@@ -76,7 +76,7 @@ const Default = forwardRef<HTMLTableElement, ITableInfiniteScrollerProps>(
                             )
                         )}
                         <Table.FlexRow
-                            key={createShortUUID()}
+                            key={Utils.String.Token.shortUUID()}
                             className={cn("absolute left-0 top-0 w-full items-center justify-center border-none", !hasMore && "hidden")}
                             data-index={loaderIndex}
                             style={{
@@ -143,7 +143,7 @@ const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
                     <Table.FlexHeader>
                         <Table.FlexRow>
                             {columns.map((column) => (
-                                <Table.FlexHead key={createShortUUID()} className={column.className}>
+                                <Table.FlexHead key={Utils.String.Token.shortUUID()} className={column.className}>
                                     {column.name}
                                 </Table.FlexHead>
                             ))}
@@ -162,7 +162,7 @@ const WithBodyScroller = forwardRef<HTMLTableElement, IWithBodyScrollerProps>(
                                     )
                                 )}
                                 <Table.FlexRow
-                                    key={createShortUUID()}
+                                    key={Utils.String.Token.shortUUID()}
                                     className={cn("absolute left-0 top-0 w-full items-center justify-center border-none", !hasMore && "hidden")}
                                     data-index={loaderIndex}
                                     style={{

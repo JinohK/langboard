@@ -4,7 +4,7 @@ import cookie from "cookie";
 import jwt from "jsonwebtoken";
 import { JWT_ALGORITHM, JWT_SECRET_KEY, PROJECT_NAME, REFRESH_TOKEN_NAME } from "@/Constants";
 import Encryptor from "@/core/security/Encryptor";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 class Auth {
     public static async validateToken(type: "socket", params: URLSearchParams): Promise<User | null>;
@@ -71,7 +71,7 @@ class Auth {
 
             if (
                 !decoded ||
-                TypeUtils.isString(decoded) ||
+                Utils.Type.isString(decoded) ||
                 decoded.iss !== PROJECT_NAME ||
                 !decoded.exp ||
                 new Date(decoded.exp * 1000).getTime() < new Date().getTime()
@@ -91,7 +91,7 @@ class Auth {
 
             if (
                 !decoded ||
-                TypeUtils.isString(decoded) ||
+                Utils.Type.isString(decoded) ||
                 decoded.iss !== PROJECT_NAME ||
                 !decoded.exp ||
                 new Date(decoded.exp * 1000).getTime() < new Date().getTime()

@@ -4,12 +4,12 @@ import { useLocation } from "react-router";
 import { QUERY_NAMES } from "@/constants";
 import { Toast } from "@/components/base";
 import useVerifyNewEmail from "@/controllers/api/account/useVerifyNewEmail";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { EHttpStatus } from "@langboard/core/enums";
 
 function EmailVerificationPage() {
     const { setPageAliasRef } = usePageHeader();

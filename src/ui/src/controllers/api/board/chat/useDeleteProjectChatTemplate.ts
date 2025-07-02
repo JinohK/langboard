@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteProjectChatTemplateForm {
     project_uid: string;
@@ -13,7 +13,7 @@ const useDeleteProjectChatTemplate = (options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
 
     const deleteProjectChatTemplate = async (params: IDeleteProjectChatTemplateForm) => {
-        const url = format(API_ROUTES.BOARD.CHAT.TEMPLATE.DELETE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.TEMPLATE.DELETE, {
             uid: params.project_uid,
             template_uid: params.template_uid,
         });

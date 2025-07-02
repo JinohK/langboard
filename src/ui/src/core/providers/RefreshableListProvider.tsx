@@ -1,7 +1,7 @@
 import { TGetRefreshableListForm } from "@/controllers/api/shared/types";
 import useGetRefreshableList, { IUseGetRefreshableListProps } from "@/controllers/api/shared/useGetRefreshableList";
 import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistry";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
 export interface IRefreshableListContext<TModelName extends TCreatedAtModelName> {
@@ -67,7 +67,7 @@ export function RefreshableListProvider<TModelName extends TCreatedAtModelName>(
     } = useGetRefreshableList({ form, limit, setPage, isLastPage, setIsLastPage, lastCurrentDateRef, prepareData });
     const isDelayingCheckOutdated = useRef(false);
     const isFetchingRef = useRef(false);
-    const listIdRef = useRef(createShortUUID());
+    const listIdRef = useRef(Utils.String.Token.shortUUID());
     const delayCheckOutdatedTimeoutRef = useRef<NodeJS.Timeout>(null);
     const nextPage = useCallback(async () => {
         if (isFetchingRef.current || isLastPage) {

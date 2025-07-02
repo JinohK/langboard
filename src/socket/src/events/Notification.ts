@@ -1,10 +1,10 @@
-import ESocketTopic from "@/core/server/ESocketTopic";
 import EventManager from "@/core/server/EventManager";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import UserNotification from "@/models/UserNotification";
 
 EventManager.on(ESocketTopic.None, "user:notification:read", async (context) => {
-    if (!context.data || !TypeUtils.isString(context.data.uid)) {
+    if (!context.data || !Utils.Type.isString(context.data.uid)) {
         return;
     }
 
@@ -16,7 +16,7 @@ EventManager.on(ESocketTopic.None, "user:notification:read-all", async (context)
 });
 
 EventManager.on(ESocketTopic.None, "user:notification:delete", async (context) => {
-    if (!context.data || !TypeUtils.isString(context.data.uid)) {
+    if (!context.data || !Utils.Type.isString(context.data.uid)) {
         return;
     }
 

@@ -3,7 +3,7 @@ import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
 import { ILangflowRequestModel } from "@/core/ai/types";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { DATA_TEXT_FORMAT_DESCRIPTIONS } from "@/core/utils/EditorUtils";
-import { generateToken } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import InternalBot, { EInternalBotPlatformRunningType } from "@/models/InternalBot";
 
 export enum ELangflowConstants {
@@ -58,7 +58,7 @@ export interface ICreateLangflowRequestModelParams {
 }
 
 export const createLangflowRequestModel = ({ internalBot, headers, requestModel, useStream }: ICreateLangflowRequestModelParams) => {
-    const sessionId = requestModel.sessionId ?? generateToken(32);
+    const sessionId = requestModel.sessionId ?? Utils.String.Token.generate(32);
     const oneTimeToken = createOneTimeToken(new SnowflakeID(requestModel.userId));
 
     const queryParams = new URLSearchParams({

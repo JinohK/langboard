@@ -4,10 +4,10 @@ import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/el
 import invariant from "tiny-invariant";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { TRowDroppableTargetData, TRowData, TRowState, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateDndRowEventsProps<TRowModel extends TOrderableModel<TOrderableModelName>> {
     row: TRowModel;
@@ -112,7 +112,7 @@ const createDndRowEvents = <TRowModel extends TOrderableModel<TOrderableModelNam
                 // optimization - Don't update react state if we don't need to.
                 const proposed: TRowState = { type: "is-over", dragging: source.data.rect, closestEdge };
                 setState((current) => {
-                    if (TypeUtils.isShallowEqual(proposed, current)) {
+                    if (Utils.Object.isShallowEqual(proposed, current)) {
                         return current;
                     }
                     return proposed;

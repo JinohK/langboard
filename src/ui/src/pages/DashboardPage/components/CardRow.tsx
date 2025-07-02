@@ -5,7 +5,7 @@ import { ProjectCard } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { formatTimerDuration } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fns";
 import { useMemo } from "react";
 
@@ -71,7 +71,7 @@ function CardRowTimeTaken() {
         });
     }, [archivedAt]);
 
-    return <>{archivedAt && formatTimerDuration(duration)}</>;
+    return <>{archivedAt && Utils.String.formatTimerDuration(duration)}</>;
 }
 
 export default CardRow;

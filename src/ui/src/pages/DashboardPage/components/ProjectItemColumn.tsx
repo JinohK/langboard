@@ -1,6 +1,6 @@
 import { Box, Flex, Tooltip } from "@/components/base";
 import { ProjectColumn } from "@/core/models";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IProjectCardColumnProps {
     column: ProjectColumn.TModel;
@@ -20,7 +20,7 @@ function ProjectCardColumn({ column }: IProjectCardColumnProps) {
                         h="0.5"
                         w="full"
                         rounded="full"
-                        style={{ background: new ColorGenerator(name).generateRandomColor() }}
+                        style={{ background: new Utils.Color.Generator(name).generateRandomColor() }}
                     />
                 </Flex>
             </Tooltip.Trigger>

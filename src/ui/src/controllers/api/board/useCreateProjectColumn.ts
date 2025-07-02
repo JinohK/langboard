@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateProjectColumnForm {
     project_uid: string;
@@ -13,7 +13,7 @@ const useCreateProjectColumn = (options?: TMutationOptions<ICreateProjectColumnF
     const { mutate } = useQueryMutation();
 
     const createProjectColumn = async (params: ICreateProjectColumnForm) => {
-        const url = format(API_ROUTES.BOARD.COLUMN.CREATE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.COLUMN.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

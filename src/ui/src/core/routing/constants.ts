@@ -1,4 +1,4 @@
-import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export const ROUTES = {
     REDIRECT: "/redirect",

@@ -11,10 +11,9 @@ import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHea
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
 import BoardColumnAddCardButton from "@/pages/BoardPage/components/board/BoardColumnAddCardButton";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import useBoardUIColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardUIColumnDeletedHandlers";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import { TColumnState } from "@/core/helpers/dnd/types";
 import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
@@ -31,7 +30,7 @@ export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
                 <Box pb="2.5" className="overflow-hidden">
                     <Flex direction="col" gap="3">
                         {Array.from({ length: cardCount }).map(() => (
-                            <SkeletonBoardColumnCard key={createShortUUID()} />
+                            <SkeletonBoardColumnCard key={Utils.String.Token.shortUUID()} />
                         ))}
                     </Flex>
                 </Box>
@@ -79,7 +78,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.classList.add("ring-2", "ring-primary");
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;

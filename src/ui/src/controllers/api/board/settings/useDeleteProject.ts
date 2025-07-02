@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteProjectForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useDeleteProject = (options?: TMutationOptions<IDeleteProjectForm, IDelete
     const { mutate } = useQueryMutation();
 
     const deleteProject = async (params: IDeleteProjectForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.DELETE_PROJECT, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.DELETE_PROJECT, {
             uid: params.project_uid,
         });
         const res = await api.delete(url, {

@@ -3,7 +3,7 @@ import useGetProjectChatTemplates from "@/controllers/api/board/chat/useGetProje
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ChatTemplateModel } from "@/core/models";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -86,7 +86,7 @@ function ChatTemplateList(props: IChatTemplateListProps) {
         <ScrollArea.Root>
             <Flex direction="col" w="full" h="full" className="max-h-[calc(70vh_-_theme(spacing.11))] border-t">
                 {chatTemplates.map((chatTemplate) => (
-                    <ChatTemplate key={createShortUUID()} chatTemplate={chatTemplate} {...props} />
+                    <ChatTemplate key={Utils.String.Token.shortUUID()} chatTemplate={chatTemplate} {...props} />
                 ))}
             </Flex>
         </ScrollArea.Root>

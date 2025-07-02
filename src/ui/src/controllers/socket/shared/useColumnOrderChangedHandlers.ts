@@ -1,9 +1,9 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, ProjectChecklist, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
 import { TPickedModel } from "@/core/models/ModelRegistry";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 
 export interface IColumnOrderChangedResponse {
@@ -54,7 +54,7 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId, sorted
     return useSocketHandler({
         topic,
         topicId,
-        eventKey: `${new StringCase(type).toKebab()}-column-order-changed`,
+        eventKey: `${new Utils.String.Case(type).toKebab()}-column-order-changed`,
         onProps: {
             name: onEventName,
             params,

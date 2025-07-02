@@ -1,6 +1,5 @@
 import { Box, Dialog, Flex, Skeleton, Toast } from "@/components/base";
 import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -20,10 +19,10 @@ import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
 import { AuthUser } from "@/core/models";
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardCardProps {
     projectUID: string;

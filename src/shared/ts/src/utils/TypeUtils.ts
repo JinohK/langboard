@@ -29,7 +29,14 @@ const isUndefined: (value: unknown) => value is undefined = isType("undefined");
 const isNullOrUndefined = (value: unknown): value is null | undefined => isNull(value) || isUndefined(value);
 const isError = (value: unknown): value is Error => isObject(value) && isString((value as Error).message) && isString((value as Error).name);
 
-const TypeUtils = {
+const getProperty = <T>(obj: unknown, key: string): T | undefined => Object.assign(obj ?? {})?.[key];
+const hasProperty = <T>(obj: unknown, key: string): obj is T => {
+    const assigned = Object.assign(obj ?? {})?.[key];
+    if (isUndefined(assigned) || isNull(assigned)) return false;
+    return true;
+};
+
+export const TypeUtils = {
     isArray,
     isNumber,
     isBigInt,
@@ -41,6 +48,8 @@ const TypeUtils = {
     isUndefined,
     isNullOrUndefined,
     isError,
+    getProperty,
+    hasProperty,
 };
 
-export default TypeUtils;
+export type TTypeUtils = typeof TypeUtils;

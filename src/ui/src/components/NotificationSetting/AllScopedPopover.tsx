@@ -11,7 +11,7 @@ import {
     FLAT_NOTIFICATION_TYPE_MAP,
     TNotificationSpecificType,
 } from "@/core/models/notification.type";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { memo, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -63,7 +63,7 @@ const AllScopedSwitchList = memo(({ modal, currentUser, type, triggerProps, icon
             <Box items="center" gap="2" wrap display={onlyFlex ? "flex" : onlyPopover ? "hidden" : { initial: "hidden", sm: "flex" }}>
                 {Object.keys(ENotificationChannel).map((channelKey) => (
                     <NotificationSettingChannelSwitch
-                        key={createShortUUID()}
+                        key={Utils.String.Token.shortUUID()}
                         channel={ENotificationChannel[channelKey]}
                         toggle={toggle}
                         hasSubscription={subscribedChannelMap[ENotificationChannel[channelKey]]}
@@ -81,7 +81,7 @@ const AllScopedSwitchList = memo(({ modal, currentUser, type, triggerProps, icon
                         <Flex direction="col" gap="2.5">
                             {Object.keys(ENotificationChannel).map((channelKey) => (
                                 <NotificationSettingChannelSwitch
-                                    key={createShortUUID()}
+                                    key={Utils.String.Token.shortUUID()}
                                     channel={ENotificationChannel[channelKey]}
                                     toggle={toggle}
                                     hasSubscription={subscribedChannelMap[ENotificationChannel[channelKey]]}

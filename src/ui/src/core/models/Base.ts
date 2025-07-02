@@ -1,17 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import TypeUtils from "@/core/utils/TypeUtils";
+
 import { create, StoreApi, UseBoundStore } from "zustand";
 import { immer } from "zustand/middleware/immer";
 import { produce } from "immer";
 import { useEffect, useState } from "react";
 import useSocketHandler from "@/core/helpers/SocketHandler";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
-import { createUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import createFakeModel from "@/core/models/FakeModel";
 import { getTopicWithId } from "@/core/stores/SocketStore";
 import { ModelRegistry, IModelMap, TPickedModel } from "@/core/models/ModelRegistry";
 import ModelEdgeStore from "@/core/models/ModelEdgeStore";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export const ROLE_ALL_GRANTED = "*";
 
@@ -200,7 +200,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         this: TDerived,
         uidOrFilter: string | ((model: InstanceType<TDerived>) => bool)
     ): InstanceType<TDerived> | undefined {
-        if (TypeUtils.isString(uidOrFilter)) {
+        if (Utils.Type.isString(uidOrFilter)) {
             return BaseModel.#MODELS[this.MODEL_NAME]?.[uidOrFilter] as any;
         }
 
@@ -223,7 +223,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         uidsOrFilter: string[] | ((model: InstanceType<TDerived>) => bool)
     ): InstanceType<TDerived>[] {
         const models: InstanceType<TDerived>[] = [];
-        if (TypeUtils.isFunction(uidsOrFilter)) {
+        if (Utils.Type.isFunction(uidsOrFilter)) {
             return Object.values(BaseModel.#MODELS[this.MODEL_NAME] ?? {}).filter(uidsOrFilter as any);
         }
 
@@ -246,7 +246,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         );
 
         useEffect(() => {
-            const key = createUUID();
+            const key = Utils.String.Token.uuid();
             const unsubscribeCreation = this.subscribe(
                 "CREATION",
                 key,
@@ -293,7 +293,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             return;
         }
 
-        if (TypeUtils.isString(uidOrFilter)) {
+        if (Utils.Type.isString(uidOrFilter)) {
             delete BaseModel.#MODELS[modelName][uidOrFilter];
         } else {
             const model = Object.values(BaseModel.#MODELS[modelName] ?? {}).find(uidOrFilter as any);
@@ -303,7 +303,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             }
         }
 
-        if (TypeUtils.isString(uidOrFilter)) {
+        if (Utils.Type.isString(uidOrFilter)) {
             this.unsubscribeSocketEvents(uidOrFilter);
 
             BaseModel.#notify("DELETION", modelName, uidOrFilter);
@@ -322,7 +322,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
         }
 
         let uids: string[] = [];
-        if (TypeUtils.isArray(uidsOrFilter)) {
+        if (Utils.Type.isArray(uidsOrFilter)) {
             for (let i = 0; i < uidsOrFilter.length; ++i) {
                 const uid = uidsOrFilter[i];
                 delete BaseModel.#MODELS[modelName][uid];
@@ -383,7 +383,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             return;
         }
 
-        if (!TypeUtils.isArray(targetModelsOrUIDs)) {
+        if (!Utils.Type.isArray(targetModelsOrUIDs)) {
             targetModelsOrUIDs = [targetModelsOrUIDs];
         }
 
@@ -487,7 +487,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             produce((draft: any) => {
                 Object.keys(model).forEach((field) => {
                     const value = model[field as keyof TUpdateModel];
-                    if (TypeUtils.isArray(value)) {
+                    if (Utils.Type.isArray(value)) {
                         if (!draft[field]) {
                             draft[field] = [];
                         }
@@ -532,7 +532,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
 
         Object.entries(topicMap).forEach(([topic, topicIdMap]) => {
             Object.entries(topicIdMap!).forEach(([topicId, handlers]) => {
-                const key = createUUID();
+                const key = Utils.String.Token.uuid();
                 const offs: (() => void)[] = [];
                 const subscription: [ESocketTopic, string, string, (() => void)[]] = [topic, topicId, key, offs];
                 BaseModel.#SOCKET.subscribeTopicNotifier({
@@ -607,7 +607,7 @@ export abstract class BaseModel<TModel extends IBaseModel> {
             }
 
             const modelName = foreignModels[key];
-            if (!TypeUtils.isArray(model[key])) {
+            if (!Utils.Type.isArray(model[key])) {
                 model[key] = [model[key]];
             }
 

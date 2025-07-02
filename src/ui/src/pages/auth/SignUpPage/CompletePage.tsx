@@ -4,11 +4,11 @@ import { useLocation } from "react-router";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex, Toast } from "@/components/base";
 import useResendSignUpLink from "@/controllers/api/auth/useResendSignUpLink";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 function CompletePage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();

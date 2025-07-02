@@ -62,7 +62,8 @@ services:
     init: true
     container_name: ${PROJECT_NAME}_ui
     build:
-      context: ../src/ui
+      context: ../src
+      dockerfile: ui/Dockerfile
     environment:
       <<: *server-common-env
       SOCKET_URL: ${SOCKET_URL:-http://localhost:${NGINX_SOCKET_EXPOSE_PORT}}
@@ -72,6 +73,7 @@ services:
     volumes:
       - ../src/ui/src:/app/src
       - ../src/ui/dist:/app/dist:rw
+      - ../src/shared/ts:/shared/ts
       - ../src/ui/vite.config.ts:/app/vite.config.ts
       - ../src/ui/tailwind.config.js:/app/tailwind.config.js
       - ../src/ui/postcss.config.js:/app/postcss.config.js
@@ -101,8 +103,8 @@ services:
     command: ${PROJECT_NAME} run --workers ${API_WORKERS_COUNT:-1}
     volumes:
       - ../src/api/${PROJECT_NAME}:/app/src/api/${PROJECT_NAME}
-      - ../src/shared/core:/app/src/shared/core
-      - ../src/shared/models:/app/src/shared/models
+      - ../src/shared/py/core:/app/src/shared/py/core
+      - ../src/shared/py/models:/app/src/shared/py/models
       - ../src/resources:/app/src/resources
       - ../pyproject.toml:/app/pyproject.toml
       - ../poetry.lock:/app/poetry.lock
@@ -133,7 +135,8 @@ services:
     init: true
     container_name: ${PROJECT_NAME}_socket
     build:
-      context: ../src/socket
+      context: ../src
+      dockerfile: socket/Dockerfile
     environment:
       <<:
         - *server-common-env
@@ -143,6 +146,7 @@ services:
     volumes:
       - ../src/socket/package.json:/app/package.json
       - ../src/socket/yarn.lock:/app/yarn.lock
+      - ../src/shared/ts:/shared/ts
       - ../src/resources:/app/resources
       - ../.env:/app/.env
     depends_on:

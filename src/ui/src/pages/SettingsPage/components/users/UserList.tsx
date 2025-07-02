@@ -10,7 +10,7 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import { RefreshableListProvider, useRefreshableList } from "@/core/providers/RefreshableListProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import UserRow from "@/pages/SettingsPage/components/users/UserRow";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { useMemo, useRef } from "react";
@@ -132,7 +132,7 @@ function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
                     hasMore={!isLastPage}
                     totalCount={users.length}
                     loader={
-                        <Flex justify="center" py="6" key={createShortUUID()}>
+                        <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
                             <Loading variant="secondary" />
                         </Flex>
                     }

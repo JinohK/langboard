@@ -5,7 +5,7 @@ import useScrollToTop from "@/core/hooks/useScrollToTop";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import WebhookRow from "@/pages/SettingsPage/components/webhook/WebhookRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
@@ -61,7 +61,7 @@ function WebhookList({ selectedWebhooks, setSelectedWebhooks }: IWebhookListProp
                     hasMore={hasMore}
                     totalCount={urls.length}
                     loader={
-                        <Flex justify="center" py="6" key={createShortUUID()}>
+                        <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
                             <Loading variant="secondary" />
                         </Flex>
                     }

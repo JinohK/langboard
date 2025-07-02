@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IToggleProjectBotActivationForm {
     project_uid: string;
@@ -13,7 +13,7 @@ const useToggleProjectBotActivation = (options?: TMutationOptions<IToggleProject
     const { mutate } = useQueryMutation();
 
     const toggleProjectBotActivation = async (params: IToggleProjectBotActivationForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.TOGGLE_BOT_ACTIVATION, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.TOGGLE_BOT_ACTIVATION, {
             uid: params.project_uid,
             bot_uid: params.bot_uid,
         });

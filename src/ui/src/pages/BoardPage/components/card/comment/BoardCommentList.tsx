@@ -1,14 +1,14 @@
 import { Box, Flex } from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetCardComments from "@/controllers/api/card/comment/useGetCardComments";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ProjectCardComment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import BoardComment, { SkeletonBoardComment } from "@/pages/BoardPage/components/card/comment/BoardComment";
 import { useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
@@ -74,7 +74,7 @@ function BoardCommentListResult(): JSX.Element {
         <InfiniteScroller.NoVirtual
             scrollable={() => viewportRef.current}
             loadMore={nextPage}
-            loader={<SkeletonBoardComment key={createShortUUID()} />}
+            loader={<SkeletonBoardComment key={Utils.String.Token.shortUUID()} />}
             hasMore={hasMore}
             className="pb-2.5"
         >

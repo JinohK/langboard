@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, ProjectCard } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboarCardDeletedRawResponse {
     uid: string;

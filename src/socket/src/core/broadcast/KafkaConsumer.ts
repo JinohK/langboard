@@ -1,7 +1,7 @@
 import { BROADCAST_URLS, CACHE_URL, PROJECT_NAME } from "@/Constants";
 import BaseConsumer from "@/core/broadcast/BaseConsumer";
-import JsonUtils from "@/core/utils/JsonUtils";
 import Logger from "@/core/utils/Logger";
+import { Utils } from "@langboard/core/utils";
 import { Consumer, Kafka } from "kafkajs";
 import { createClient } from "redis";
 
@@ -56,7 +56,7 @@ class KafkaConsumer extends BaseConsumer {
 
                         try {
                             const decoder = new TextDecoder("utf-8");
-                            const model = JsonUtils.Parse(decoder.decode(message.value));
+                            const model = Utils.Json.Parse(decoder.decode(message.value));
                             if (!model) {
                                 return;
                             }
@@ -69,7 +69,7 @@ class KafkaConsumer extends BaseConsumer {
                             const cachedData = await this.#redisClient.get(cacheKey);
                             let data;
                             if (cachedData) {
-                                const cachedModel = JsonUtils.Parse(cachedData);
+                                const cachedModel = Utils.Json.Parse(cachedData);
                                 if (cachedModel) {
                                     data = cachedModel;
                                 }

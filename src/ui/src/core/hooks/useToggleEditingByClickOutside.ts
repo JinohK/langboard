@@ -1,4 +1,4 @@
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useRef } from "react";
 
 const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edit" | "view") => void, isEditing?: bool) => {
@@ -52,7 +52,7 @@ const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edi
         (event: React.MouseEvent | CustomEvent | MouseEvent) => {
             const target = event.target as HTMLElement;
             if (
-                (TypeUtils.isBool(isEditing) && !isEditing) ||
+                (Utils.Type.isBool(isEditing) && !isEditing) ||
                 target.hasAttribute("data-scroll-area-scrollbar") ||
                 target.closest("[data-scroll-area-scrollbar]") ||
                 target.closest("[data-sonner-toast]") ||

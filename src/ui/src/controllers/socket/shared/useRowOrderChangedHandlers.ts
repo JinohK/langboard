@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 interface IBaseRowOrderChangedResponse {
     move_type: "from_column" | "to_column" | "in_column";
@@ -53,7 +53,7 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
     return useSocketHandler({
         topic,
         topicId: topicId,
-        eventKey: `${new StringCase(type).toKebab()}-row-order-changed`,
+        eventKey: `${new Utils.String.Case(type).toKebab()}-row-order-changed`,
         onProps: {
             name: onEventName,
             params,

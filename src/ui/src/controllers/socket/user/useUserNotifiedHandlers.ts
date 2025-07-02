@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, UserNotification } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUserNotifiedRawResponse {
     notification: UserNotification.Interface;

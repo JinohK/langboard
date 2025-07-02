@@ -1,4 +1,4 @@
-import EHttpStatus from "@/core/helpers/EHttpStatus";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const errorMessages: Record<number, string> = {
     [EHttpStatus.HTTP_400_BAD_REQUEST]: "Bad Request",

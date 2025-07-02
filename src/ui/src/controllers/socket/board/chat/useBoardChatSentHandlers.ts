@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ChatMessageModel } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardChatSentRawResponse {
     user_message: ChatMessageModel.Interface;

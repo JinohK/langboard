@@ -3,7 +3,7 @@ import { ArrowDown } from "lucide-react";
 import { Box, Button, Flex } from "@/components/base";
 import { useAutoScroll } from "@/core/hooks/useAutoScroll";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface ChatMessageListProps extends React.HTMLAttributes<HTMLDivElement> {
     smooth?: bool;
@@ -35,9 +35,9 @@ const ChatMessageList = React.forwardRef<HTMLDivElement, ChatMessageListProps>(
                     className={cn("overflow-y-auto", className)}
                     ref={(el) => {
                         scrollRef.current = el;
-                        if (TypeUtils.isFunction(ref)) {
+                        if (Utils.Type.isFunction(ref)) {
                             ref(el);
-                        } else if (TypeUtils.isObject<React.RefObject<HTMLDivElement | null>>(ref)) {
+                        } else if (Utils.Type.isObject<React.RefObject<HTMLDivElement | null>>(ref)) {
                             ref.current = el;
                         }
                     }}

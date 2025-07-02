@@ -3,11 +3,11 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import { QUERY_NAMES } from "@/constants";
 import { Box, Button, Flex, Floating, Form, SubmitButton } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IEmailFormProps {
     signToken: string;

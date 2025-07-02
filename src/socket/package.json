@@ -1,5 +1,5 @@
 {
-  "name": "langboard-socket",
+  "name": "@langboard/socket",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -15,6 +15,7 @@
   },
   "dependencies": {
     "@hocuspocus/server": "^3.1.3",
+    "@langboard/core": "file:../shared/ts",
     "axios": "^1.9.0",
     "cookie": "^1.0.2",
     "crypto-js": "^4.2.0",

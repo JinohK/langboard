@@ -4,7 +4,7 @@ import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import useScrollToTop from "@/core/hooks/useScrollToTop";
 import { GlobalRelationshipType } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import GlobalRelationshipRow from "@/pages/SettingsPage/components/relationships/GlobalRelationshipRow";
 import { useReducer } from "react";
 import { useTranslation } from "react-i18next";
@@ -64,7 +64,7 @@ function GlobalRelationshipList({ selectedGlobalRelationships, setSelectedGlobal
                     hasMore={hasMore}
                     totalCount={globalRelationships.length}
                     loader={
-                        <Flex justify="center" py="6" key={createShortUUID()}>
+                        <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
                             <Loading variant="secondary" />
                         </Flex>
                     }

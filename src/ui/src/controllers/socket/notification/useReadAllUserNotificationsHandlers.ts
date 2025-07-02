@@ -1,6 +1,6 @@
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler from "@/core/helpers/SocketHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 const useReadAllUserNotificationsHandlers = () => {
     return useSocketHandler<{}, {}>({

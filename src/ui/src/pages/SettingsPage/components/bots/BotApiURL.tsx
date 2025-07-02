@@ -1,11 +1,11 @@
 import { Box, Floating, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
-import { isValidURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -24,7 +24,7 @@ const BotApiURL = memo(() => {
         }
 
         const value = inputRef.current.value.trim();
-        if (value === apiURL || !value || !isValidURL(value)) {
+        if (value === apiURL || !value || !Utils.String.isValidURL(value)) {
             inputRef.current.value = apiURL;
             return;
         }

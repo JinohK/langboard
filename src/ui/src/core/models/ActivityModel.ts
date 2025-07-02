@@ -4,7 +4,7 @@ import { TProjectWikiActivityInterface } from "@/core/models/activities/project.
 import { TUserActivityInterface } from "@/core/models/activities/user.activity.type";
 import { BaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export type TActivity = TUserActivityInterface | TProjectRelatedActivityInterface | TProjectWikiActivityInterface;
 
@@ -14,7 +14,7 @@ export class ActivityModel extends BaseModel<TActivity> {
     }
 
     public static convertModel(model: any): any {
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
         return model;

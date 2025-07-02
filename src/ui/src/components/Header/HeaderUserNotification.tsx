@@ -18,7 +18,7 @@ import { ENotificationType } from "@/core/models/notification.type";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { memo, useCallback, useMemo, useReducer, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
@@ -160,7 +160,7 @@ function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotifi
                 loadMore={nextPage}
                 hasMore={hasMore}
                 loader={
-                    <Flex justify="center" py="6" key={createShortUUID()}>
+                    <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
                         <Loading variant="secondary" size={{ initial: "2", sm: "3" }} />
                     </Flex>
                 }

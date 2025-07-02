@@ -1,6 +1,6 @@
 import { useCallback, useEffect } from "react";
 import { Box, Flex, Loading, Skeleton } from "@/components/base";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import useGetDashboardCards from "@/controllers/api/dashboard/useGetDashboardCards";
 import { useTranslation } from "react-i18next";
@@ -12,7 +12,7 @@ export function SkeletonCardsPage(): JSX.Element {
     return (
         <>
             {Array.from({ length: 4 }).map((_, index) => (
-                <Flex items="center" w="full" key={createShortUUID()} mt={index ? "2" : "0"}>
+                <Flex items="center" w="full" key={Utils.String.Token.shortUUID()} mt={index ? "2" : "0"}>
                     <Box px="4" className="w-1/3">
                         <Skeleton h="10" w="full" />
                     </Box>
@@ -67,7 +67,7 @@ function CardsPage(): JSX.Element {
                 hasMore={!isLastPage}
                 totalCount={cards.length}
                 loader={
-                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={createShortUUID()}>
+                    <Flex justify="center" mt={{ initial: "4", md: "6", lg: "8" }} key={Utils.String.Token.shortUUID()}>
                         <Loading size="3" variant="secondary" />
                     </Flex>
                 }

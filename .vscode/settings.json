@@ -1,5 +1,10 @@
 {
-  "eslint.workingDirectories": ["./src/ui", "./src/socket", "./docs"],
+  "eslint.workingDirectories": [
+    "./src/ui",
+    "./src/socket",
+    "./src/shared/ts",
+    "./docs"
+  ],
   "eslint.options": {
     "overrideConfigFile": "./eslint.config.js"
   },
@@ -26,7 +31,7 @@
   "python.analysis.extraPaths": [
     "./src/langboard",
     "./src/flows",
-    "./src/shared"
+    "./src/shared/py"
   ],
   "python.languageServer": "Pylance",
   "python.analysis.typeEvaluation.enableTypeIgnoreComments": true,

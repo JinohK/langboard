@@ -2,10 +2,10 @@ import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Avatar, Box, Button, Card, Flex, SubmitButton } from "@/components/base";
 import useSignUp, { ISignUpForm } from "@/controllers/api/auth/useSignUp";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { ROUTES } from "@/core/routing/constants";
-import { StringCase, createNameInitials } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { ISignUpFormProps } from "@/pages/auth/SignUpPage/types";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
@@ -98,7 +98,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
                 <Card.Header className="relative space-y-0 bg-transparent">
                     <Avatar.Root className="absolute top-10" size="2xl">
                         <Avatar.Image src={(values as unknown as Record<string, string>).avatarUrl} alt="" />
-                        <Avatar.Fallback>{createNameInitials(values.firstname, values.lastname)}</Avatar.Fallback>
+                        <Avatar.Fallback>{Utils.String.getInitials(values.firstname, values.lastname)}</Avatar.Fallback>
                     </Avatar.Root>
                     <Card.Title className="ml-24 pt-6">
                         {values.firstname} {values.lastname}
@@ -116,7 +116,7 @@ function Overview({ values, moveStep }: Omit<ISignUpFormProps, "initialErrorsRef
 
                         return (
                             <Flex items="center" justify="between" py="4" key={key} className="border-card-border border-b">
-                                <p className="text-sm text-muted-foreground">{t(`user.${new StringCase(key).toPascal()}`)}</p>
+                                <p className="text-sm text-muted-foreground">{t(`user.${new Utils.String.Case(key).toPascal()}`)}</p>
                                 <p className="text-sm">{translate(key, value)}</p>
                             </Flex>
                         );

@@ -1,11 +1,11 @@
 import { Box, Toast } from "@/components/base";
 import PasswordInput from "@/components/PasswordInput";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 

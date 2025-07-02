@@ -2,10 +2,10 @@ import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
 import { API_URL } from "@/constants";
 import { API_ROUTES } from "@/controllers/constants";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { getAuthStore } from "@/core/stores/AuthStore";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export const api = axios.create({
     baseURL: API_URL,
@@ -16,7 +16,7 @@ export const api = axios.create({
             : [axios.defaults.transformRequest]
         : []
     ).concat((data, headers) => {
-        if (TypeUtils.isString(data) && data.length > 1024) {
+        if (Utils.Type.isString(data) && data.length > 1024) {
             headers["Content-Encoding"] = "gzip";
             return pako.gzip(data);
         } else {

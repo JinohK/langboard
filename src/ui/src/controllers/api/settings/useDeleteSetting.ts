@@ -3,13 +3,13 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AppSettingModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const useDeleteSetting = (setting: AppSettingModel.TModel, options?: TMutationOptions<unknown>) => {
     const { mutate } = useQueryMutation();
 
     const deleteSetting = async () => {
-        const url = format(API_ROUTES.SETTINGS.DELETE, { uid: setting.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.DELETE, { uid: setting.uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

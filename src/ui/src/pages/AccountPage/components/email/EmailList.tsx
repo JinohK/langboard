@@ -3,9 +3,9 @@ import { Fragment } from "react/jsx-runtime";
 import { Badge, Box, Card, Flex, IconComponent, Separator, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import useDeleteSubEmail from "@/controllers/api/account/useDeleteSubEmail";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export function SkeletonEmails(): JSX.Element {
     return (

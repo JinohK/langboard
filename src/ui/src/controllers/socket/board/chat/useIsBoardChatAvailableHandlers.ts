@@ -1,7 +1,7 @@
 import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { InternalBotModel } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 interface IBaseIsBoardChatAvailableRawResponse {
     available: bool;

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface INotifyCardChecklistForm {
     project_uid: string;
@@ -15,7 +15,7 @@ const useNotifyCardChecklist = (options?: TMutationOptions<INotifyCardChecklistF
     const { mutate } = useQueryMutation();
 
     const notifyChecklist = async (params: INotifyCardChecklistForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECKLIST.NOTIFY, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKLIST.NOTIFY, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checklist_uid: params.checklist_uid,

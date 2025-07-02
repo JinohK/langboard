@@ -4,7 +4,7 @@ import useInfiniteScrollPager from "@/core/hooks/useInfiniteScrollPager";
 import { AppSettingModel } from "@/core/models";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import ApiKeyRow from "@/pages/SettingsPage/components/keys/ApiKeyRow";
 import { useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -64,7 +64,7 @@ function ApiKeyList({ selectedKeys, setSelectedKeys }: IApiKeyListProps) {
                     loadMore={nextPage}
                     hasMore={hasMore}
                     loader={
-                        <Flex justify="center" py="6" key={createShortUUID()}>
+                        <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
                             <Loading variant="secondary" />
                         </Flex>
                     }

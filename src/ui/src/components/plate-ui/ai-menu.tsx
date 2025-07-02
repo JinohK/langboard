@@ -2,7 +2,6 @@
 "use client";
 
 import * as React from "react";
-
 import { AIChatPlugin, AIPlugin, useEditorChat, useLastAssistantMessage } from "@platejs/ai/react";
 import { BlockSelectionPlugin, useIsSelecting } from "@platejs/selection/react";
 import { Command as CommandPrimitive } from "cmdk";

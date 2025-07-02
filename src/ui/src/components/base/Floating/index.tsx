@@ -5,7 +5,7 @@ import BaseInput from "@/components/base/Input";
 import BaseLabel from "@/components/base/Label";
 import BaseTextarea, { type TextareaProps as BaseTextareaProps } from "@/components/base/Textarea";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
 export interface TextareaProps extends BaseTextareaProps {}
@@ -46,7 +46,7 @@ type LabelInputProps = InputProps & { wrapperClassNames?: string; label: string;
 
 const LabelInput = React.forwardRef<React.ComponentRef<typeof Input>, React.PropsWithoutRef<LabelInputProps>>(
     ({ wrapperClassNames, label, isFormControl, id, ...props }, ref) => {
-        id = id ?? `floating-input-${createShortUUID()}`;
+        id = id ?? `floating-input-${Utils.String.Token.shortUUID()}`;
 
         let comp = <Input id={id} ref={ref} {...props} />;
         if (isFormControl) {
@@ -69,7 +69,7 @@ type LabelTextareaProps = BaseTextareaProps & { wrapperClassNames?: string; labe
 
 const LabelTextarea = React.forwardRef<React.ComponentRef<typeof Textarea>, React.PropsWithoutRef<LabelTextareaProps>>(
     ({ wrapperClassNames, label, isFormControl, id, ...props }, ref) => {
-        id = id ?? `floating-textarea-${createShortUUID()}`;
+        id = id ?? `floating-textarea-${Utils.String.Token.shortUUID()}`;
 
         let comp = <Textarea id={id} ref={ref} {...props} />;
         if (isFormControl) {

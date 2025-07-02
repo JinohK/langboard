@@ -1,11 +1,10 @@
 import { Box, Button, Dialog, Flex, Floating, IconComponent, Input, Popover, Textarea, Toast } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { isJsonString } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import JsonView from "@uiw/react-json-view";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { composeRefs } from "@/core/utils/ComponentUtils";
 
 interface IInternalBotValueInputProps {
@@ -62,8 +61,8 @@ function InternalBotValueJsonInput({
     ref,
 }: Omit<IInternalBotValueInputProps, "valueType">) {
     const [t] = useTranslation();
-    const [currentObject, setCurrentObject] = useState(isJsonString(value) ? JSON.parse(value) : {});
-    const [currentJSON, setCurrentJSON] = useState(isJsonString(value) ? JSON.stringify(currentObject, undefined, "    ") : value);
+    const [currentObject, setCurrentObject] = useState(Utils.String.isJsonString(value) ? JSON.parse(value) : {});
+    const [currentJSON, setCurrentJSON] = useState(Utils.String.isJsonString(value) ? JSON.stringify(currentObject, undefined, "    ") : value);
     const [error, setError] = useState<string>("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
     const viewerScrollableRef = useRef<HTMLDivElement>(null);
@@ -108,7 +107,7 @@ function InternalBotValueJsonInput({
             return;
         }
 
-        const isJson = isJsonString(textareaRef.current.value);
+        const isJson = Utils.String.isJsonString(textareaRef.current.value);
         newValueRef.current = isJson ? JSON.stringify(currentObject) : value;
 
         change?.();
@@ -147,12 +146,12 @@ function InternalBotValueJsonInput({
 
         const reader = new FileReader();
         reader.onload = (event) => {
-            if (!TypeUtils.isString(event.target?.result)) {
+            if (!Utils.Type.isString(event.target?.result)) {
                 return;
             }
 
             const newValue = event.target.result;
-            if (isJsonString(newValue)) {
+            if (Utils.String.isJsonString(newValue)) {
                 const newObject = JSON.parse(newValue);
                 setCurrentJSON(JSON.stringify(newObject, undefined, "    "));
                 setCurrentObject(newObject);

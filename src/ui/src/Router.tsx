@@ -1,11 +1,11 @@
 import { Await, createBrowserRouter, Navigate, RouteObject } from "react-router";
 import { RouterProvider } from "react-router/dom";
 import { SuspenseComponent } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, Suspense } from "react";
 import useAuthStore from "@/core/stores/AuthStore";
 import SwallowErrorBoundary from "@/components/SwallowErrorBoundary";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const modules = import.meta.glob<{ default: RouteObject[] }>("./pages/**/Route.tsx");
 const pages = Object.values(modules);

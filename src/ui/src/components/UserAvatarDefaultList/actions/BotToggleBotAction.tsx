@@ -6,7 +6,7 @@ import useProjectBotActivationToggledHandlers from "@/controllers/socket/project
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, Project } from "@/core/models";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -66,7 +66,7 @@ function UserAvatarDefaultBotToggleAction({ bot, project }: IUserAvatarDefaultBo
         dependencies: [projectBotActivationToggledHandlers],
     });
 
-    if (TypeUtils.isNullOrUndefined(isBotDisabled)) {
+    if (Utils.Type.isNullOrUndefined(isBotDisabled)) {
         return <></>;
     }
 

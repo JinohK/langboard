@@ -8,8 +8,7 @@ import { cn } from "@/core/utils/ComponentUtils";
 import IconComponent from "@/components/base/IconComponent";
 import Flex from "@/components/base/Flex";
 import Box from "@/components/base/Box";
-import { createShortUUID } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IAutorCompleteProps {
     selectedValue?: string;
@@ -23,7 +22,7 @@ export interface IAutorCompleteProps {
 }
 
 function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, disabled, className }: IAutorCompleteProps) {
-    const id = useRef(createShortUUID());
+    const id = useRef(Utils.String.Token.shortUUID());
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(selectedValue);
 
@@ -87,7 +86,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                         asChild
                         onOpenAutoFocus={(e) => e.preventDefault()}
                         onInteractOutside={(e) => {
-                            if (!TypeUtils.isElement(e.target, "input")) {
+                            if (!Utils.Type.isElement(e.target, "input")) {
                                 return;
                             }
 

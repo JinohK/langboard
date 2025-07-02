@@ -5,8 +5,6 @@ import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as InternalBotModel from "@/core/models/InternalBotModel";
 import { IBaseModel, BaseModel, TRoleAllGranted } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
 import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
@@ -33,6 +31,8 @@ import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDel
 import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 import useBoardChatTemplateCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatTemplateCreatedHandlers";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export enum ERoleAction {
     Read = "read",
@@ -113,10 +113,10 @@ class Project extends BaseModel<IStore> {
     }
 
     public static convertModel(model: IStore): Interface {
-        if (TypeUtils.isString(model.updated_at)) {
+        if (Utils.Type.isString(model.updated_at)) {
             model.updated_at = new Date(model.updated_at);
         }
-        if (TypeUtils.isString(model.last_viewed_at)) {
+        if (Utils.Type.isString(model.last_viewed_at)) {
             model.last_viewed_at = new Date(model.last_viewed_at);
         }
         return model;

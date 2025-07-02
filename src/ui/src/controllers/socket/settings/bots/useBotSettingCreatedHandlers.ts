@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 
 export interface IBotSettingCreatedRawResponse {
     setting_bot: BotModel.Interface;

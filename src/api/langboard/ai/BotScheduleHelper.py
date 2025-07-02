@@ -1,6 +1,7 @@
 from os import environ
 from subprocess import run as subprocess_run
-from typing import Any, Literal, overload
+from typing import Any, Callable, Literal, overload
+from zoneinfo import ZoneInfo
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.schema import Pagination
 from core.types import SafeDateTime
@@ -190,9 +191,12 @@ class BotScheduleHelper:
         running_type: BotScheduleRunningType | None = None,
         start_at: SafeDateTime | None = None,
         end_at: SafeDateTime | None = None,
+        tz: str | float = "UTC",
     ) -> BotSchedule | None:
         if not BotScheduleHelper.is_valid_interval_str(interval_str):
             return None
+
+        interval_str = BotScheduleHelper.__adjust_interval_for_utc(interval_str, tz)
 
         if not running_type:
             running_type = BotScheduleRunningType.Infinite
@@ -238,6 +242,7 @@ class BotScheduleHelper:
         running_type: BotScheduleRunningType | None = None,
         start_at: SafeDateTime | None = None,
         end_at: SafeDateTime | None = None,
+        tz: str | float = "UTC",
     ) -> tuple[BotSchedule, dict[str, Any]] | None:
         bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
         if not bot_schedule:
@@ -301,20 +306,23 @@ class BotScheduleHelper:
             model["filterable_table"] = filterable_model.__tablename__
             model["filterable_uid"] = filterable_model.get_uid()
 
-        if interval_str and BotScheduleHelper.is_valid_interval_str(interval_str) and old_interval_str != interval_str:
-            bot_schedule.interval_str = interval_str
-            model["interval_str"] = interval_str
+        if interval_str and BotScheduleHelper.is_valid_interval_str(interval_str):
+            interval_str = BotScheduleHelper.__adjust_interval_for_utc(interval_str, tz)
 
-            if not cron:
-                cron = BotScheduleHelper.__get_cron()
+            if old_interval_str != interval_str:
+                bot_schedule.interval_str = interval_str
+                model["interval_str"] = interval_str
 
-            if (
-                bot_schedule.running_type in BotSchedule.RUNNING_TYPES_WITH_START_AT
-                and bot_schedule.status == BotScheduleStatus.Pending
-            ):
-                has_changed = BotScheduleHelper.__create_job(cron, interval_str, running_type) or has_changed
-            else:
-                has_changed = BotScheduleHelper.__create_job(cron, interval_str) or has_changed
+                if not cron:
+                    cron = BotScheduleHelper.__get_cron()
+
+                if (
+                    bot_schedule.running_type in BotSchedule.RUNNING_TYPES_WITH_START_AT
+                    and bot_schedule.status == BotScheduleStatus.Pending
+                ):
+                    has_changed = BotScheduleHelper.__create_job(cron, interval_str, running_type) or has_changed
+                else:
+                    has_changed = BotScheduleHelper.__create_job(cron, interval_str) or has_changed
 
         with DbSession.use(readonly=False) as db:
             db.update(bot_schedule)
@@ -457,3 +465,72 @@ class BotScheduleHelper:
             )
             result = bool(result.first())
         return result
+
+    @staticmethod
+    def __adjust_interval_for_utc(interval_str: str, tz: str | float) -> str:
+        if isinstance(tz, str):
+            try:
+                info = ZoneInfo(tz)
+                delta = info.utcoffset(SafeDateTime.now())
+                if delta is None:
+                    tz = 0.0
+                else:
+                    tz = delta.total_seconds() / 3600.0
+            except Exception:
+                tz = 0.0
+
+        if tz == 0.0:
+            return interval_str
+
+        cron_item = CronItem()
+        cron_item.setall(interval_str)
+        cron_chunks = interval_str.split(" ")
+
+        diff_minutes = int((tz - int(tz)) * 60)
+        diff_hours = int(tz)
+
+        if diff_minutes != 0 and cron_item.minutes != "*":
+            cron_chunks[0] = BotScheduleHelper.__adjust_interval_for_utc_chunk(
+                str(cron_item.minutes), diff_minutes, BotScheduleHelper.__ensure_valid_minute, is_minute=True
+            )
+
+        if diff_hours != 0 and cron_item.hours != "*":
+            cron_chunks[1] = BotScheduleHelper.__adjust_interval_for_utc_chunk(
+                str(cron_item.hours), diff_hours, BotScheduleHelper.__ensure_valid_hour, is_minute=False
+            )
+
+        return " ".join(cron_chunks)
+
+    @staticmethod
+    def __adjust_interval_for_utc_chunk(chunk: str, diff: int, ensure: Callable[[int], int], is_minute: bool) -> str:
+        parts = chunk.split(",")
+        new_chunks: list[str] = []
+
+        for part in parts:
+            if part.startswith("*/"):
+                interval = int(part[2:])
+                max_interval = 60 if is_minute else 24
+                if interval == 1:
+                    new_chunks.append(part)
+                    continue
+
+                tz_intervals = [time for time in range(0, max_interval, interval)]
+                new_intervals = sorted({ensure(time - diff) for time in tz_intervals})
+                new_chunks.append(",".join(str(time) for time in new_intervals))
+            elif part.count("-") == 1:
+                start, end = map(int, part.split("-"))
+                new_start = ensure(start - diff)
+                new_end = ensure(end - diff)
+                new_chunks.append(f"{new_start}-{new_end}")
+            else:
+                new_value = ensure(int(part) - diff)
+                new_chunks.append(str(new_value))
+        return ",".join(new_chunks)
+
+    @staticmethod
+    def __ensure_valid_minute(minute: int) -> int:
+        return ((minute % 60) + 60) % 60
+
+    @staticmethod
+    def __ensure_valid_hour(hour: int) -> int:
+        return ((hour % 24) + 24) % 24

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IChangeWikiOrderForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useChangeWikiOrder = (options?: TMutationOptions<IChangeWikiOrderForm>) =>
     const { mutate } = useQueryMutation();
 
     const changeWikiOrder = async (params: IChangeWikiOrderForm) => {
-        const url = format(API_ROUTES.BOARD.WIKI.CHANGE_ORDER, {
+        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CHANGE_ORDER, {
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });

@@ -5,8 +5,7 @@ import { SINGLE_ROW_IDLE } from "@/core/helpers/dnd/createDndSingleRowEvents";
 import { TSingleRowState } from "@/core/helpers/dnd/types";
 import { Project, ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { formatDateDistance } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import BoardCardAttachmentMoreMenu from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentMoreMenu";
 import { BOARD_CARD_ATTACHMENT_DND_SYMBOL_SET } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentConstants";
 import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
@@ -67,7 +66,7 @@ function BoardCardAttachment({ attachment, openPreview }: IBoardCardAttachmentPr
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;
 
@@ -137,7 +136,7 @@ const BoardCardAttachmentDisplay = memo(({ attachment, canReorder, draggableRef,
                     <Box ml={{ initial: "1", sm: "0" }}>
                         <Box textSize="sm">{name}</Box>
                         <Box textSize="xs" className="text-muted-foreground">
-                            {t("card.Added {date}", { date: formatDateDistance(i18n, t, attachment.created_at) })}
+                            {t("card.Added {date}", { date: Utils.String.formatDateDistance(i18n, t, attachment.created_at) })}
                         </Box>
                     </Box>
                 </Flex>

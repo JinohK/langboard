@@ -17,7 +17,7 @@ import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import { BOARD_CARD_CHECK_DND_SYMBOL_SET } from "@/pages/BoardPage/components/card/checklist/BoardCardCheckConstants";
 import { TRowState } from "@/core/helpers/dnd/types";
 import { ROW_IDLE } from "@/core/helpers/dnd/createDndRowEvents";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IBoardCardCheckitemProps {
     checkitem: ProjectCheckitem.TModel;
@@ -52,7 +52,7 @@ function BoardCardCheckitem({ checkitem }: IBoardCardCheckitemProps): JSX.Elemen
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;
 

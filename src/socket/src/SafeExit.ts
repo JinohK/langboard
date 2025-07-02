@@ -2,7 +2,7 @@ import Consumer from "@/core/broadcast/Consumer";
 import DB from "@/core/db/DB";
 import Server from "@/core/server/Server";
 import Logger from "@/core/utils/Logger";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 const EXIT_SIGNALS = [
     "SIGABRT",
@@ -75,7 +75,7 @@ const ERROR_SIGNALS = ["uncaughtException", "unhandledRejection"];
 for (let i = 0; i < ERROR_SIGNALS.length; ++i) {
     const signal = ERROR_SIGNALS[i];
     process.on(signal, (error) => {
-        if (TypeUtils.isError(error)) {
+        if (Utils.Type.isError(error)) {
             if (error.message.includes("address already in use")) {
                 Logger.red("Port is already in use. Please stop the server before restarting.\n");
                 return;

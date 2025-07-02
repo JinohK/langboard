@@ -1,9 +1,9 @@
 import { Toast } from "@/components/base";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, User } from "@/core/models";
 import { t } from "i18next";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 
 export interface ISelectedUsersDeletedRawResponse {
     uids: string[];

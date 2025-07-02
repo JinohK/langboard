@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IClearProjectChatMessagesForm {
     uid: string;
@@ -12,7 +12,7 @@ const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectCha
     const { mutate } = useQueryMutation();
 
     const clearProjectChatMessages = async (params: IClearProjectChatMessagesForm) => {
-        const url = format(API_ROUTES.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

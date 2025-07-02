@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteProjectLabelForm {
     project_uid: string;
@@ -15,7 +15,7 @@ const useDeleteProjectLabel = (options?: TMutationOptions<IDeleteProjectLabelFor
     const { mutate } = useQueryMutation();
 
     const deleteProjectLabel = async (params: IDeleteProjectLabelForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.LABEL.DELETE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.LABEL.DELETE, {
             uid: params.project_uid,
             label_uid: params.label_uid,
         });

@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, Project, ProjectCard } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUserProjectRolesUpdatedRawResponse {
     project_uid: string;

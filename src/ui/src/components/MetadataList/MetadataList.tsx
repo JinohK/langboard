@@ -4,7 +4,7 @@ import { TMetadataForm } from "@/controllers/api/metadata/types";
 import useGetMetadata from "@/controllers/api/metadata/useGetMetadata";
 import setupApiErrorHandler, { IApiErrorHandlerMap } from "@/core/helpers/setupApiErrorHandler";
 import { MetadataModel } from "@/core/models";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useState } from "react";
 
 export interface IMetadataListProps {
@@ -62,7 +62,7 @@ function MetadataListInner({ form, metadata: record, errorsMap, canEdit }: IMeta
     return (
         <Flex direction="col" gap="2" mt="2" mb="2">
             {Object.entries(metadata).map(([key, value]) => (
-                <MetadataRow key={createShortUUID()} form={form} keyName={key} value={value} errorsMap={errorsMap} canEdit={canEdit} />
+                <MetadataRow key={Utils.String.Token.shortUUID()} form={form} keyName={key} value={value} errorsMap={errorsMap} canEdit={canEdit} />
             ))}
         </Flex>
     );

@@ -1,12 +1,6 @@
-import { differenceInDays, Duration, formatDistanceToNow } from "date-fns";
-import { TFunction, i18n } from "i18next";
-import * as dateLocale from "date-fns/locale";
-import { API_URL } from "@/constants";
-import TypeUtils from "@/core/utils/TypeUtils";
-
 type TStringCase = "flat" | "upper" | "camel" | "pascal" | "snake" | "upperSnake" | "kebab";
 
-export class StringCase {
+class Case {
     #str: string;
     #case: TStringCase;
     #rawChunks: string[];
@@ -110,87 +104,46 @@ export class StringCase {
     }
 }
 
-export const generateToken = (n: number): string => {
-    const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    let token = "";
-    for (let i = 0; i < n; ++i) {
-        token += chars[Math.floor(Math.random() * chars.length)];
+class Token {
+    public static generate(n: number): string {
+        const chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        let token = "";
+        for (let i = 0; i < n; ++i) {
+            token += chars[Math.floor(Math.random() * chars.length)];
+        }
+        return token;
     }
 
-    return token;
-};
+    public static uuid(): string {
+        return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+            const r = (Math.random() * 16) | 0;
+            const v = c === "x" ? r : (r & 0x3) | 0x8;
+            return v.toString(16);
+        });
+    }
 
-export const createUUID = (): string => {
-    return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-        const r = (Math.random() * 16) | 0;
-        const v = c === "x" ? r : (r & 0x3) | 0x8;
-        return v.toString(16);
-    });
-};
+    public static shortUUID(): string {
+        return "xxxx-xxxx-xxxx-xxxx".replace(/x/g, () => {
+            return ((Math.random() * 16) | 0).toString(16);
+        });
+    }
 
-export const createShortUUID = (): string => {
-    return "xxxx-xxxx-xxxx-xxxx".replace(/x/g, () => {
-        return ((Math.random() * 16) | 0).toString(16);
-    });
-};
+    public static reactKey(name: string): string {
+        return `${name.replace(/(\.|\s)/g, "-")}-${Token.shortUUID()}`;
+    }
+}
 
-export const createNameInitials = (firstname?: string, lastname?: string): string => {
+const getInitials = (firstname?: string, lastname?: string): string => {
     return `${firstname?.charAt(0) ?? ""}${lastname?.charAt(0) ?? ""}`.toUpperCase();
 };
 
-export const makeReactKey = (name: string): string => {
-    return `${name.replace(/(\.|\s)/g, "-")}-${createShortUUID()}`;
-};
-
-export const format = (str: string, map: Record<string, string>): string => {
+const format = (str: string, map: Record<string, string>): string => {
     return str.replace(/{(\w+)}/g, (match, key) => {
         return map[key] || match;
     });
 };
 
-export const formatDateDistance = (i18n: i18n, translate: TFunction<"translation", undefined>, date: Date): string => {
-    return differenceInDays(Date.now(), date) >= 1
-        ? date.toLocaleString(undefined, { dateStyle: "medium", timeStyle: "short" })
-        : translate("date.{distance} ago", {
-              distance: formatDistanceToNow(date, {
-                  locale: dateLocale[new StringCase(i18n.language).toLanguageObjKey() as keyof typeof dateLocale],
-              }),
-          });
-};
-
-export const formatTimerDuration = (duration: Duration) => {
-    let hours = duration.hours ?? 0;
-    if (duration.years) {
-        hours += duration.years * 365 * 24;
-    }
-    if (duration.months) {
-        hours += duration.months * 30 * 24;
-    }
-    if (duration.days) {
-        hours += duration.days * 24;
-    }
-
-    const timeTextChunks: string[] = [];
-    if (hours > 0) {
-        timeTextChunks.push(`${hours}h`);
-    }
-    if (hours < 100) {
-        if (duration.minutes) {
-            timeTextChunks.push(`${duration.minutes}m`);
-        }
-        if (duration.seconds) {
-            timeTextChunks.push(`${duration.seconds}s`);
-        }
-    }
-
-    if (!timeTextChunks.length) {
-        timeTextChunks.push("0s");
-    }
-
-    return timeTextChunks.join(" ");
-};
-
-export const formatBytes = (
+const formatBytes = (
     bytes: number,
     opts: {
         decimals?: number;
@@ -210,37 +163,12 @@ export const formatBytes = (
     return `${(bytes / Math.pow(1024, i)).toFixed(decimals)} ${sizeType === "accurate" ? (accurateSizes[i] ?? "Bytest") : (sizes[i] ?? "Bytes")}`;
 };
 
-export const convertServerFileURL = <TURL extends string | undefined>(url: TURL): TURL extends string ? string : undefined => {
-    if (!url) {
-        return url as unknown as TURL extends string ? string : undefined;
-    }
-
-    if (url.startsWith("http")) {
-        return url as unknown as TURL extends string ? string : undefined;
-    }
-
-    return `${API_URL}${url}` as unknown as TURL extends string ? string : undefined;
-};
-
-export const isValidURL = (str: unknown): bool => {
-    if (!TypeUtils.isString(str)) {
-        return false;
-    }
-
-    try {
-        new URL(str);
-        return true;
-    } catch (err) {
-        return false;
-    }
-};
-
-export const isValidIpv4OrRnage = (str: string): bool => {
+const isValidIpv4OrRnage = (str: string): bool => {
     const ipv4Pattern = /^(\d{1,3}\.){3}\d{1,3}(\/24)?$/;
     return ipv4Pattern.test(str);
 };
 
-export const isJsonString = (str: string): bool => {
+const isJsonString = (str: string): bool => {
     if (str.length > 0 && ((str[0] === "{" && str[str.length - 1] === "}") || (str[0] === "[" && str[str.length - 1] === "]"))) {
         try {
             JSON.parse(str);
@@ -253,6 +181,76 @@ export const isJsonString = (str: string): bool => {
     return false;
 };
 
-export const convertSafeEnum = <T extends Record<string, string>>(EnumType: T, value: T[keyof T] | string) => {
-    return EnumType[new StringCase(value).toPascal() as keyof typeof EnumType];
+const convertSafeEnum = <T extends Record<string, string>>(EnumType: T, value: T[keyof T] | string) => {
+    if (value.includes(".")) {
+        value = value.split(".").pop() || value;
+    }
+    return EnumType[new Case(value).toPascal() as keyof typeof EnumType];
 };
+
+class Crontab {
+    public static restoreTimezone(interval: string): string {
+        const timezoneOffset = new Date().getTimezoneOffset() / -60;
+        if (!timezoneOffset) {
+            return interval;
+        }
+
+        const parts = interval.split(" ");
+        const diffMinutes = (timezoneOffset % 1) * 60;
+        const diffHours = Math.floor(timezoneOffset);
+
+        if (diffMinutes !== 0 && parts[0] !== "*") {
+            parts[0] = Crontab.#restoreTimezoneChunk(parts[0], diffMinutes, Crontab.#ensureValidMinute);
+        }
+
+        if (diffHours !== 0 && parts[1] !== "*") {
+            parts[1] = Crontab.#restoreTimezoneChunk(parts[1], diffHours, Crontab.#ensureValidHour);
+        }
+
+        return parts.join(" ");
+    }
+
+    static #restoreTimezoneChunk(chunk: string, diff: number, ensure: (value: number) => number): string {
+        const parts = chunk.split(",");
+        const newChunks = [];
+
+        for (let i = 0; i < parts.length; ++i) {
+            const part = parts[i].trim();
+            if (part.startsWith("*/")) {
+                newChunks.push(part);
+            } else if (part.includes("-")) {
+                const [start, end] = part.split("-").map((num) => parseInt(num, 10));
+                const newStart = ensure(start + diff);
+                const newEnd = ensure(end + diff);
+                newChunks.push(`${newStart}-${newEnd}`);
+            } else {
+                const newValue = ensure(parseInt(part, 10) + diff);
+                newChunks.push(newValue.toString());
+            }
+        }
+
+        return newChunks.join(",");
+    }
+
+    static #ensureValidMinute(minute: number): number {
+        return ((minute % 60) + 60) % 60;
+    }
+
+    static #ensureValidHour(hour: number): number {
+        return ((hour % 24) + 24) % 24;
+    }
+}
+
+export const StringUtils = {
+    Case,
+    Token,
+    getInitials,
+    format,
+    formatBytes,
+    isValidIpv4OrRnage,
+    isJsonString,
+    convertSafeEnum,
+    Crontab,
+};
+
+export type TStringUtils = typeof StringUtils;

@@ -2,15 +2,15 @@ import { useTranslation } from "react-i18next";
 import { AutoComplete, Box, Button, Dialog, Flex, Floating, Form, Input, SubmitButton, Switch, Toast } from "@/components/base";
 import { useRef } from "react";
 import useCreateUserInSettings from "@/controllers/api/settings/users/useCreateUserInSettings";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import useForm from "@/core/hooks/form/useForm";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useSignUpExistsEmail from "@/controllers/api/auth/useSignUpExistsEmail";
 import { User } from "@/core/models";
 import PasswordInput from "@/components/PasswordInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IUserCreateFormDialogProps {
     opened: bool;
@@ -35,7 +35,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                 custom: {
                     errorKey: "exists",
                     validate: async (value) => {
-                        if (!TypeUtils.isString(value) || !value.trim().length) {
+                        if (!Utils.Type.isString(value) || !value.trim().length) {
                             return false;
                         }
 
@@ -81,9 +81,9 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
             }
 
             setTimeout(() => {
-                if (TypeUtils.isElement(focusComponentRef.current)) {
+                if (Utils.Type.isElement(focusComponentRef.current)) {
                     focusComponentRef.current.focus();
-                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                } else if (Utils.Type.isString(focusComponentRef.current)) {
                     formRef.current?.[focusComponentRef.current]?.focus();
                 }
             }, 0);

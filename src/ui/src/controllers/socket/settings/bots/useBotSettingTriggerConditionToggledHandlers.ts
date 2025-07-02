@@ -1,9 +1,9 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 
 export interface IBotSettingTriggerConditionToggledRawResponse {
     condition: EBotTriggerCondition;
@@ -26,7 +26,7 @@ const useBotSettingTriggerConditionToggledHandlers = ({ callback, bot }: IUseBot
             responseConverter: (data) => {
                 const newConditions = { ...bot.conditions };
 
-                const condition = EBotTriggerCondition[new StringCase(data.condition).toPascal() as keyof typeof EBotTriggerCondition];
+                const condition = EBotTriggerCondition[new Utils.String.Case(data.condition).toPascal() as keyof typeof EBotTriggerCondition];
 
                 if (data.is_enabled) {
                     newConditions[condition] = { is_predefined: false };

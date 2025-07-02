@@ -1,6 +1,6 @@
-import ESocketTopic from "@/core/server/ESocketTopic";
 import SocketClient from "@/core/server/SocketClient";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export type TEventContext = {
     client: SocketClient;
@@ -18,7 +18,7 @@ class _EventManager {
     }
 
     public on(topic: ESocketTopic, event: string, callback: TEventCallback): _EventManager {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         if (!this.#events.has(event)) {
             this.#events.set(event, {});
@@ -32,7 +32,7 @@ class _EventManager {
     }
 
     public async emit(topic: ESocketTopic, event: string, context: TEventContext): Promise<void> {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         if (!this.#events.has(event) || !this.#events.get(event)![topic]) {
             return;

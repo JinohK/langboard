@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCardComment } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetCardCommentsForm {
     project_uid: string;
@@ -18,7 +18,7 @@ const useGetCardComments = (params: IGetCardCommentsForm, options?: TQueryOption
     const { query } = useQueryMutation();
 
     const getCardComments = async () => {
-        const url = format(API_ROUTES.BOARD.CARD.COMMENT.GET_LIST, { uid: params.project_uid, card_uid: params.card_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.COMMENT.GET_LIST, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

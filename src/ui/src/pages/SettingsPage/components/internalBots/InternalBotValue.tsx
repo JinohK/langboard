@@ -1,6 +1,5 @@
 import { Alert, Box, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { InternalBotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
@@ -9,6 +8,7 @@ import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const InternalBotValue = memo(() => {
     const [t] = useTranslation();

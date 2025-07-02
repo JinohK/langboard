@@ -5,7 +5,7 @@ import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
-import { formatTimerDuration } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { add as addDate, differenceInSeconds, intervalToDuration } from "date-fns";
 import { useEffect, useMemo, useReducer, useRef } from "react";
 import { useTranslation } from "react-i18next";
@@ -137,7 +137,7 @@ function TrackingRowTimeTaken() {
         };
     }, [status]);
 
-    return <>{formatTimerDuration(duration)}</>;
+    return <>{Utils.String.formatTimerDuration(duration)}</>;
 }
 
 export default TrackingRow;

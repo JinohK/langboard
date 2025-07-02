@@ -2,5 +2,10 @@ FROM node:22
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y
-COPY . .
-RUN yarn install
+
+COPY ./ui /app
+COPY ./shared/ts /shared/ts
+
+RUN cd /shared/ts && yarn install && yarn run build && yarn link
+
+RUN cd /app && yarn install

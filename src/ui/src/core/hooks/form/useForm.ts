@@ -1,10 +1,10 @@
 import { useRef, useState } from "react";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { IUseForm, TFormDataType, TUseFormProps } from "@/core/hooks/form/types";
 import { convertValidationToLangKey, handleResponseErrors } from "@/core/hooks/form/utils";
 import { validate } from "@/core/hooks/form/validator";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TError = Error, TFormData extends bool = bool>({
     errorLangPrefix,
@@ -51,7 +51,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
         setIsValidating(true);
 
         if (predefineValues) {
-            const predefinedValues = TypeUtils.isFunction(predefineValues) ? predefineValues() : predefineValues;
+            const predefinedValues = Utils.Type.isFunction(predefineValues) ? predefineValues() : predefineValues;
             if (isFormData) {
                 Object.entries(predefinedValues).forEach(([key, value]) => {
                     if (value instanceof DataTransfer) {
@@ -79,7 +79,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
         const newErrors: typeof errors = {};
 
-        const validationSchema = TypeUtils.isFunction(schema) ? schema() : schema;
+        const validationSchema = Utils.Type.isFunction(schema) ? schema() : schema;
 
         const schemaEntries = Object.entries(validationSchema);
         for (let i = 0; i < schemaEntries.length; ++i) {
@@ -95,9 +95,9 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
 
                 if (input instanceof DataTransfer) {
                     inputValue = input.files;
-                } else if (TypeUtils.isString(input)) {
+                } else if (Utils.Type.isString(input)) {
                     inputValue = input.trim();
-                } else if (TypeUtils.isBool(input)) {
+                } else if (Utils.Type.isBool(input)) {
                     inputValue = input.toString();
                 } else {
                     inputValue = input.value.trim();
@@ -116,7 +116,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
                         inputValue = [input];
                     } else if (input instanceof DataTransfer) {
                         inputValue = input.files;
-                    } else if (TypeUtils.isString(input)) {
+                    } else if (Utils.Type.isString(input)) {
                         inputValue = input.trim();
                     } else {
                         inputValue = input;
@@ -137,7 +137,7 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             }
 
             if (isFormData) {
-                if (TypeUtils.isString(inputValue)) {
+                if (Utils.Type.isString(inputValue)) {
                     (formDataRef.current as FormData).append(inputName, inputValue);
                 } else {
                     for (let i = 0; i < inputValue.length; ++i) {
@@ -153,9 +153,9 @@ const useForm = <TVariables = unknown, TData = unknown, TContext = unknown, TErr
             setErrors(newErrors);
             setIsValidating(false);
             if (formRef.current) {
-                if (TypeUtils.isString(focusComponentRef.current)) {
+                if (Utils.Type.isString(focusComponentRef.current)) {
                     (formRef.current[focusComponentRef.current] as HTMLInputElement).focus();
-                } else if (TypeUtils.isElement(focusComponentRef.current)) {
+                } else if (Utils.Type.isElement(focusComponentRef.current)) {
                     (focusComponentRef.current as HTMLInputElement).focus();
                 }
             }

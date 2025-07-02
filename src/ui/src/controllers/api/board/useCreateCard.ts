@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateCardForm {
     project_uid: string;
@@ -15,7 +15,7 @@ const useCreateCard = (options?: TMutationOptions<ICreateCardForm, { uid: string
     const { mutate } = useQueryMutation();
 
     const createCard = async (params: ICreateCardForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CREATE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

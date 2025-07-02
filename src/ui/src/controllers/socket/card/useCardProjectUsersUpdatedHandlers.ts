@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, User } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardProjectUsersUpdatedRawResponse {
     assigned_members: User.Interface[];

@@ -1,6 +1,6 @@
 import { DATA_DIR } from "@/Constants";
 import BaseConsumer from "@/core/broadcast/BaseConsumer";
-import JsonUtils from "@/core/utils/JsonUtils";
+import { Utils } from "@langboard/core/utils";
 import * as fs from "fs";
 import * as path from "path";
 
@@ -26,7 +26,7 @@ class InMemoryConsumer extends BaseConsumer {
             const fileContent = fs.readFileSync(filename, "utf-8");
 
             try {
-                const model: { event: string; data: unknown } = JsonUtils.Parse(fileContent);
+                const model: { event: string; data: unknown } = Utils.Json.Parse(fileContent);
                 if (!model || !model.event) {
                     return;
                 }
@@ -60,7 +60,7 @@ class InMemoryConsumer extends BaseConsumer {
 
             const fileContent = fs.readFileSync(filePath, "utf-8");
             try {
-                const model: { event: string; data: unknown } = JsonUtils.Parse(fileContent);
+                const model: { event: string; data: unknown } = Utils.Json.Parse(fileContent);
                 if (model && model.event) {
                     this.emit(model.event, model.data);
                 }

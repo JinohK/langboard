@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 const useTaskAbortedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{ task_id: string }>) => {
     return useSocketHandler({

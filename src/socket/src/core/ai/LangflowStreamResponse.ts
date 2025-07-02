@@ -1,7 +1,6 @@
 import { api } from "@/core/helpers/Api";
-import JsonUtils from "@/core/utils/JsonUtils";
 import Logger from "@/core/utils/Logger";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export const getLangflowOutputMessage = (response: Record<string, any>): string | undefined => {
@@ -55,13 +54,13 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                     const allString = bufferedChunks.splice(0).join("");
                     let jsonChunk: Record<string, any>;
                     try {
-                        jsonChunk = JsonUtils.Parse(allString);
+                        jsonChunk = Utils.Json.Parse(allString);
                     } catch (e) {
                         return;
                     }
 
                     const parsedMessage = parseLangflowResponse(jsonChunk);
-                    if (TypeUtils.isString(parsedMessage)) {
+                    if (Utils.Type.isString(parsedMessage)) {
                         await onMessage(parsedMessage);
                     }
                 }
@@ -108,7 +107,7 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
 
                         let jsonChunk: Record<string, any>;
                         try {
-                            jsonChunk = JsonUtils.Parse(`${bufferedChunks.join("")}${chunk}`);
+                            jsonChunk = Utils.Json.Parse(`${bufferedChunks.join("")}${chunk}`);
                         } catch (e) {
                             bufferedChunks.push(chunk);
                             continue;
@@ -117,16 +116,16 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                         bufferedChunks.splice(0);
 
                         const parsedMessage = parseLangflowResponse(jsonChunk);
-                        if (TypeUtils.isUndefined(parsedMessage)) {
+                        if (Utils.Type.isUndefined(parsedMessage)) {
                             continue;
                         }
 
-                        if (TypeUtils.isString(parsedMessage)) {
+                        if (Utils.Type.isString(parsedMessage)) {
                             await onMessage(parsedMessage);
                             continue;
                         }
 
-                        if (TypeUtils.isObject(parsedMessage) && parsedMessage.error) {
+                        if (Utils.Type.isObject(parsedMessage) && parsedMessage.error) {
                             await endStream(new Error(`Langflow stream error: ${parsedMessage.error}`));
                             break;
                         }
@@ -151,7 +150,9 @@ const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallba
                 return;
             }
 
-            await onError?.(TypeUtils.isError(error) ? error : new Error("An unknown error occurred while processing the Langflow stream response."));
+            await onError?.(
+                Utils.Type.isError(error) ? error : new Error("An unknown error occurred while processing the Langflow stream response.")
+            );
             onEndCallback?.();
         }
     };

@@ -1,8 +1,7 @@
 import { Button, Dock, Flex, IconComponent, Popover, AnimatedEmoji } from "@/components/base";
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { LottieRefCurrentProps } from "lottie-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -34,7 +33,7 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled
 
                     return (
                         <ReactionCounterButton
-                            key={`reaction-counter-${reaction}-${createShortUUID()}`}
+                            key={`reaction-counter-${reaction}-${Utils.String.Token.shortUUID()}`}
                             reaction={reaction}
                             reactionData={reactions[reaction]}
                             toggleCallback={toggle}
@@ -112,10 +111,10 @@ function ReactionCounterButton({ reaction, reactionData, toggleCallback, isActiv
         disabled,
     };
 
-    if (TypeUtils.isUndefined(reactionData)) {
+    if (Utils.Type.isUndefined(reactionData)) {
         return (
             <Dock.Button
-                key={`reaction-dock-${reaction}-${createShortUUID()}`}
+                key={`reaction-dock-${reaction}-${Utils.String.Token.shortUUID()}`}
                 buttonProps={{
                     type: "button",
                     className: "size-full p-3",

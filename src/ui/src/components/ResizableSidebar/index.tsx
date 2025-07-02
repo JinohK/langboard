@@ -3,7 +3,7 @@ import { Box, Button, Floating, IconComponent } from "@/components/base";
 import setupResizeEvent from "@/core/events/setupResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ScreenMap } from "@/core/utils/VariantUtils";
-import { createShortUUID, createUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IResizableSidebarProps {
     main: React.ReactNode;
@@ -51,7 +51,7 @@ function ResizableSidebar({
         };
     }, []);
 
-    const sidebarId = `resizable-sidebar-${createShortUUID()}`;
+    const sidebarId = `resizable-sidebar-${Utils.String.Token.shortUUID()}`;
     const setCollapsedAttr = (collapsed: bool, sidebar?: HTMLElement, widthSize?: number) => {
         sidebar = sidebar ?? document.getElementById(sidebarId)!;
         if (!widthSize) {
@@ -159,11 +159,11 @@ function ResizableSidebar({
                 {main}
             </Box>
             <Floating.Button.Root fullScreen={floatingFullScreen} hidden={hidden}>
-                <Floating.Button.Content key={createUUID()}>
+                <Floating.Button.Content key={Utils.String.Token.uuid()}>
                     {floatingFullScreen && <Floating.Button.CloseButton />}
                     {isMobile && children}
                 </Floating.Button.Content>
-                <Floating.Button.Trigger key={createUUID()} icon={floatingIcon} title={floatingTitle} titleSide="right" />
+                <Floating.Button.Trigger key={Utils.String.Token.uuid()} icon={floatingIcon} title={floatingTitle} titleSide="right" />
             </Floating.Button.Root>
         </>
     );

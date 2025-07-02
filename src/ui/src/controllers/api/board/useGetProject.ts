@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetProjectForm {
     uid: string;
@@ -17,7 +17,7 @@ const useGetProject = (form: IGetProjectForm, options?: TQueryOptions<unknown, I
     const { query } = useQueryMutation();
 
     const getProject = async () => {
-        const url = format(API_ROUTES.BOARD.GET, { uid: form.uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.GET, { uid: form.uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

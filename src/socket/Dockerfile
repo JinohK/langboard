@@ -2,8 +2,13 @@ FROM node:22
 WORKDIR /app
 
 RUN apt-get update && apt-get install -y
-COPY . .
-RUN yarn install
+
+COPY ./socket /app
+COPY ./shared/ts /shared/ts
+
+RUN cd /shared/ts && yarn install && yarn run build && yarn link
+
+RUN cd /app && yarn install
 RUN yarn build
 RUN yarn global add pm2
 

@@ -8,11 +8,11 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import MultiSelectAssignee, { TSaveHandler } from "@/components/MultiSelectAssignee";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IWikiPrivateOptionProps {
     wiki: ProjectWiki.TModel;

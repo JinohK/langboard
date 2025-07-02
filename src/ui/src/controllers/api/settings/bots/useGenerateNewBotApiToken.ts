@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGenerateNewBotApiTokenResponse {
     secret_app_api_token: string;
@@ -14,7 +14,7 @@ const useGenerateNewBotApiToken = (bot: BotModel.TModel, options?: TMutationOpti
     const { mutate } = useQueryMutation();
 
     const generateNewBotApiToken = async () => {
-        const url = format(API_ROUTES.SETTINGS.BOTS.GENERATE_NEW_API_TOKEN, { bot_uid: bot.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.BOTS.GENERATE_NEW_API_TOKEN, { bot_uid: bot.uid });
         const res = await api.put(url, undefined, {
             env: {
                 interceptToast: options?.interceptToast,

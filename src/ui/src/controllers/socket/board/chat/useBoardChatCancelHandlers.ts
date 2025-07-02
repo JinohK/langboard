@@ -1,6 +1,6 @@
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUseBoardChatCancelHandlersProps extends IBaseUseSocketHandlersProps<{ task_id: string }> {
     projectUID: string;

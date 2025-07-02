@@ -3,11 +3,12 @@ import useRescheduleProjectBotCron from "@/controllers/api/board/settings/useRes
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
+import { Utils } from "@langboard/core/utils";
 import BoardSettingsCronBotScheduleForm, {
     IBotScheduleFormMap,
     IBotScheduleTriggersMap,
 } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IBoardSettingsCronBotScheduleEditProps {
@@ -28,7 +29,8 @@ function BoardSettingsCronBotScheduleEdit({
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: rescheduleProjectBotCronMutateAsync } = useRescheduleProjectBotCron({ interceptToast: true });
     const runningType = schedule.useField("running_type");
-    const intervalStr = schedule.useField("interval_str");
+    const rawIntervalStr = schedule.useField("interval_str");
+    const intervalStr = useMemo(() => Utils.String.Crontab.restoreTimezone(rawIntervalStr), [rawIntervalStr]);
     const targetTable = schedule.useField("target_table");
     const targetUID = schedule.useField("target_uid");
     const startAt = schedule.useField("start_at");

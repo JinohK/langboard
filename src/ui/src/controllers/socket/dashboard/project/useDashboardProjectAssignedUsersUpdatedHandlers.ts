@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboardProjectAssignedUsersUpdatedRawResponse {
     assigned_users: User.Interface[];

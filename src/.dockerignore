@@ -1,0 +1,4 @@
+# This ignore file is temporarily placed. This will be removed after publishing ts core.
+**/node_modules
+**/dist
+**/.rollup.cache

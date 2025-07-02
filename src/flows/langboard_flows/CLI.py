@@ -3,9 +3,9 @@ from pathlib import Path
 
 
 root = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(root / "shared"))
-sys.path.insert(0, str(root / "shared/core"))
-sys.path.insert(0, str(root / "shared/models"))
+sys.path.insert(0, str(root / "shared/py"))
+sys.path.insert(0, str(root / "shared/py/core"))
+sys.path.insert(0, str(root / "shared/py/models"))
 
 
 def execute():

@@ -1,12 +1,9 @@
 import Auth from "@/core/security/Auth";
-import ESocketStatus from "@/core/server/ESocketStatus";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/server/ESocketTopic";
 import SocketClient from "@/core/server/SocketClient";
-import { isValidURL } from "@/core/utils/StringUtils";
 import { WebSocket, WebSocketServer } from "ws";
 import { IncomingMessage } from "http";
-import TypeUtils from "@/core/utils/TypeUtils";
-import JsonUtils from "@/core/utils/JsonUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketStatus, ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 import EventManager from "@/core/server/EventManager";
 
 class SocketManager {
@@ -28,7 +25,7 @@ class SocketManager {
             return;
         }
 
-        const url = new URL(!isValidURL(request.url) ? `http://localhost${request.url}` : request.url);
+        const url = new URL(!Utils.String.isValidURL(request.url) ? `http://localhost${request.url}` : request.url);
         const user = await Auth.validateToken("socket", url.searchParams);
         if (!user) {
             ws.close(ESocketStatus.WS_3000_UNAUTHORIZED);
@@ -54,7 +51,7 @@ class SocketManager {
         ping();
 
         ws.on("message", async (message) => {
-            if (TypeUtils.isNullOrUndefined(message)) {
+            if (Utils.Type.isNullOrUndefined(message)) {
                 return;
             }
 
@@ -66,7 +63,7 @@ class SocketManager {
             const decoder = new TextDecoder("utf-8");
             let parsedMessage;
             try {
-                parsedMessage = JsonUtils.Parse(decoder.decode(message as ArrayBuffer));
+                parsedMessage = Utils.Json.Parse(decoder.decode(message as ArrayBuffer));
             } catch (error) {
                 return;
             }

@@ -1,12 +1,12 @@
 import { Button, Flex, IconComponent, Toast } from "@/components/base";
 import useDeleteSelectedSettings from "@/controllers/api/settings/useDeleteSelectedSettings";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { ROUTES } from "@/core/routing/constants";
 import WebhookList from "@/pages/SettingsPage/components/webhook/WebhookList";
+import { EHttpStatus } from "@langboard/core/enums";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 

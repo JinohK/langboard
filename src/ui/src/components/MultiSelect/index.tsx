@@ -6,8 +6,7 @@ import { Command as CommandPrimitive } from "cmdk";
 import { Badge, Box, Command, Flex, IconComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useFloating, autoUpdate, offset, shift, limitShift, hide, flip, size } from "@floating-ui/react-dom";
-import TypeUtils from "@/core/utils/TypeUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IMultiSelectItem {
     label: string;
@@ -100,7 +99,7 @@ const MultiSelect = React.memo(
         const setSelectedWithFireEvent = React.useCallback(
             (action: React.SetStateAction<string[]>) => {
                 setSelected((prev) => {
-                    const newSelected = TypeUtils.isFunction(action) ? action(prev) : action;
+                    const newSelected = Utils.Type.isFunction(action) ? action(prev) : action;
                     if (onValueChange) {
                         setTimeout(() => {
                             setInputValue("");
@@ -504,8 +503,8 @@ const MultiSelectItemList = React.memo(
                 <Command.Group className="h-full overflow-auto" forceMount onMouseDown={onPointerDown} onTouchStart={onPointerDown}>
                     {newItems.map((newItem) => (
                         <Command.Item
-                            key={createShortUUID()}
-                            onSelect={() => onSelect(TypeUtils.isArray(newItem.value) ? newItem.value : [newItem.value])}
+                            key={Utils.String.Token.shortUUID()}
+                            onSelect={() => onSelect(Utils.Type.isArray(newItem.value) ? newItem.value : [newItem.value])}
                             disabled={disabled}
                             className="cursor-pointer"
                         >

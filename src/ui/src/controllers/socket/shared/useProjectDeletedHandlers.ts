@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { deleteProjectModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUseProjectDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     topic: ESocketTopic.Board | ESocketTopic.Dashboard;

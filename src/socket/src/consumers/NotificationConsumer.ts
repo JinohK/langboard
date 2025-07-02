@@ -1,15 +1,13 @@
 import * as nodemailer from "nodemailer";
 import * as fs from "fs";
 import Consumer from "@/core/broadcast/Consumer";
-import ESocketTopic from "@/core/server/ESocketTopic";
 import Subscription from "@/core/server/Subscription";
-import TypeUtils from "@/core/utils/TypeUtils";
 import UserNotification from "@/models/UserNotification";
 import UserNotificationUnsubscription, { ENotificationChannel, TSocketPublishData } from "@/models/UserNotificationUnsubscription";
 import { MAIL_FROM, MAIL_FROM_NAME, MAIL_PASSWORD, MAIL_PORT, MAIL_SERVER, MAIL_SSL_TLS, MAIL_USERNAME, PROJECT_NAME, ROOT_DIR } from "@/Constants";
 import * as path from "path";
-import { format, StringCase } from "@/core/utils/StringUtils";
-import JsonUtils from "@/core/utils/JsonUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import SnowflakeID from "@/core/db/SnowflakeID";
 
 Consumer.register("notification_publish", async (data: unknown) => {
@@ -59,15 +57,15 @@ Consumer.register("notification_publish", async (data: unknown) => {
 
         let subject;
         try {
-            const locale = JsonUtils.Parse(fs.readFileSync(langPath, "utf-8"));
+            const locale = Utils.Json.Parse(fs.readFileSync(langPath, "utf-8"));
             subject = locale.subjects[model.email_template_name];
-            subject = `[${new StringCase(PROJECT_NAME).toPascal()}] ${subject}`;
-            subject = format(subject, model.email_formats ?? {});
+            subject = `[${new Utils.String.Case(PROJECT_NAME).toPascal()}] ${subject}`;
+            subject = Utils.String.format(subject, model.email_formats ?? {});
         } catch {
             return;
         }
 
-        const content = format(fs.readFileSync(templatePath, "utf-8"), model.email_formats ?? {});
+        const content = Utils.String.format(fs.readFileSync(templatePath, "utf-8"), model.email_formats ?? {});
 
         await nodemailer
             .createTransport({
@@ -103,7 +101,7 @@ Consumer.register("notification_publish", async (data: unknown) => {
         }
     };
 
-    if (!TypeUtils.isObject<TSocketPublishData>(data)) {
+    if (!Utils.Type.isObject<TSocketPublishData>(data)) {
         return;
     }
 

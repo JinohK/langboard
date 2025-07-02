@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -62,7 +62,7 @@ const useSearchFilters = <TFilterMap extends ISearchFilterMap>(
         if (rawFilters) {
             rawFilters.split(",").map((rawFilter) => {
                 const [key, value] = rawFilter.split(":");
-                if (TypeUtils.isNull(value) || TypeUtils.isUndefined(value) || !value.length) {
+                if (Utils.Type.isNull(value) || Utils.Type.isUndefined(value) || !value.length) {
                     return;
                 }
 

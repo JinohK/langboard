@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useRef, useState } from "react";
 
 const useGetProjectBotSchedules = (projectUID: string, botUID: string, limit: number = 20, options?: TMutationOptions) => {
@@ -22,7 +22,7 @@ const useGetProjectBotSchedules = (projectUID: string, botUID: string, limit: nu
 
         ++pageRef.current;
 
-        const url = format(API_ROUTES.BOARD.SETTINGS.BOT_SCHEDULE.GET_ALL, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.BOT_SCHEDULE.GET_ALL, {
             uid: projectUID,
             bot_uid: botUID,
         });

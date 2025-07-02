@@ -3,9 +3,8 @@ import * as SeparatorPrimitive from "@radix-ui/react-separator";
 import React, { forwardRef, memo } from "react";
 import { Avatar, Box, Card, Flex, IconComponent, Popover, Separator } from "@/components/base";
 import { BotModel, User } from "@/core/models";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createNameInitials } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { UserAvatarProvider, useUserAvatar } from "@/components/UserAvatar/Provider";
 import UserAvatarTrigger, { TriggerVariants } from "@/components/UserAvatar/Trigger";
 import { IUserAvatarProps } from "@/components/UserAvatar/types";
@@ -37,7 +36,7 @@ function UserRoot(props: IUserAvatarRootProps & { user: User.TModel }) {
     const lastname = user.useField("lastname");
     const username = user.useField("username");
     const userAvatar = user.useField("avatar");
-    const initials = createNameInitials(firstname, lastname);
+    const initials = Utils.String.getInitials(firstname, lastname);
     const isDeletedUser = user.isDeletedUser(userType);
     const isPresentableUnknownUser = user.isPresentableUnknownUser(userType);
 
@@ -69,7 +68,7 @@ function BotRoot(props: IUserAvatarRootProps & { bot: BotModel.TModel }) {
     const botName = bot.useField("name");
     const botUName = bot.useField("bot_uname");
     const botAvatar = bot.useField("avatar");
-    const initials = createNameInitials(botName);
+    const initials = Utils.String.getInitials(botName);
 
     if (onlyAvatar || !children) {
         return <>{trigger}</>;
@@ -106,7 +105,7 @@ interface IHoverableRootProps {
 
 function HoverableRoot({ trigger, initials, listAlign, avatarUrl, avatarFallback, cardTitle, children }: IHoverableRootProps) {
     const { isOpened, hoverProps, setIsOpened, onPointerEnter, onPointerLeave, getAvatarHoverCardAttrs } = useUserAvatar();
-    const [bgColor, textColor] = new ColorGenerator(initials).generateAvatarColor();
+    const [bgColor, textColor] = new Utils.Color.Generator(initials).generateAvatarColor();
 
     const hoverAttrs = {
         ...getAvatarHoverCardAttrs(),

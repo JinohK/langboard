@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IToggleCardCheckitemCheckedForm {
     project_uid: string;
@@ -14,7 +14,7 @@ const useToggleCardCheckitemChecked = (options?: TMutationOptions<IToggleCardChe
     const { mutate } = useQueryMutation();
 
     const toggleCheckitemChecked = async (params: IToggleCardCheckitemCheckedForm) => {
-        const url = format(API_ROUTES.BOARD.CARD.CHECKITEM.TOGGLE_CHECKED, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKITEM.TOGGLE_CHECKED, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checkitem_uid: params.checkitem_uid,

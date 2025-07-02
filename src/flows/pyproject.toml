@@ -23,8 +23,8 @@ link-mode = "copy"
 
 
 [tool.uv.sources]
-core = { path = "../shared/core" }
-models = { path = "../shared/models" }
+core = { path = "../shared/py/core" }
+models = { path = "../shared/py/models" }
 langboard-flows = { workspace = true }
 
 

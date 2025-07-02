@@ -4,10 +4,10 @@ import { useRef, useState } from "react";
 import useCreateSetting from "@/controllers/api/settings/useCreateSetting";
 import { ESettingType } from "@/core/models/AppSettingModel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
-import { isValidURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 
 export interface IWebhookCreateFormDialogProps {
@@ -40,7 +40,7 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
             focusableInput = nameInputRef.current;
         }
 
-        if (!isValidURL(urlValue)) {
+        if (!Utils.String.isValidURL(urlValue)) {
             newErrors.url = t("settings.errors.invalid.webhook_url");
             if (!focusableInput) {
                 focusableInput = urlInputRef.current;

@@ -1,7 +1,6 @@
-import ESocketTopic from "@/core/server/ESocketTopic";
 import ISocketClient from "@/core/server/ISocketClient";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IValidatorContext {
     client: ISocketClient;
@@ -18,13 +17,13 @@ class _Subscription {
     }
 
     public registerValidator(topic: ESocketTopic | string, validator: (context: IValidatorContext) => Promise<bool>): void {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         this.#validators.set(topic, validator);
     }
 
     public async publish(topic: ESocketTopic | string, topicId: string, event: string, data: Record<string, unknown>) {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         const subscriptions = this.#subscriptions.get(topic);
         if (!subscriptions) {
@@ -56,7 +55,7 @@ class _Subscription {
     }
 
     public async subscribe(ws: ISocketClient, topic: ESocketTopic | string, topicId: string | string[]) {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         if (!this.#subscriptions.has(topic)) {
             this.#subscriptions.set(topic, new Map());
@@ -64,11 +63,11 @@ class _Subscription {
 
         const subscriptions = this.#subscriptions.get(topic)!;
 
-        topicId = TypeUtils.isArray(topicId) ? topicId : [topicId];
+        topicId = Utils.Type.isArray(topicId) ? topicId : [topicId];
         const subscribedIDs: string[] = [];
         for (let i = 0; i < topicId.length; ++i) {
             const id = topicId[i];
-            if (!TypeUtils.isString(id) || !id.length) {
+            if (!Utils.Type.isString(id) || !id.length) {
                 continue;
             }
 
@@ -98,14 +97,14 @@ class _Subscription {
     }
 
     public async unsubscribe(ws: ISocketClient, topic: ESocketTopic | string, topicId: string | string[]) {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         const subscriptions = this.#subscriptions.get(topic);
         if (!subscriptions) {
             return;
         }
 
-        topicId = TypeUtils.isArray(topicId) ? topicId : [topicId];
+        topicId = Utils.Type.isArray(topicId) ? topicId : [topicId];
         for (let i = 0; i < topicId.length; ++i) {
             const id = topicId[i];
             const subscriberSet = subscriptions.get(id);

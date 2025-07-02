@@ -3,12 +3,12 @@ import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from
 import { useRef, useState } from "react";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import AvatarUploader from "@/components/AvatarUploader";
 import { BotModel } from "@/core/models";
-import { isValidIpv4OrRnage, isValidURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import CopyInput from "@/components/CopyInput";
 import MultiSelect from "@/components/MultiSelect";
 import PasswordInput from "@/components/PasswordInput";
@@ -57,7 +57,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 if (!focusableInput) {
                     focusableInput = input;
                 }
-            } else if (key === "apiURL" && !isValidURL(value)) {
+            } else if (key === "apiURL" && !Utils.String.isValidURL(value)) {
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.invalid.bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;
@@ -238,7 +238,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 }}
                                 inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
                                 canCreateNew
-                                validateCreatedNewValue={isValidIpv4OrRnage}
+                                validateCreatedNewValue={Utils.String.isValidIpv4OrRnage}
                                 createNewCommandItemLabel={(value) => {
                                     const newIPs: string[] = [];
 

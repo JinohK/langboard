@@ -1,7 +1,7 @@
-import ESocketTopic from "@/core/server/ESocketTopic";
 import Subscription from "@/core/server/Subscription";
 import ProjectAssignedBot from "@/models/ProjectAssignedBot";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
+import { ESocketTopic } from "@langboard/core/enums";
 
 Subscription.registerValidator(ESocketTopic.User, async (context) => {
     if (!context.topicId.includes("-")) {

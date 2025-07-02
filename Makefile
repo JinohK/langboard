@@ -9,6 +9,7 @@ UI_DIR := src/ui
 API_DIR := src/api
 FLOWS_DIR := src/flows
 SOCKET_DIR := src/socket
+TS_CORE_DIR := src/shared/ts
 GREEN := \033[0;32m
 RED := \033[0;31m
 CYAN := \033[0;36m
@@ -57,8 +58,14 @@ clean_python_cache: ## clean Python cache
 	find . -type f -name '.*~' -exec rm -f {} +
 	@printf "$(GREEN)Python cache cleaned.$(NC)"
 
+clean_ts_core_cache: ## clean Yarn cache
+	@echo "Cleaning ts core cache..."
+	cd $(TS_CORE_DIR) && yarn cache clean --force
+	rm -rf $(TS_CORE_DIR)/node_modules $(TS_CORE_DIR)/build
+	@printf "$(GREEN)Yarn cache and ts core directories cleaned.$(NC)"
+
 clean_ui_cache: ## clean Yarn cache
-	@echo "Cleaning yarn cache..."
+	@echo "Cleaning ui cache..."
 	cd $(UI_DIR) && yarn cache clean --force
 	rm -rf $(UI_DIR)/node_modules $(UI_DIR)/build
 	@printf "$(GREEN)Yarn cache and ui directories cleaned.$(NC)"
@@ -74,17 +81,25 @@ format: ## run code formatters
 	poetry run ruff format .
 	cd $(FLOWS_DIR) && uv run ruff check . --fix
 	cd $(FLOWS_DIR) && uv run ruff format .
+	cd $(TS_CORE_DIR) && yarn run format
 	cd $(UI_DIR) && yarn run format
 	cd $(SOCKET_DIR) && yarn run format
 
 lint: ## run linters
 	poetry run ruff check .
-	cd $(FLOWS_DIR) && uv run ruff check . --fix
+	cd $(FLOWS_DIR) && uv run ruff check .
+	cd $(TS_CORE_DIR) && yarn run lint
 	cd $(UI_DIR) && yarn run lint
+	cd $(SOCKET_DIR) && yarn run lint
 
 install_api: ## install the api dependencies
 	@echo 'Installing api dependencies'
 	@poetry install
+
+install_ts_core: ## install the ts core dependencies
+	@echo 'Installing ts core dependencies'
+	cd $(TS_CORE_DIR) && yarn install
+	yarn run build -w
 
 install_ui: ## install ui dependencies
 	@echo 'Installing ui dependencies'
@@ -98,11 +113,14 @@ install_socket: ## install socket dependencies
 	@echo 'Installing socket dependencies'
 	cd $(SOCKET_DIR) && yarn install
 
-dev_ui: ## run the UI in development mode
-	cd $(UI_DIR) && yarn run dev
-
 dev_api: ## run the API in development mode
 	langboard run -w
+
+dev_ts_core_build: ## build the shared core in development mode
+	cd $(TS_CORE_DIR) && yarn run build -w
+
+dev_ui: ## run the UI in development mode
+	cd $(UI_DIR) && yarn run dev
 
 dev_flows: ## run the Flows in development mode
 	cd $(FLOWS_DIR) && uv run flows run -w
@@ -113,8 +131,9 @@ dev_socket: ## run the Socket in development mode
 dev_socket_build: ## build the Socket in development mode
 	cd $(SOCKET_DIR) && yarn run build -w
 
-init: check_tools clean_python_cache clean_ui_cache clean_socket_cache ## initialize the project
+init: check_tools clean_python_cache clean_ts_core_cache clean_ui_cache clean_socket_cache ## initialize the project
 	make install_api
+	make install_ts_core
 	make install_ui
 	make install_flows
 	make install_socket

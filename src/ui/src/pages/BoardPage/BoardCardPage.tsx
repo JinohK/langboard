@@ -1,11 +1,11 @@
 import { Dialog } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useRef } from "react";
 import { Navigate, useParams } from "react-router";
 

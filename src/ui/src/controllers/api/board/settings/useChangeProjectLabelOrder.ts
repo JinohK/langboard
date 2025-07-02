@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IChangeProjectLabelOrderForm {
     project_uid: string;
@@ -16,7 +16,7 @@ const useChangeProjectLabelOrder = (options?: TMutationOptions<IChangeProjectLab
     const { mutate } = useQueryMutation();
 
     const changeProjectLabelOrder = async (params: IChangeProjectLabelOrderForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.LABEL.CHANGE_ORDER, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.LABEL.CHANGE_ORDER, {
             uid: params.project_uid,
             label_uid: params.label_uid,
         });

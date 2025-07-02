@@ -1,7 +1,5 @@
 import type { IModelMap, TPickedModel, TPickedModelClass } from "@/core/models/ModelRegistry";
-import { deleteDeepRecordMap, getDeepRecordMap } from "@/core/utils/ObjectUtils";
-import { createUUID } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useMemo, useReducer, useState } from "react";
 
 type TCommonModel = TPickedModel<keyof IModelMap>;
@@ -67,12 +65,12 @@ class _ModelEdgeStore {
     }
 
     public addEdge(source: TCommonModel, targets: TCommonModel | TCommonModel[]) {
-        if (!TypeUtils.isArray(targets)) {
+        if (!Utils.Type.isArray(targets)) {
             targets = [targets];
         }
 
         const sourceModelName = this.#convertModelName(source.MODEL_NAME);
-        const targetMap = getDeepRecordMap(true, this.#edgeMap, sourceModelName, source.uid);
+        const targetMap = Utils.Object.getDeepRecordMap(true, this.#edgeMap, sourceModelName, source.uid);
         const notifierMap: Partial<Record<keyof IModelMap, [TPickedModelClass<keyof IModelMap>, string[]]>> = {};
         for (let i = 0; i < targets.length; ++i) {
             const target = targets[i];
@@ -136,14 +134,14 @@ class _ModelEdgeStore {
         modelName?: keyof IModelMap
     ) {
         const sourceModelName = this.#convertModelName(source.MODEL_NAME);
-        const targetMap = getDeepRecordMap(false, this.#edgeMap, sourceModelName, source.uid);
+        const targetMap = Utils.Object.getDeepRecordMap(false, this.#edgeMap, sourceModelName, source.uid);
         if (!targetMap) {
             return;
         }
 
         modelName = modelName ? this.#convertModelName(modelName) : undefined;
 
-        if (TypeUtils.isFunction(targets)) {
+        if (Utils.Type.isFunction(targets)) {
             if (!modelName || !targetMap[modelName]) {
                 return;
             }
@@ -165,7 +163,7 @@ class _ModelEdgeStore {
             return;
         }
 
-        if (!TypeUtils.isArray(targets)) {
+        if (!Utils.Type.isArray(targets)) {
             targets = [targets as TCommonModel];
         }
 
@@ -177,7 +175,7 @@ class _ModelEdgeStore {
             const children = targetMap[modelName]!;
             for (let i = 0; i < targets.length; ++i) {
                 const target = targets[i];
-                const targetUID = TypeUtils.isString(target) ? target : target.uid;
+                const targetUID = Utils.Type.isString(target) ? target : target.uid;
                 children.delete(targetUID);
                 this.#notify({
                     event: "DISCONNECTED",
@@ -190,7 +188,7 @@ class _ModelEdgeStore {
 
         for (let i = 0; i < targets.length; ++i) {
             const target = targets[i];
-            if (TypeUtils.isString(target)) {
+            if (Utils.Type.isString(target)) {
                 continue;
             }
 
@@ -219,7 +217,7 @@ class _ModelEdgeStore {
         if (event === "CONNECTED") {
             targetModelName = this.#convertModelName(context.targetClass.MODEL_NAME);
 
-            targetMap = getDeepRecordMap(true, this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName);
+            targetMap = Utils.Object.getDeepRecordMap(true, this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName);
             targetMap[key] = callback;
             return () => {
                 this.unsubscribe({
@@ -233,7 +231,14 @@ class _ModelEdgeStore {
 
         targetModelName = this.#convertModelName(context.target.MODEL_NAME);
 
-        targetMap = getDeepRecordMap(true, this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, targetModelName, context.target.uid);
+        targetMap = Utils.Object.getDeepRecordMap(
+            true,
+            this.#subscriptions.DISCONNECTED,
+            sourceModelName,
+            source.uid,
+            targetModelName,
+            context.target.uid
+        );
         targetMap[key] = callback;
 
         return () => {
@@ -254,10 +259,10 @@ class _ModelEdgeStore {
         let targetModelName;
         if (event === "CONNECTED") {
             targetModelName = this.#convertModelName(context.targetClass.MODEL_NAME);
-            deleteDeepRecordMap(this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName, key);
+            Utils.Object.deleteDeepRecordMap(this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName, key);
         } else {
             targetModelName = this.#convertModelName(context.target.MODEL_NAME);
-            deleteDeepRecordMap(this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, targetModelName, context.target.uid, key);
+            Utils.Object.deleteDeepRecordMap(this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, targetModelName, context.target.uid, key);
         }
     }
 
@@ -275,7 +280,7 @@ class _ModelEdgeStore {
         useEffect(() => {
             const unsubs: (() => void)[] = models
                 .map((model) => {
-                    const key = `${sourceModelName}-${source.uid}-${targetModelName}-${model.uid}-${createUUID()}`;
+                    const key = `${sourceModelName}-${source.uid}-${targetModelName}-${model.uid}-${Utils.String.Token.uuid()}`;
                     const unsub = store.subscribe({
                         event: "DISCONNECTED",
                         key,
@@ -291,7 +296,7 @@ class _ModelEdgeStore {
                 .concat(
                     store.subscribe({
                         event: "CONNECTED",
-                        key: `${sourceModelName}-${source.uid}-${targetModelName}-${createUUID()}`,
+                        key: `${sourceModelName}-${source.uid}-${targetModelName}-${Utils.String.Token.uuid()}`,
                         targetClass,
                         source,
                         callback: (uids: string[]) => {
@@ -346,7 +351,7 @@ class _ModelEdgeStore {
                 return;
             }
 
-            const key = `${sourceModelName}-${source.uid}-${targetModelName}-${model.uid}-${createUUID()}`;
+            const key = `${sourceModelName}-${source.uid}-${targetModelName}-${model.uid}-${Utils.String.Token.uuid()}`;
             const unsub = store.subscribe({
                 event: "DISCONNECTED",
                 key,
@@ -379,10 +384,10 @@ class _ModelEdgeStore {
         let subscriptions;
         if (event === "CONNECTED") {
             const targetModelName = this.#convertModelName(context.targetClass.MODEL_NAME);
-            subscriptions = getDeepRecordMap(false, this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName);
+            subscriptions = Utils.Object.getDeepRecordMap(false, this.#subscriptions.CONNECTED, sourceModelName, source.uid, targetModelName);
         } else {
             const { modelName, uid } = context.target;
-            subscriptions = getDeepRecordMap(false, this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, modelName, uid);
+            subscriptions = Utils.Object.getDeepRecordMap(false, this.#subscriptions.DISCONNECTED, sourceModelName, source.uid, modelName, uid);
         }
 
         if (!subscriptions) {

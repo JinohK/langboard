@@ -1,11 +1,10 @@
 import useUserUpdatedHandlers from "@/controllers/socket/user/useUserUpdatedHandlers";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import createFakeModel from "@/core/models/FakeModel";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
-import { convertServerFileURL } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import useUserDeletedHandlers from "@/controllers/socket/user/useUserDeletedHandlers";
 
 export interface Interface extends IBaseModel {
@@ -102,12 +101,12 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
 
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
-            model.avatar = convertServerFileURL(model.avatar);
+            model.avatar = Utils.String.convertServerFileURL(model.avatar);
         }
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
-        if (TypeUtils.isString(model.activated_at)) {
+        if (Utils.Type.isString(model.activated_at)) {
             model.activated_at = new Date(model.activated_at);
         }
         return model;
@@ -116,7 +115,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
     public static createFakeMethodsMap<TMethodMap>(model: Interface): TMethodMap {
         const map = {
             isPresentableUnknownUser: () => model.type === User.GROUP_EMAIL_TYPE,
-            isValidUser: () => TypeUtils.isString(model.uid) && !map.isPresentableUnknownUser(),
+            isValidUser: () => Utils.Type.isString(model.uid) && !map.isPresentableUnknownUser(),
             isDeletedUser: () => model.type === User.UNKNOWN_TYPE,
         };
         return map as TMethodMap;
@@ -227,7 +226,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
         return this.getValue("activated_at");
     }
     public set activated_at(value: string | Date | undefined) {
-        this.update({ activated_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ activated_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 
     public isPresentableUnknownUser(type?: User["type"]) {
@@ -238,7 +237,7 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
     }
 
     public isValidUser() {
-        return TypeUtils.isString(this.uid) && !this.isPresentableUnknownUser();
+        return Utils.Type.isString(this.uid) && !this.isPresentableUnknownUser();
     }
 
     public isDeletedUser(type?: User["type"]) {

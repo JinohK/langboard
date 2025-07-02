@@ -3,8 +3,8 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Flex, Floating, Form, Skeleton, SubmitButton, Toast } from "@/components/base";
 import useAddNewEmail from "@/controllers/api/account/useAddNewEmail";
 import useForm from "@/core/hooks/form/useForm";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
+import { Utils } from "@langboard/core/utils";
 
 export function SkeletonAddSubEmailForm(): JSX.Element {
     const [t] = useTranslation();
@@ -35,7 +35,7 @@ function AddSubEmailForm(): JSX.Element {
                 custom: {
                     errorKey: "exists",
                     validate: (value) => {
-                        if (!TypeUtils.isString(value) || currentUser.email === value) {
+                        if (!Utils.Type.isString(value) || currentUser.email === value) {
                             return false;
                         }
 

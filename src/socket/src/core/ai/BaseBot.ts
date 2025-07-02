@@ -3,12 +3,12 @@ import { createLangflowRequestModel, parseLangflowResponse } from "@/core/ai/Lan
 import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
 import { ILangflowRequestModel } from "@/core/ai/types";
 import { api } from "@/core/helpers/Api";
-import EHttpStatus from "@/core/server/EHttpStatus";
 import Logger from "@/core/utils/Logger";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import InternalBot, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 import fs from "fs";
+import { EHttpStatus } from "@langboard/core/enums";
 
 abstract class BaseBot {
     static get BOT_TYPE(): EInternalBotType {
@@ -218,12 +218,12 @@ export const registerBot = <TBot extends typeof BaseBot>(bot: TBot) => {
         throw new Error("Bot must have a botType property");
     }
 
-    const botType = convertSafeEnum(EInternalBotType, bot.BOT_TYPE);
+    const botType = Utils.String.convertSafeEnum(EInternalBotType, bot.BOT_TYPE);
     BOTS.set(botType, new (bot as any)());
 };
 
 export const getBot = (botType: EInternalBotType): BaseBot | undefined => {
-    botType = convertSafeEnum(EInternalBotType, botType);
+    botType = Utils.String.convertSafeEnum(EInternalBotType, botType);
     return BOTS.get(botType);
 };
 

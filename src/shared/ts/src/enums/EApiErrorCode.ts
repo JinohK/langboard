@@ -1,4 +1,4 @@
-enum EApiErrorCode {
+export enum EApiErrorCode {
     // Authentication and Authorization Errors
     AU1001 = "No authorized to access this endpoint.",
     AU1002 = "The email isn't verified yet.",
@@ -68,5 +68,3 @@ enum EApiErrorCode {
     OP1001 = "Failed to send email.",
     OP1002 = "Failed to upload.",
 }
-
-export default EApiErrorCode;

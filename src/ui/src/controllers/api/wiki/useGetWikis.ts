@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel, ProjectWiki, User } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetWikisForm {
     project_uid: string;
@@ -19,7 +19,7 @@ const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGe
     const { query } = useQueryMutation();
 
     const getWikis = async () => {
-        const url = format(API_ROUTES.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

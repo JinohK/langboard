@@ -1,4 +1,4 @@
-import { isValidURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { type TMentionElement } from "platejs";
 import { convertNodesSerialize, MentionNode as IBaseMentionNode, MdLink, SerializeMdOptions } from "@platejs/markdown";
 import type { Node, Parent, Link, RootContent } from "mdast";
@@ -32,7 +32,7 @@ export const remark: Plugin = function () {
             if (
                 !parent ||
                 typeof index !== "number" ||
-                isValidURL(node.url) ||
+                Utils.String.isValidURL(node.url) ||
                 node.children?.[0].type !== "strong" ||
                 node.children[0].children?.[0].type !== "text"
             )

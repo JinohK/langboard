@@ -3,7 +3,7 @@ import { TMetadataForm } from "@/controllers/api/metadata/types";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface ISaveMetadataForm {
     key: string;
@@ -17,10 +17,10 @@ const useSaveMetadata = (form: TMetadataForm, options?: TMutationOptions<ISaveMe
     let url: string;
     switch (form.type) {
         case "card":
-            url = format(API_ROUTES.METADATA.CARD, { uid: form.project_uid, card_uid: form.uid });
+            url = Utils.String.format(API_ROUTES.METADATA.CARD, { uid: form.project_uid, card_uid: form.uid });
             break;
         case "project_wiki":
-            url = format(API_ROUTES.METADATA.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.uid });
+            url = Utils.String.format(API_ROUTES.METADATA.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.uid });
             break;
         default:
             throw new Error("Invalid metadata type");

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IDeleteProjectColumnForm {
     project_uid: string;
@@ -13,7 +13,7 @@ const useDeleteProjectColumn = (options?: TMutationOptions<IDeleteProjectColumnF
     const { mutate } = useQueryMutation();
 
     const deleteProjectColumn = async (params: IDeleteProjectColumnForm) => {
-        const url = format(API_ROUTES.BOARD.COLUMN.DELETE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.COLUMN.DELETE, {
             uid: params.project_uid,
             column_uid: params.column_uid,
         });

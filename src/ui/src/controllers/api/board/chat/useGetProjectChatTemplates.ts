@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ChatTemplateModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetProjectChatTemplatesForm {
     project_uid: string;
@@ -13,7 +13,7 @@ const useGetProjectChatTemplates = (options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
 
     const getProjectChatTemplates = async (params: IGetProjectChatTemplatesForm) => {
-        const url = format(API_ROUTES.BOARD.CHAT.TEMPLATE.GET_LIST, {
+        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.TEMPLATE.GET_LIST, {
             uid: params.project_uid,
         });
         const res = await api.get(url, {

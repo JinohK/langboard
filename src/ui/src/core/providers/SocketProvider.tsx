@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { createContext, useContext, useEffect } from "react";
 import { refresh } from "@/core/helpers/Api";
-import ESocketStatus from "@/core/helpers/ESocketStatus";
 import { useAuth } from "@/core/providers/AuthProvider";
 import useSocketStore, {
     getTopicWithId,
@@ -12,8 +11,8 @@ import useSocketStore, {
     TSocketAddEventProps,
     TSocketRemoveEventProps,
 } from "@/core/stores/SocketStore";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useAuthStore from "@/core/stores/AuthStore";
+import { ESocketStatus, ESocketTopic } from "@langboard/core/enums";
 
 interface IBaseRunEventsProps {
     topic?: ESocketTopic;

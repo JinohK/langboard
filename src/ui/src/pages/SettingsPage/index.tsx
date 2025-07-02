@@ -3,7 +3,6 @@ import { DashboardStyledLayout } from "@/components/Layout";
 import { ISidebarNavItem } from "@/components/Sidebar/types";
 import useGetAllSettings from "@/controllers/api/settings/useGetAllSettings";
 import useIsSettingsAvailable from "@/controllers/api/settings/useIsSettingsAvailable";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { AppSettingProvider } from "@/core/providers/AppSettingProvider";
@@ -16,9 +15,9 @@ import WebhooksPage from "@/pages/SettingsPage/WebhooksPage";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useSocket } from "@/core/providers/SocketProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import UsersPage from "@/pages/SettingsPage/UsersPage";
 import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 
 function SettingsProxy(): JSX.Element {
     const [t] = useTranslation();

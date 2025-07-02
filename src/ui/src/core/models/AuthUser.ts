@@ -3,11 +3,11 @@ import useUserDeletedHandlers from "@/controllers/socket/user/useUserDeletedHand
 import useUserNotificationDeletedHandlers from "@/controllers/socket/user/useUserNotificationDeletedHandlers";
 import useUserNotifiedHandlers from "@/controllers/socket/user/useUserNotifiedHandlers";
 import useUserProjectRolesUpdatedHandlers from "@/controllers/socket/user/useUserProjectRolesUpdatedHandlers";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { ENotificationChannel, ENotificationScope, TNotificationType } from "@/core/models/notification.type";
 import * as User from "@/core/models/User";
 import * as UserGroup from "@/core/models/UserGroup";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import { ESocketTopic } from "@langboard/core/enums";
 
 interface INotificationUnsubscriptionMap {
     [ENotificationScope.All]?: {

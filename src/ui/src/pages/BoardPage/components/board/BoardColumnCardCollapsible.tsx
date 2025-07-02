@@ -9,7 +9,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import SelectRelationshipDialog from "@/pages/BoardPage/components/board/SelectRelationshipDialog";
 import BoardColumnCardRelationship from "@/pages/BoardPage/components/board/BoardColumnCardRelationship";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { LabelModelBadge } from "@/components/LabelBadge";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
@@ -167,7 +167,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                         {!!presentableRelationships.length && (
                             <Card.Content className="px-6 pb-4">
                                 {presentableRelationships.map(([relatedCardTitle, relationshipName]) => (
-                                    <Flex key={createShortUUID()} items="center" gap="2" className="truncate text-accent-foreground/70">
+                                    <Flex key={Utils.String.Token.shortUUID()} items="center" gap="2" className="truncate text-accent-foreground/70">
                                         <span>{relationshipName}</span>
                                         <span className="text-muted-foreground">&gt;</span>
                                         <span className="truncate">{relatedCardTitle}</span>

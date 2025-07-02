@@ -4,14 +4,12 @@ import { Navigate } from "react-router";
 import { DashboardStyledLayout } from "@/components/Layout";
 import { Toast } from "@/components/base";
 import useIsProjectAvailable from "@/controllers/api/board/useIsProjectAvailable";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ChatSidebar from "@/pages/BoardPage/components/chat/ChatSidebar";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/chat/useIsBoardChatAvailableHandlers";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
 import BoardPage from "@/pages/BoardPage/BoardPage";
@@ -29,6 +27,7 @@ import useBoardAssignedInternalBotChangedHandlers from "@/controllers/socket/boa
 import useInternalBotUpdatedHandlers from "@/controllers/socket/global/useInternalBotUpdatedHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { InternalBotModel, Project } from "@/core/models";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 
 const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {

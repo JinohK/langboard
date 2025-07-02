@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotSchedule } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IScheduleProjectBotCronForm {
     project_uid: string;
@@ -22,7 +22,7 @@ const useScheduleProjectBotCron = (options?: TMutationOptions<IScheduleProjectBo
     const { mutate } = useQueryMutation();
 
     const scheduleProjectBotCron = async (params: IScheduleProjectBotCronForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.BOT_SCHEDULE.SCHEDULE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.BOT_SCHEDULE.SCHEDULE, {
             uid: params.project_uid,
             bot_uid: params.bot_uid,
         });
@@ -35,6 +35,7 @@ const useScheduleProjectBotCron = (options?: TMutationOptions<IScheduleProjectBo
                 running_type: params.running_type,
                 start_at: params.start_at,
                 end_at: params.end_at,
+                timezone: new Date().getTimezoneOffset() / -60,
             },
             {
                 env: {

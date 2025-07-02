@@ -8,8 +8,8 @@ import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/el
 import { TColumnData, TColumnDroppableTargetData, TColumnState, TColumnRowSettings, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
+import { Utils } from "@langboard/core/utils";
 
 export const COLUMN_IDLE = { type: "idle" } satisfies TColumnState;
 
@@ -145,7 +145,7 @@ const createDndColumnEvents = <TColumnModel extends TOrderableModel<TOrderableMo
                 // optimization - Don't update react state if we don't need to.
                 const proposed: TColumnState = { type: "is-column-over", dragging: source.data.rect, closestEdge };
                 setState((current) => {
-                    if (TypeUtils.isShallowEqual(proposed, current)) {
+                    if (Utils.Object.isShallowEqual(proposed, current)) {
                         return current;
                     }
                     return proposed;

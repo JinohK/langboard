@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ActivityModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useRef, useState } from "react";
 
 type TActivityType = "user" | "project" | "card" | "project_wiki" | "project_assignee";
@@ -70,16 +70,16 @@ const useGetActivities = (
             url = API_ROUTES.ACTIVITIY.USER;
             break;
         case "project":
-            url = format(API_ROUTES.ACTIVITIY.PROJECT, { uid: form.project_uid });
+            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT, { uid: form.project_uid });
             break;
         case "card":
-            url = format(API_ROUTES.ACTIVITIY.CARD, { uid: form.project_uid, card_uid: form.card_uid });
+            url = Utils.String.format(API_ROUTES.ACTIVITIY.CARD, { uid: form.project_uid, card_uid: form.card_uid });
             break;
         case "project_wiki":
-            url = format(API_ROUTES.ACTIVITIY.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.wiki_uid });
+            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.wiki_uid });
             break;
         case "project_assignee":
-            url = format(API_ROUTES.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
+            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
             break;
         default:
             throw new Error("Invalid activity type");

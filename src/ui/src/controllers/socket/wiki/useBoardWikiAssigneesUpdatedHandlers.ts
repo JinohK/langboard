@@ -1,10 +1,10 @@
 import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardWikiAssigneesUpdatedRawResponse {
     assigned_bots: BotModel.Interface[];
@@ -41,7 +41,7 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
                 if (!socket.isSubscribed(ESocketTopic.BoardWikiPrivate, wiki.uid)) {
                     socket.subscribe(ESocketTopic.BoardWikiPrivate, [wiki.uid], () => {
                         api.get(
-                            format(API_ROUTES.BOARD.WIKI.GET_DETAILS, {
+                            Utils.String.format(API_ROUTES.BOARD.WIKI.GET_DETAILS, {
                                 uid: projectUID,
                                 wiki_uid: wiki.uid,
                             })

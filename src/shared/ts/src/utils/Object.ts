@@ -18,7 +18,7 @@ type TDeepRecordMapReturn<TRecord, TPath extends readonly string[], TCreateIfMis
     ? TExcludeUndefined<TDeepValue<TRecord, TPath>>
     : TDeepValue<TRecord, TPath> | undefined;
 
-export const getDeepRecordMap = <TCreateIfMissing extends bool, TRecord extends Record<string, any>, TPath extends readonly string[]>(
+const getDeepRecordMap = <TCreateIfMissing extends bool, TRecord extends Record<string, any>, TPath extends readonly string[]>(
     createIfMissing: TCreateIfMissing,
     record: TRecord,
     ...path: TPath
@@ -38,7 +38,7 @@ export const getDeepRecordMap = <TCreateIfMissing extends bool, TRecord extends 
     return current as TDeepRecordMapReturn<TRecord, TPath, TCreateIfMissing>;
 };
 
-export const deleteDeepRecordMap = <TRecord extends Record<string, any>, TPath extends readonly string[]>(record: TRecord, ...path: TPath): void => {
+const deleteDeepRecordMap = <TRecord extends Record<string, any>, TPath extends readonly string[]>(record: TRecord, ...path: TPath): void => {
     const deepMap = getDeepRecordMap<false, TRecord, TPath>(false, record, ...path);
     if (!deepMap) {
         return;
@@ -67,3 +67,21 @@ export const deleteDeepRecordMap = <TRecord extends Record<string, any>, TPath e
         }
     }
 };
+
+const isShallowEqual = (obj1: Record<string, unknown>, obj2: Record<string, unknown>): bool => {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+
+    if (keys1.length !== keys2.length) {
+        return false;
+    }
+    return keys1.every((key1) => Object.is(obj1[key1], obj2[key1]));
+};
+
+export const ObjectUtils = {
+    getDeepRecordMap,
+    deleteDeepRecordMap,
+    isShallowEqual,
+};
+
+export type TObjectUtils = typeof ObjectUtils;

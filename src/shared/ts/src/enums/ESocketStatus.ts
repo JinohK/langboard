@@ -1,4 +1,4 @@
-enum ESocketStatus {
+export enum ESocketStatus {
     WS_1000_NORMAL_CLOSURE = 1000,
     WS_1001_GOING_AWAY = 1001,
     WS_1002_PROTOCOL_ERROR = 1002,
@@ -23,5 +23,3 @@ enum ESocketStatus {
     WS_4000_INVALID_CONNECTION = 4000,
     WS_4001_INVALID_DATA = 4001,
 }
-
-export default ESocketStatus;

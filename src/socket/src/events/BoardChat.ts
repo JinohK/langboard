@@ -1,9 +1,8 @@
 import BotRunner from "@/core/ai/BotRunner";
 import SnowflakeID from "@/core/db/SnowflakeID";
-import ESocketStatus from "@/core/server/ESocketStatus";
-import ESocketTopic from "@/core/server/ESocketTopic";
 import EventManager from "@/core/server/EventManager";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketStatus, ESocketTopic } from "@langboard/core/enums";
 import ChatHistory from "@/models/ChatHistory";
 import { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
@@ -31,7 +30,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:available", async ({ client, top
 
 EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId, data }) => {
     const { message, file_path, task_id } = data ?? {};
-    if (!TypeUtils.isString(message) || !TypeUtils.isString(task_id)) {
+    if (!Utils.Type.isString(message) || !Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid message data", false);
         return;
     }
@@ -100,7 +99,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
         return;
     }
 
-    if (TypeUtils.isString(response)) {
+    if (Utils.Type.isString(response)) {
         aiMessage.message = { content: response };
         stream.buffer({ uid: aiMessageUID, message: aiMessage.message });
         stream.end({ uid: aiMessageUID, status: "success" });
@@ -160,7 +159,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
 
 EventManager.on(ESocketTopic.Board, "board:chat:cancel", async ({ client, data }) => {
     const { task_id } = data ?? {};
-    if (!TypeUtils.isString(task_id)) {
+    if (!Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid task ID", false);
         return;
     }

@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetProjectCurrentAuthRolesForm {
     uid: string;
@@ -20,7 +20,7 @@ const useGetProjectCurrentAuthRoles = (
     const { query } = useQueryMutation();
 
     const getProjectCurrentAuthRoles = async () => {
-        const url = format(API_ROUTES.BOARD.CURRENT_AUTH_ROLES, { uid: form.uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.CURRENT_AUTH_ROLES, { uid: form.uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

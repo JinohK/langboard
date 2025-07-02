@@ -36,6 +36,10 @@ class CreateBotCronTimeForm(BaseFormModel):
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
     )
+    timezone: str | float = Field(
+        default="UTC",
+        title="Timezone (Default: UTC). Can be a string like 'Europe/Moscow' or a float like 3.0 for UTC+3)",
+    )
 
 
 @form_model
@@ -57,4 +61,8 @@ class UpdateBotCronTimeForm(BaseFormModel):
     end_at: SafeDateTime | None = Field(
         default=None,
         title=f"End time (Required if running_type is {', '.join([schedule_type.name for schedule_type in BotSchedule.RUNNING_TYPES_WITH_END_AT])})",
+    )
+    timezone: str | float = Field(
+        default="UTC",
+        title="Timezone (Default: UTC). Can be a string like 'Europe/Moscow' or a float like 3.0 for UTC+3)",
     )

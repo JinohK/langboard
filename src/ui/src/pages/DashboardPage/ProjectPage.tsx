@@ -2,12 +2,12 @@ import { memo, useEffect } from "react";
 import useGetProjects from "@/controllers/api/dashboard/useGetProjects";
 import { ROUTES } from "@/core/routing/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectTabs, { SkeletonProjecTabs } from "@/pages/DashboardPage/components/ProjectTabs";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { TProjectTab } from "@/pages/DashboardPage/constants";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 interface IProjectPageProps {
     currentTab: TProjectTab;

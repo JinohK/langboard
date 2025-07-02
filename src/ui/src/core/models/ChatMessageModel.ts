@@ -1,6 +1,6 @@
 import { BaseModel, IBaseModel, IChatContent } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface Interface extends IBaseModel {
     filterable_table: "project";
@@ -21,7 +21,7 @@ class ChatMessageModel extends BaseModel<Interface> {
     }
 
     public static convertModel(model: Interface): Interface {
-        if (TypeUtils.isString(model.updated_at)) {
+        if (Utils.Type.isString(model.updated_at)) {
             model.updated_at = new Date(model.updated_at);
         }
         if (!model.sender_uid) {

@@ -5,12 +5,12 @@ import { QUERY_NAMES } from "@/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Button, Checkbox, Flex, Floating, Form, Label, SubmitButton } from "@/components/base";
 import useSignIn from "@/controllers/api/auth/useSignIn";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IPasswordformProps {
     signToken: string;

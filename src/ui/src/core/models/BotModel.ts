@@ -1,10 +1,9 @@
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertSafeEnum, convertServerFileURL } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useBotSettingTriggerConditionPredefinedHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionPredefinedHandlers";
 import useBotSettingTriggerConditionToggledHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionToggledHandlers";
 import useBotSettingUpdatedHandlers from "@/controllers/socket/settings/bots/useBotSettingUpdatedHandlers";
@@ -54,16 +53,16 @@ class BotModel extends BaseModel<Interface> {
 
     public static convertModel(model: Interface): Interface {
         if (model.avatar) {
-            model.avatar = convertServerFileURL(model.avatar);
+            model.avatar = Utils.String.convertServerFileURL(model.avatar);
         }
 
-        if (TypeUtils.isString(model.api_auth_type)) {
-            model.api_auth_type = convertSafeEnum(EAPIAuthType, model.api_auth_type);
+        if (Utils.Type.isString(model.api_auth_type)) {
+            model.api_auth_type = Utils.String.convertSafeEnum(EAPIAuthType, model.api_auth_type);
         }
 
         if (model.conditions) {
             Object.entries(model.conditions).forEach(([key, value]) => {
-                if (TypeUtils.isString(key)) {
+                if (Utils.Type.isString(key)) {
                     const conditionKey = key as EBotTriggerCondition;
                     model.conditions[conditionKey] = value;
                 }

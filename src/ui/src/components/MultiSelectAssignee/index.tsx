@@ -16,7 +16,7 @@ import { memo, useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { IUserAvatarListProps, UserAvatarList } from "@/components/UserAvatarList";
 import { TIconProps } from "@/components/base/IconComponent";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { ModelRegistry, TUserLikeModelName, TUserLikeModel } from "@/core/models/ModelRegistry";
 import UserLikeComponent from "@/components/UserLikeComponent";
 
@@ -399,7 +399,11 @@ function UserGroupSelectDropdownMenu({
             <DropdownMenu.Content>
                 <DropdownMenu.Group>
                     {Object.values(selectableGroups).map((group) => (
-                        <DropdownMenu.Item key={`group-${group.name}-${createShortUUID()}`} data-uid={group.uid} onClick={addGroupMembers}>
+                        <DropdownMenu.Item
+                            key={`group-${group.name}-${Utils.String.Token.shortUUID()}`}
+                            data-uid={group.uid}
+                            onClick={addGroupMembers}
+                        >
                             {group.name}
                         </DropdownMenu.Item>
                     ))}

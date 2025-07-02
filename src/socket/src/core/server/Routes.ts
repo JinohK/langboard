@@ -2,8 +2,8 @@
 import { PUBLIC_UI_URL } from "@/Constants";
 import Auth from "@/core/security/Auth";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
-import EHttpStatus from "@/core/server/EHttpStatus";
-import { isValidURL, StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import User from "@/models/User";
 import { IncomingMessage, ServerResponse } from "http";
 
@@ -36,9 +36,9 @@ class _Routes {
         TRequest extends typeof IncomingMessage = typeof IncomingMessage,
         TResponse extends typeof ServerResponse<InstanceType<TRequest>> = typeof ServerResponse,
     >(req: InstanceType<TRequest>, res: InstanceType<TResponse>) {
-        const method = new StringCase(req.method || "GET").toUpper() as TMethod;
+        const method = new Utils.String.Case(req.method || "GET").toUpper() as TMethod;
         req.url = req.url || "/";
-        const url = new URL(!isValidURL(req.url) ? `http://localhost${req.url}` : req.url);
+        const url = new URL(!Utils.String.isValidURL(req.url) ? `http://localhost${req.url}` : req.url);
 
         if (method === "OPTIONS") {
             this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_204_NO_CONTENT));

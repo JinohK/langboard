@@ -2,8 +2,8 @@
 import { AxiosError, isAxiosError } from "axios";
 import { t } from "i18next";
 import { Toast } from "@/components/base";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export type TResponseErrors = Record<string, Record<string, string[] | undefined> | undefined> | undefined;
 
@@ -55,13 +55,13 @@ const DEFAULT_CONFIGS: IApiErrorHandlerMap = {
 
 const setupApiErrorHandler = (configs: IApiErrorHandlerMap, messageRef?: { message: string }) => {
     const handleResult = (result: TCallbackReturn, isToast: bool) => {
-        if (!result || !TypeUtils.isString(result)) {
+        if (!result || !Utils.Type.isString(result)) {
             return result;
         }
 
         if (messageRef) {
             messageRef.message = result;
-        } else if (isToast && TypeUtils.isString(result) && result.length > 0) {
+        } else if (isToast && Utils.Type.isString(result) && result.length > 0) {
             Toast.Add.error(result);
         } else {
             return result;
@@ -70,7 +70,7 @@ const setupApiErrorHandler = (configs: IApiErrorHandlerMap, messageRef?: { messa
 
     const convertHandlerWithConfig = (error: any, config: IApiErrorHandler<any>): [() => TCallbackReturn, () => TCallbackReturnVoid] => {
         const responseErrors = error?.response?.data?.errors as TResponseErrors;
-        const message = TypeUtils.isString(config.message) ? config.message : config.message?.(error, responseErrors);
+        const message = Utils.Type.isString(config.message) ? config.message : config.message?.(error, responseErrors);
 
         return [() => handleResult(message, config.toast ?? false), () => config.after?.(message, error, responseErrors)];
     };

@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { GlobalRelationshipType } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateGlobalRelationshipForm {
     parent_name?: string;
@@ -18,7 +18,7 @@ const useUpdateGlobalRelationship = (
     const { mutate } = useQueryMutation();
 
     const updateGlobalRelationship = async (params: IUpdateGlobalRelationshipForm) => {
-        const url = format(API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.UPDATE, { uid: globalRelationship.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.UPDATE, { uid: globalRelationship.uid });
         const res = await api.put(
             url,
             {

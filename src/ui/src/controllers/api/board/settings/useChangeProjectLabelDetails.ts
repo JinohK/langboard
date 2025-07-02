@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface IBaseChangeProjectLabelDetailsForm {
     project_uid: string;
@@ -27,7 +27,7 @@ const useChangeProjectLabelDetails = <TDetail extends TChangeableDetail>(
     const { mutate } = useQueryMutation();
 
     const changeProjectLabelDetails = async (params: TChangeProjectLabelDetailsForm<TDetail>) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.LABEL.CHANGE_DETAILS, { uid: params.project_uid, label_uid: params.label_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.LABEL.CHANGE_DETAILS, { uid: params.project_uid, label_uid: params.label_uid });
         const res = await api.put(
             url,
             {

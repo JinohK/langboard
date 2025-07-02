@@ -4,7 +4,7 @@ import { getMentionOnSelectItem } from "@platejs/mention";
 import { InlineComboboxItem } from "@/components/plate-ui/inline-combobox";
 import { BotModel, User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { PlateEditor } from "platejs/react";
 import type { TMentionableUser } from "@/components/plate-ui/mention-node";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
@@ -70,7 +70,12 @@ interface IMentionInputComboboxItemInnerProps extends IMentionInputComboboxItem 
 
 const MentionInputComboboxItemInner = ({ search, value, username, names, userOrBot, editor, projectUID }: IMentionInputComboboxItemInnerProps) => {
     return (
-        <InlineComboboxItem key={createShortUUID()} value={value} onClick={() => onSelectItem(editor, userOrBot, search)} className="h-auto p-0">
+        <InlineComboboxItem
+            key={Utils.String.Token.shortUUID()}
+            value={value}
+            onClick={() => onSelectItem(editor, userOrBot, search)}
+            className="h-auto p-0"
+        >
             <UserAvatar.Root
                 userOrBot={userOrBot}
                 withNameProps={{

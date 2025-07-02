@@ -1,7 +1,7 @@
 import { Box, Button, Flex, IconComponent, Progress } from "@/components/base";
 import useUploadCardAttachment from "@/controllers/api/card/attachment/useUploadCardAttachment";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { formatBytes } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { IAttachedFile } from "@/pages/BoardPage/components/card/action/types";
 import { memo, useState } from "react";
 
@@ -44,7 +44,7 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile }: IBoardCa
                 <Box className="truncate">{attachedFile.file.name}</Box>
                 <Box textSize="xs" className="truncate text-muted-foreground/70">
                     {!isUploading ? (
-                        formatBytes(attachedFile.file.size, { decimals: 1 })
+                        Utils.String.formatBytes(attachedFile.file.size, { decimals: 1 })
                     ) : (
                         <Progress value={progress} height="2" indicatorClassName={isError ? "bg-destructive" : ""} />
                     )}

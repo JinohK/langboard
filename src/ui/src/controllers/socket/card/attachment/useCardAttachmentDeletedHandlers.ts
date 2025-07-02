@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardAttachmentDeletedRawResponse {
     uid: string;

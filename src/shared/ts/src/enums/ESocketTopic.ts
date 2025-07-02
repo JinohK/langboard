@@ -1,4 +1,4 @@
-enum ESocketTopic {
+export enum ESocketTopic {
     Dashboard = "dashboard",
     Board = "board",
     BoardCard = "board_card",
@@ -13,7 +13,5 @@ enum ESocketTopic {
     None = "none",
 }
 
-export const GLOBAL_TOPIC_ID = "all";
-export const NONE_TOPIC_ID = "none";
-
-export default ESocketTopic;
+export const GLOBAL_TOPIC_ID = "all" as const;
+export const NONE_TOPIC_ID = "none" as const;

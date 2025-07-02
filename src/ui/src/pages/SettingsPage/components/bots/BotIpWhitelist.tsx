@@ -1,12 +1,12 @@
 import { Box, Toast } from "@/components/base";
 import MultiSelect from "@/components/MultiSelect";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
-import { isValidIpv4OrRnage } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -62,7 +62,7 @@ const BotIpWhitelist = memo(() => {
                 onValueChange={updateBot}
                 inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
                 canCreateNew
-                validateCreatedNewValue={isValidIpv4OrRnage}
+                validateCreatedNewValue={Utils.String.isValidIpv4OrRnage}
                 createNewCommandItemLabel={(value) => {
                     const newIPs: string[] = [];
 

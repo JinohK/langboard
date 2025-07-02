@@ -3,6 +3,7 @@ import { Box, Button, Card, Flex } from "@/components/base";
 import { CronText } from "@/components/Cron";
 import { BotModel, BotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
+import { Utils } from "@langboard/core/utils";
 import BoardSettingsCronBotScheduleDelete from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleDelete";
 import BoardSettingsCronBotScheduleEdit from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleEdit";
 import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
@@ -22,7 +23,8 @@ function BoardSettingsCronBotSchedule({ bot, schedule, setCopiedForm, setIsAddMo
     const status = schedule.useField("status");
     const startAt = schedule.useField("start_at");
     const endAt = schedule.useField("end_at");
-    const intervalStr = schedule.useField("interval_str");
+    const rawIntervalStr = schedule.useField("interval_str");
+    const intervalStr = useMemo(() => Utils.String.Crontab.restoreTimezone(rawIntervalStr), [rawIntervalStr]);
     const targetTable = schedule.useField("target_table");
     const targetUID = schedule.useField("target_uid");
     const [Scope, scope] = useMemo(() => {

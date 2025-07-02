@@ -1,7 +1,6 @@
 "use client";
 
 import type { PlateEditor } from "platejs/react";
-
 import { insertCallout } from "@platejs/callout";
 import { insertCodeBlock, toggleCodeBlock } from "@platejs/code-block";
 import { insertDate } from "@platejs/date";

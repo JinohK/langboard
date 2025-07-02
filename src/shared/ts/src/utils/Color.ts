@@ -2,7 +2,7 @@ const HRANGE: [number, number] = [0, 360];
 const SRANGE: [number, number] = [40, 60];
 const LRANGE: [number, number] = [40, 60];
 
-export const hexToRgb = (hex: string): [number, number, number] => {
+const hexToRgb = (hex: string): [number, number, number] => {
     const hexWithoutHash = hex.replace("#", "");
 
     const r = parseInt(hexWithoutHash.slice(0, 2), 16);
@@ -12,7 +12,7 @@ export const hexToRgb = (hex: string): [number, number, number] => {
     return [r, g, b];
 };
 
-export const getTextColorFromHex = (hex: string): "#000" | "#fff" => {
+const getTextColorFromHex = (hex: string): "#000" | "#fff" => {
     if (hex.includes("#")) {
         hex = hex.replace("#", "");
     }
@@ -34,7 +34,7 @@ export const getTextColorFromHex = (hex: string): "#000" | "#fff" => {
     }
 };
 
-export class ColorGenerator {
+class Generator {
     #input: string;
 
     constructor(input: string) {
@@ -116,3 +116,11 @@ export class ColorGenerator {
         return hex.length === 1 ? "0" + hex : hex;
     };
 }
+
+export const ColorUtils = {
+    hexToRgb,
+    getTextColorFromHex,
+    Generator,
+};
+
+export type TColorUtils = typeof ColorUtils;

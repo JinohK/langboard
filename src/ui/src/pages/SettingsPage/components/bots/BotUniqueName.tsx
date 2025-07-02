@@ -1,6 +1,5 @@
 import { Box, Flex, IconComponent, Input, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
@@ -8,6 +7,7 @@ import { BotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 

@@ -1,6 +1,6 @@
 import { SOCKET_URL } from "@/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID, NONE_TOPIC_ID } from "@/core/helpers/ESocketTopic";
-import { deleteDeepRecordMap, getDeepRecordMap } from "@/core/utils/ObjectUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic, GLOBAL_TOPIC_ID, NONE_TOPIC_ID } from "@langboard/core/enums";
 import { create } from "zustand";
 
 export type TDefaultEvents = "open" | "close" | "error";
@@ -297,7 +297,7 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         const { topic, topicId } = getTopicWithId(props);
-        const events = getDeepRecordMap(true, socketMap.subscriptions, topic, topicId, event);
+        const events = Utils.Object.getDeepRecordMap(true, socketMap.subscriptions, topic, topicId, event);
         if (!events[eventKey]) {
             events[eventKey] = [];
         }
@@ -321,7 +321,7 @@ const useSocketStore = create<ISocketStore>(() => {
         }
 
         const { topic, topicId } = getTopicWithId(props);
-        const events = getDeepRecordMap(false, socketMap.subscriptions, topic, topicId, event);
+        const events = Utils.Object.getDeepRecordMap(false, socketMap.subscriptions, topic, topicId, event);
         if (!events?.[eventKey]) {
             return;
         }
@@ -331,7 +331,7 @@ const useSocketStore = create<ISocketStore>(() => {
             delete events[eventKey];
         }
 
-        deleteDeepRecordMap(socketMap.subscriptions, topic, topicId, event);
+        Utils.Object.deleteDeepRecordMap(socketMap.subscriptions, topic, topicId, event);
     };
 
     const send = (json: string) => {
@@ -445,7 +445,7 @@ const useSocketStore = create<ISocketStore>(() => {
         const { topic, topicId } = getTopicWithId(props);
         const { key, notifier } = props;
 
-        const subscribedNotifier = getDeepRecordMap(true, socketMap.subscribedTopicNotifiers, topic, topicId);
+        const subscribedNotifier = Utils.Object.getDeepRecordMap(true, socketMap.subscribedTopicNotifiers, topic, topicId);
         if (subscribedNotifier[key]) {
             return;
         }
@@ -460,7 +460,7 @@ const useSocketStore = create<ISocketStore>(() => {
         const { topic, topicId } = getTopicWithId(props);
         const { key } = props;
 
-        deleteDeepRecordMap(socketMap.subscribedTopicNotifiers, topic, topicId, key);
+        Utils.Object.deleteDeepRecordMap(socketMap.subscribedTopicNotifiers, topic, topicId, key);
     };
 
     const isSubscribed = (topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, topicId: string) => {

@@ -2,7 +2,7 @@
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 interface IChangeProjectInternalBotForm {
     internal_bot_uid: string;
@@ -17,7 +17,7 @@ const useChangeProjectInternalBot = (
     const { mutate } = useQueryMutation();
 
     const changeProjectInternalBot = async (params: IChangeProjectInternalBotForm) => {
-        const url = format(API_ROUTES.BOARD.SETTINGS.CHANGE_INTERNAL_BOT, { uid: projectUID });
+        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.CHANGE_INTERNAL_BOT, { uid: projectUID });
         const res = await api.put(url, params, {
             env: {
                 interceptToast: options?.interceptToast,

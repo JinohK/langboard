@@ -2,7 +2,6 @@ import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Button, DropdownMenu, Flex, IconComponent } from "@/components/base";
 import useClearProjectChatMessages from "@/controllers/api/board/chat/useClearProjectChatMessages";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import Conversation from "@/pages/BoardPage/components/chat/Conversation";
@@ -10,6 +9,7 @@ import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { ChatMessageModel } from "@/core/models";
 import ChatInput from "@/pages/BoardPage/components/chat/ChatInput";
+import { EHttpStatus } from "@langboard/core/enums";
 
 const ChatSidebar = memo((): JSX.Element => {
     const { projectUID } = useBoardChat();

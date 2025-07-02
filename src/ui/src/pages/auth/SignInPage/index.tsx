@@ -4,7 +4,7 @@ import { QUERY_NAMES, SIGN_IN_TOKEN_LENGTH } from "@/constants";
 import { FormOnlyLayout, createTwoSidedSizeClassNames } from "@/components/Layout";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import { ROUTES } from "@/core/routing/constants";
-import { generateToken } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import EmailForm from "@/pages/auth/SignInPage/EmailForm";
 import PasswordForm from "@/pages/auth/SignInPage/PasswordForm";
 import { Flex } from "@/components/base";
@@ -28,7 +28,7 @@ function SignInPage(): JSX.Element {
         const emailTokenParam = searchParams.get(QUERY_NAMES.EMAIL_TOKEN);
 
         if (!signTokenParam || signTokenParam.length !== SIGN_IN_TOKEN_LENGTH) {
-            const token = generateToken(SIGN_IN_TOKEN_LENGTH);
+            const token = Utils.String.Token.generate(SIGN_IN_TOKEN_LENGTH);
 
             searchParams.set(QUERY_NAMES.SIGN_IN_TOKEN, token);
 

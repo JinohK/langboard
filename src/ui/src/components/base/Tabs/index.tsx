@@ -5,8 +5,8 @@ import * as React from "react";
 import { motion } from "framer-motion";
 import { type VariantProps, tv } from "tailwind-variants";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { composeRefs } from "@/core/utils/ComponentUtils";
+import { Utils } from "@langboard/core/utils";
 
 const TabsVariants = tv(
     {
@@ -190,7 +190,7 @@ const Trigger = React.forwardRef<HTMLButtonElement, ITabTrigger>(({ value, class
             type="button"
             ref={(el) => {
                 setTabRef(value, el);
-                if (TypeUtils.isFunction(ref)) {
+                if (Utils.Type.isFunction(ref)) {
                     ref(el);
                 } else if (ref) {
                     ref.current = el;

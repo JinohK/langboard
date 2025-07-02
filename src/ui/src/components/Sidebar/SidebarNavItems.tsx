@@ -2,17 +2,17 @@ import { forwardRef, memo } from "react";
 import { ISidebarNavItem, TSidebarNavItemsProps } from "@/components/Sidebar/types";
 import { ButtonVariants, Floating, IconComponent, Tooltip } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID, makeReactKey } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.Element => {
     return (
         <>
             {navs.map((item) => {
-                const key = makeReactKey(item.name);
+                const key = Utils.String.Token.reactKey(item.name);
                 const Comp = isFloating ? FloatingNavItem : SidebarNavItem;
 
                 return (
-                    <Tooltip.Root key={createShortUUID()}>
+                    <Tooltip.Root key={Utils.String.Token.shortUUID()}>
                         <Tooltip.Trigger asChild>
                             <span>
                                 <Comp key={key} item={item} />

@@ -2,8 +2,7 @@ import { SubmitButton, Toast } from "@/components/base";
 import useCreateProjectLabel from "@/controllers/api/board/settings/useCreateProjectLabel";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { ColorGenerator } from "@/core/utils/ColorUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -23,7 +22,7 @@ function BoardSettingsLabelAddButton() {
         const promise = createProjectLabelMutateAsync({
             project_uid: project.uid,
             name: "New Label",
-            color: new ColorGenerator(createShortUUID()).generateRandomColor(),
+            color: new Utils.Color.Generator(Utils.String.Token.shortUUID()).generateRandomColor(),
             description: "Sample label description",
         });
 

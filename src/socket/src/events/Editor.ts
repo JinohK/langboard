@@ -1,8 +1,7 @@
 import BotRunner from "@/core/ai/BotRunner";
-import ESocketStatus from "@/core/server/ESocketStatus";
-import ESocketTopic, { NONE_TOPIC_ID } from "@/core/server/ESocketTopic";
 import EventManager, { TEventContext } from "@/core/server/EventManager";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketStatus, ESocketTopic, NONE_TOPIC_ID } from "@langboard/core/enums";
 import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 
@@ -17,7 +16,7 @@ interface IEditorEventRegistryParams {
 const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalBot, createRestData }: IEditorEventRegistryParams) => {
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:chat:send`, async (context) => {
         const { task_id } = context.data ?? {};
-        if (!context.data || !TypeUtils.isString(task_id)) {
+        if (!context.data || !Utils.Type.isString(task_id)) {
             return;
         }
 
@@ -41,7 +40,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalB
             return;
         }
 
-        if (TypeUtils.isString(response)) {
+        if (Utils.Type.isString(response)) {
             stream.buffer({ message: response });
             message = response;
             stream.end({ message });
@@ -86,7 +85,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalB
 
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:chat:abort`, async (context) => {
         const { task_id } = context.data ?? {};
-        if (!context.data || !TypeUtils.isString(task_id)) {
+        if (!context.data || !Utils.Type.isString(task_id)) {
             context.client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid task ID", false);
             return;
         }
@@ -96,7 +95,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalB
 
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:copilot:send`, async (context) => {
         const { task_id } = context.data ?? {};
-        if (!context.data || !TypeUtils.isString(task_id)) {
+        if (!context.data || !Utils.Type.isString(task_id)) {
             context.client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid task ID", false);
             return;
         }
@@ -126,7 +125,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalB
             return;
         }
 
-        if (TypeUtils.isString(response)) {
+        if (Utils.Type.isString(response)) {
             context.client.send({
                 ...sharedData,
                 data: { text: response },
@@ -161,7 +160,7 @@ const registerEditorEvents = ({ eventPrefix, chatType, copilotType, getInternalB
 
     EventManager.on(ESocketTopic.None, `${eventPrefix}:editor:copilot:abort`, async (context) => {
         const { task_id } = context.data ?? {};
-        if (!context.data || !TypeUtils.isString(task_id)) {
+        if (!context.data || !Utils.Type.isString(task_id)) {
             context.client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid task ID", false);
             return;
         }
@@ -180,7 +179,7 @@ const EDITOR_TYPES: IEditorType[] = [
     {
         type: "board:card",
         getInternalBot: async (botType, context) =>
-            !TypeUtils.isString(context.data.project_uid)
+            !Utils.Type.isString(context.data.project_uid)
                 ? null
                 : await ProjectAssignedInternalBot.getInternalBotByProjectUID(botType, context.data.project_uid),
         createRestData: (context) => ({
@@ -191,7 +190,7 @@ const EDITOR_TYPES: IEditorType[] = [
     {
         type: "board:wiki",
         getInternalBot: async (botType, context) =>
-            !TypeUtils.isString(context.data.project_uid)
+            !Utils.Type.isString(context.data.project_uid)
                 ? null
                 : await ProjectAssignedInternalBot.getInternalBotByProjectUID(botType, context.data.project_uid),
         createRestData: (context) => ({

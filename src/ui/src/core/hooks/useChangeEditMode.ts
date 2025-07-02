@@ -1,6 +1,6 @@
 import { IEditorContent } from "@/core/models/Base";
 import { measureTextAreaHeight } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useRef, useState } from "react";
 
 export type TValueType = "string" | "textarea" | "input" | "editor";
@@ -86,12 +86,12 @@ const useChangeEditMode = <
 
                 setIsEditing(() => true);
                 setTimeout(() => {
-                    if (TypeUtils.isElement(valueRef.current, "input")) {
+                    if (Utils.Type.isElement(valueRef.current, "input")) {
                         valueRef.current.focus();
                         return;
                     }
 
-                    if (!TypeUtils.isElement(valueRef.current, "textarea")) {
+                    if (!Utils.Type.isElement(valueRef.current, "textarea")) {
                         return;
                     }
 
@@ -105,16 +105,16 @@ const useChangeEditMode = <
 
             let value: string | IEditorContent = "";
             let oldValue: string | undefined = "";
-            if (TypeUtils.isElement(valueRef.current, "textarea")) {
+            if (Utils.Type.isElement(valueRef.current, "textarea")) {
                 value = trimValue(valueRef.current.value);
                 oldValue = trimValue(originalValue as unknown as string);
-            } else if (TypeUtils.isElement(valueRef.current, "input")) {
+            } else if (Utils.Type.isElement(valueRef.current, "input")) {
                 value = trimValue(valueRef.current.value);
                 oldValue = trimValue(originalValue as unknown as string);
-            } else if (TypeUtils.isString(valueRef.current)) {
+            } else if (Utils.Type.isString(valueRef.current)) {
                 value = trimValue(valueRef.current);
                 oldValue = trimValue(originalValue as unknown as string);
-            } else if (TypeUtils.isObject<IEditorContent>(valueRef.current)) {
+            } else if (Utils.Type.isObject<IEditorContent>(valueRef.current)) {
                 value = trimValue(valueRef.current.content);
                 oldValue = trimValue((originalValue as unknown as IEditorContent)?.content);
             }
@@ -125,7 +125,7 @@ const useChangeEditMode = <
                 return;
             }
 
-            if (!TypeUtils.isElement(valueRef.current) && TypeUtils.isObject<IEditorContent>(valueRef.current)) {
+            if (!Utils.Type.isElement(valueRef.current) && Utils.Type.isObject<IEditorContent>(valueRef.current)) {
                 (valueRef.current as IEditorContent) = {
                     ...(valueRef.current as IEditorContent),
                     content: value,
@@ -146,7 +146,7 @@ const useChangeEditMode = <
     );
 
     const updateHeight = useCallback(() => {
-        if (!TypeUtils.isElement(valueRef.current, "textarea")) {
+        if (!Utils.Type.isElement(valueRef.current, "textarea")) {
             return;
         }
 

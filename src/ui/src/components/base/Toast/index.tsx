@@ -6,7 +6,7 @@ import { ExternalToast, ToastT, Toaster, toast, useSonner } from "sonner";
 import Button from "@/components/base/Button";
 import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export type { ToastT as IToast };
 
@@ -82,7 +82,7 @@ const ToastCloseButton = ({ id }: { id: string | number }) => {
 };
 
 function createToastData<ToastData>(data?: TExternalToast | TPromiseData<ToastData>): ExternalToast {
-    const { useCloseButton = true, id = createUUID() } = data || {};
+    const { useCloseButton = true, id = Utils.String.Token.uuid() } = data || {};
 
     if (!data) {
         if (useCloseButton) {

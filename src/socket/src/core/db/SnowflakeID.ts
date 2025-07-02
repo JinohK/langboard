@@ -1,5 +1,4 @@
-import { BASE62_ALPHABET } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import crypto from "crypto";
 import os from "os";
 
@@ -12,7 +11,7 @@ class SnowflakeID extends Number {
     #value: bigint;
 
     constructor(value?: bigint | number | string) {
-        if (TypeUtils.isString(value)) {
+        if (Utils.Type.isString(value)) {
             const parsedValue = Number(value);
             if (isNaN(parsedValue)) {
                 super(0);
@@ -21,13 +20,13 @@ class SnowflakeID extends Number {
             }
             value = BigInt(value);
         }
-        if (TypeUtils.isNumber(value)) {
+        if (Utils.Type.isNumber(value)) {
             super(value);
             this.#value = BigInt(value);
             return;
         }
 
-        if (TypeUtils.isBigInt(value)) {
+        if (Utils.Type.isBigInt(value)) {
             super(Number(value));
             this.#value = value;
             return;
@@ -94,16 +93,16 @@ class SnowflakeID extends Number {
         const s = [];
         while (n > 0n) {
             const r = n % 62n;
-            s.push(BASE62_ALPHABET[Number(r)]);
+            s.push(Utils.String.BASE62_ALPHABET[Number(r)]);
             n = n / 62n;
         }
-        return s.reverse().join("").padStart(SnowflakeID.FIXED_SHORT_CODE_LENGTH, BASE62_ALPHABET[0]);
+        return s.reverse().join("").padStart(SnowflakeID.FIXED_SHORT_CODE_LENGTH, Utils.String.BASE62_ALPHABET[0]);
     }
 
     static #base62Decode(s: string) {
         let n = 0n;
         for (let i = 0; i < s.length; i++) {
-            n = n * 62n + BigInt(BASE62_ALPHABET.indexOf(s[i]));
+            n = n * 62n + BigInt(Utils.String.BASE62_ALPHABET.indexOf(s[i]));
         }
         return n;
     }

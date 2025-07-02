@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboardProjectColumnOrderChangedRawResponse {
     uid: string;

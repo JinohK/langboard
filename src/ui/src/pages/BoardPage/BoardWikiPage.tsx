@@ -1,6 +1,4 @@
 import useGetWikis from "@/controllers/api/wiki/useGetWikis";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BoardWikiProvider } from "@/core/providers/BoardWikiProvider";
@@ -8,6 +6,7 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import WikiList, { SkeletonWikiList } from "@/pages/BoardPage/components/wiki/WikiList";
 import { IBoardRelatedPageProps } from "@/pages/BoardPage/types";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 import { memo, useEffect } from "react";
 
 export function SkeletonBoardWikiPage(): JSX.Element {

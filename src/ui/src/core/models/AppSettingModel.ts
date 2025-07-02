@@ -2,9 +2,8 @@
 import useAppSettingDeletedHandlers from "@/controllers/socket/settings/useAppSettingDeletedHandlers";
 import useAppSettingUpdatedHandlers from "@/controllers/socket/settings/useAppSettingUpdatedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { registerModel } from "@/core/models/ModelRegistry";
-import TypeUtils from "@/core/utils/TypeUtils";
 
 export enum ESettingType {
     ApiKey = "api_key",
@@ -35,14 +34,14 @@ class AppSettingModel extends BaseModel<Interface> {
 
     public static convertModel(model: Interface): Interface {
         if (model.setting_type) {
-            if (TypeUtils.isString(model.setting_type)) {
-                model.setting_type = convertSafeEnum(ESettingType, model.setting_type);
+            if (Utils.Type.isString(model.setting_type)) {
+                model.setting_type = Utils.String.convertSafeEnum(ESettingType, model.setting_type);
             }
         }
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
-        if (TypeUtils.isString(model.last_used_at)) {
+        if (Utils.Type.isString(model.last_used_at)) {
             model.last_used_at = new Date(model.last_used_at);
         }
         return model;

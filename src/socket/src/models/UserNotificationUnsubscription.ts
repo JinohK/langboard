@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BaseModel, { BigIntColumn, TBigIntString } from "@/core/db/BaseModel";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import User from "@/models/User";
 import UserNotification, { ENotificationType } from "@/models/UserNotification";
 import { Entity, Column, DeepPartial } from "typeorm";
@@ -64,7 +64,7 @@ class UserNotificationUnsubscription extends BaseModel {
             return true;
         }
 
-        if (!TypeUtils.isArray(publishModel.scope_models)) {
+        if (!Utils.Type.isArray(publishModel.scope_models)) {
             return false;
         }
 

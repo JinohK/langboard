@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketStreamHandler, { IBaseUseSocketStreamHandlersProps } from "@/core/hooks/useSocketStreamHandler";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUseBoardChatStreamHandlersProps extends IBaseUseSocketStreamHandlersProps {
     projectUID: string;

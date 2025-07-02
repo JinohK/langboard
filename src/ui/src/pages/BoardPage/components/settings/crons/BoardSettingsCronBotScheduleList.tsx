@@ -5,7 +5,7 @@ import useBoardBotCronScheduledHandlers from "@/controllers/socket/board/setting
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { BotModel, BotSchedule } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import BoardSettingsCronBotSchedule from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotSchedule";
 import BoardSettingsCronBotScheduleAddButton from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleAddButton";
 import { IBotScheduleFormMap } from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotScheduleForm";
@@ -56,7 +56,7 @@ function BoardSettingsCronBotScheduleList({ bot }: IBoardSettingsCronBotSchedule
                     loadMore={nextPage}
                     hasMore={!isLastPage}
                     loader={
-                        <Flex justify="center" mt="6" key={createShortUUID()}>
+                        <Flex justify="center" mt="6" key={Utils.String.Token.shortUUID()}>
                             <Loading size="3" variant="secondary" />
                         </Flex>
                     }

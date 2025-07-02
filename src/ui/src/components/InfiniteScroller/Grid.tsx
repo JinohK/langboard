@@ -3,9 +3,8 @@ import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
 import { composeRefs } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { Box } from "@/components/base";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { useVirtualizer } from "@tanstack/react-virtual";
 
 function chunkArray<T>(array: T[], size: number): T[][] {
@@ -89,7 +88,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         const loaderIndex = hasMore ? (virtualItems[virtualItems.length - 1]?.index ?? "-1") : "-1";
         const loaderY = hasMore ? (virtualItems[virtualItems.length - 1]?.start ?? -99999) : -99999;
 
-        gap = TypeUtils.isString(gap) ? parseInt(gap) : gap;
+        gap = Utils.Type.isString(gap) ? parseInt(gap) : gap;
 
         return (
             <Comp
@@ -136,7 +135,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                 })}
 
                 <Box
-                    key={createShortUUID()}
+                    key={Utils.String.Token.shortUUID()}
                     className={cn(loaderClassName, "absolute left-0 top-0 w-full", !hasMore && "hidden")}
                     data-index={loaderIndex}
                     style={{

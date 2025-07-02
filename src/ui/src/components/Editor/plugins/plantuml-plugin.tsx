@@ -1,9 +1,9 @@
-import TypeUtils from "@/core/utils/TypeUtils";
 import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, createSlatePlugin } from "platejs";
 import { toPlatePlugin } from "platejs/react";
 import PlantUMLEncoder from "plantuml-encoder";
 import React from "react";
 import { PlantUmlElement } from "@/components/plate-ui/plantuml-element";
+import { Utils } from "@langboard/core/utils";
 
 export interface TPlantUmlElement extends TElement {
     umlCode: string;
@@ -39,7 +39,7 @@ export const usePlantUmlElement = ({ umlCode }: { umlCode?: string }) => {
     const [src, setSrc] = React.useState<string | null>(null);
 
     React.useEffect(() => {
-        if (!umlCode || !TypeUtils.isString(umlCode)) {
+        if (!umlCode || !Utils.Type.isString(umlCode)) {
             setSrc(null);
             return;
         }

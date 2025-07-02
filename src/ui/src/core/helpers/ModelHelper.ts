@@ -1,4 +1,3 @@
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import {
     AuthUser,
     ActivityModel,
@@ -18,6 +17,7 @@ import {
     BotSchedule,
 } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.None | ESocketTopic.Global>, projectUID: string) => {
     const socket = useSocketOutsideProvider();

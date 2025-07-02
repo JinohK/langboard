@@ -4,7 +4,7 @@ import JsonView from "@uiw/react-json-view";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { cn } from "@/core/utils/ComponentUtils";
-import { isJsonString } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IMetadataRowJsonViewerProps {
     valueInputRef: React.RefObject<HTMLInputElement | null>;
@@ -15,8 +15,10 @@ export interface IMetadataRowJsonViewerProps {
 
 function MetadataRowJsonViewer({ valueInputRef, handleValueInput, currentValue, canEdit }: IMetadataRowJsonViewerProps): JSX.Element {
     const [t] = useTranslation();
-    const [currentObject, setCurrentObject] = useState(isJsonString(currentValue) ? JSON.parse(currentValue) : {});
-    const [currentJSON, setCurrentJSON] = useState(isJsonString(currentValue) ? JSON.stringify(currentObject, undefined, "    ") : currentValue);
+    const [currentObject, setCurrentObject] = useState(Utils.String.isJsonString(currentValue) ? JSON.parse(currentValue) : {});
+    const [currentJSON, setCurrentJSON] = useState(
+        Utils.String.isJsonString(currentValue) ? JSON.stringify(currentObject, undefined, "    ") : currentValue
+    );
     const [isOpened, setIsOpened] = useState(false);
     const [error, setError] = useState<string>("");
     const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -56,7 +58,7 @@ function MetadataRowJsonViewer({ valueInputRef, handleValueInput, currentValue, 
             return;
         }
 
-        const isJson = isJsonString(textareaRef.current.value);
+        const isJson = Utils.String.isJsonString(textareaRef.current.value);
         const newValue = isJson ? JSON.stringify(JSON.parse(textareaRef.current.value)) : textareaRef.current.value;
         valueInputRef.current.value = newValue;
         handleValueInput();
@@ -64,7 +66,7 @@ function MetadataRowJsonViewer({ valueInputRef, handleValueInput, currentValue, 
     }, [canEdit, handleValueInput, setIsOpened]);
 
     useEffect(() => {
-        if (!isJsonString(currentValue)) {
+        if (!Utils.String.isJsonString(currentValue)) {
             onChange();
             return;
         }

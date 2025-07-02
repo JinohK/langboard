@@ -1,7 +1,6 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
@@ -13,6 +12,7 @@ import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import WikiPrivateOption, { SkeletonWikiPrivateOption } from "@/pages/BoardPage/components/wiki/WikiPrivateOption";
 import WikiTitle from "@/pages/BoardPage/components/wiki/WikiTitle";
+import { EHttpStatus } from "@langboard/core/enums";
 import { AIChatPlugin, AIPlugin } from "@platejs/ai/react";
 import { memo, useEffect, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";

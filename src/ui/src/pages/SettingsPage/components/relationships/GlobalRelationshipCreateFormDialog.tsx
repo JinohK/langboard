@@ -3,10 +3,10 @@ import { Box, Button, Dialog, Floating, SubmitButton, Toast } from "@/components
 import { useRef, useState } from "react";
 import useCreateGlobalRelationship from "@/controllers/api/settings/relationships/useCreateGlobalRelationship";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IGlobalRelationshipCreateFormDialogProps {
     opened: bool;

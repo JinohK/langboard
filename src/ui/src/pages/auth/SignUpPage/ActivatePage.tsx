@@ -5,11 +5,11 @@ import { QUERY_NAMES } from "@/constants";
 import { FormOnlyLayout } from "@/components/Layout";
 import { Button, Flex } from "@/components/base";
 import useActivateUser from "@/controllers/api/auth/useActivateUser";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 function ActivatePage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();

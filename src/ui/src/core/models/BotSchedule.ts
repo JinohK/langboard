@@ -2,8 +2,7 @@ import useBoardBotCronDeletedHandlers from "@/controllers/socket/board/settings/
 import useBoardBotCronRescheduledHandlers from "@/controllers/socket/board/settings/useBoardBotCronRescheduledHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export type TTargetTable = "project_column" | "card";
 export const TARGET_TABLES: TTargetTable[] = ["project_column", "card"];
@@ -56,16 +55,16 @@ class BotSchedule extends BaseModel<Interface> {
     }
 
     public static convertModel(model: Interface): Interface {
-        if (TypeUtils.isString(model.running_type)) {
-            model.running_type = convertSafeEnum(ERunningType, model.running_type);
+        if (Utils.Type.isString(model.running_type)) {
+            model.running_type = Utils.String.convertSafeEnum(ERunningType, model.running_type);
         }
-        if (TypeUtils.isString(model.status)) {
-            model.status = convertSafeEnum(EStatus, model.status);
+        if (Utils.Type.isString(model.status)) {
+            model.status = Utils.String.convertSafeEnum(EStatus, model.status);
         }
-        if (TypeUtils.isString(model.start_at)) {
+        if (Utils.Type.isString(model.start_at)) {
             model.start_at = new Date(model.start_at);
         }
-        if (TypeUtils.isString(model.end_at)) {
+        if (Utils.Type.isString(model.end_at)) {
             model.end_at = new Date(model.end_at);
         }
         return model;

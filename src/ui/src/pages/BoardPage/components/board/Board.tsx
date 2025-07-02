@@ -13,7 +13,7 @@ import useChangeCardOrder from "@/controllers/api/board/useChangeCardOrder";
 import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import { SkeletonBoardFilter } from "@/pages/BoardPage/components/board/BoardFilter";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnReordered from "@/core/hooks/useColumnReordered";
@@ -61,7 +61,7 @@ export function SkeletonBoard() {
                 <Box size="full" className="rounded-[inherit]">
                     <Flex direction="row" items="start" gap="10" p="4">
                         {cardCounts.map((count) => (
-                            <SkeletonBoardColumn key={createShortUUID()} cardCount={count} />
+                            <SkeletonBoardColumn key={Utils.String.Token.shortUUID()} cardCount={count} />
                         ))}
                     </Flex>
                 </Box>

@@ -2,7 +2,7 @@ import { memo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { Box, Skeleton, Tabs } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
-import { makeReactKey } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import ProjectList, { SkeletonProjectList } from "@/pages/DashboardPage/components/ProjectList";
 import { PROJECT_TABS, TProjectTab, TProjectTabRoute } from "@/pages/DashboardPage/constants";
 import { Project } from "@/core/models";
@@ -70,7 +70,7 @@ const ProjectTabs = memo(({ currentTab, updateStarredProjects: updateHeaderStarr
             <Box px="2">
                 <Tabs.List className="grid w-full grid-cols-4 gap-1">
                     {PROJECT_TABS.map((tab) => (
-                        <Tabs.Trigger value={tab} key={makeReactKey(`dashboard.tabs.${tab}`)} onClick={() => navigateToTab(tab)}>
+                        <Tabs.Trigger value={tab} key={Utils.String.Token.reactKey(`dashboard.tabs.${tab}`)} onClick={() => navigateToTab(tab)}>
                             {t(`dashboard.tabs.${tab}`)}
                         </Tabs.Trigger>
                     ))}

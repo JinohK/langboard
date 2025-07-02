@@ -8,9 +8,9 @@ import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizonta
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { BOARD_WIKI_DND_SYMBOL_SET } from "@/pages/BoardPage/components/wiki/WikiConstants";
 import { DropIndicator } from "@atlaskit/pragmatic-drag-and-drop-react-drop-indicator/box";
+import { Utils } from "@langboard/core/utils";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
@@ -53,7 +53,7 @@ function WikiTab({ changeTab, wiki }: IWikiTabProps) {
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;
 

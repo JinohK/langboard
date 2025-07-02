@@ -6,7 +6,7 @@ import { IUserAvatarProps } from "@/components/UserAvatar/types";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { forwardRef, Fragment, memo, useState } from "react";
 
 const SPACING_MAP = {
@@ -29,7 +29,7 @@ export const SkeletonUserAvatarList = ({ count, size, spacing = "none", classNam
     return (
         <Flex className={cn("rtl:space-x-reverse", SPACING_MAP[spacing])}>
             {Array.from({ length: count }).map(() => (
-                <Skeleton key={createShortUUID()} display="inline-block" className={cn(AvatarVariants({ size }), className)} />
+                <Skeleton key={Utils.String.Token.shortUUID()} display="inline-block" className={cn(AvatarVariants({ size }), className)} />
             ))}
         </Flex>
     );
@@ -66,7 +66,7 @@ export const UserAvatarList = memo(
             <Flex position="relative" className={cn("rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...flexProps}>
                 {userOrBots.slice(0, maxVisible).map((userOrBot) => (
                     <UserAvatar.Root
-                        key={`user-avatar-${userOrBot.uid}-${createShortUUID()}`}
+                        key={`user-avatar-${userOrBot.uid}-${Utils.String.Token.shortUUID()}`}
                         userOrBot={userOrBot}
                         avatarSize={size}
                         listAlign={listAlign}
@@ -94,7 +94,7 @@ export const UserAvatarBadgeList = memo(
             <Flex items="center" gap="1.5" position="relative" className={className} ref={ref} {...flexProps}>
                 {userOrBots.slice(0, maxVisible).map((userOrBot) => (
                     <UserAvatar.Root
-                        key={`user-avatar-${userOrBot.uid}-${createShortUUID()}`}
+                        key={`user-avatar-${userOrBot.uid}-${Utils.String.Token.shortUUID()}`}
                         userOrBot={userOrBot}
                         withNameProps={{
                             className: cn(
@@ -153,7 +153,7 @@ const UserAvatarMoreList = memo(
                     <ScrollArea.Root>
                         <Box maxH="52" minW="40" py="1">
                             {userOrBots.slice(maxVisible).map((userOrBot, i) => (
-                                <Fragment key={`user-avatar-${userOrBot.uid}-${createShortUUID()}`}>
+                                <Fragment key={`user-avatar-${userOrBot.uid}-${Utils.String.Token.shortUUID()}`}>
                                     {i !== 0 && <Separator className="my-1 h-px bg-muted" />}
                                     <UserAvatar.Root
                                         userOrBot={userOrBot}

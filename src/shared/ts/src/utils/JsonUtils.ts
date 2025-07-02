@@ -1,5 +1,7 @@
 /* eslint-disable no-useless-escape */
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { TypeUtils } from "@/utils/TypeUtils";
+
 /* eslint-disable quotes */
 const noiseValue = /^-?\d+n+$/; // Noise - strings that match the custom format before being converted to it
 const originalStringify = JSON.stringify;
@@ -14,11 +16,17 @@ const Stringify: typeof JSON.stringify = (value, replacer, space) => {
         return originalStringify(
             value,
             (key, value) => {
-                if (typeof value === "bigint") return (JSON as any).rawJSON(value.toString());
+                if (TypeUtils.isBigInt(value)) {
+                    return (JSON as any).rawJSON(value.toString());
+                }
 
-                if (typeof replacer === "function") return replacer(key, value);
+                if (TypeUtils.isFunction(replacer)) {
+                    return replacer(key, value);
+                }
 
-                if (Array.isArray(replacer) && replacer.includes(key)) return value;
+                if (TypeUtils.isArray(replacer) && replacer.includes(key)) {
+                    return value;
+                }
 
                 return value;
             },
@@ -26,22 +34,32 @@ const Stringify: typeof JSON.stringify = (value, replacer, space) => {
         );
     }
 
-    if (!value) return originalStringify(value, replacer as any, space);
+    if (!value) {
+        return originalStringify(value, replacer as any, space);
+    }
 
     const bigInts = /([\[:])?"(-?\d+)n"($|([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
     const noise = /([\[:])?("-?\d+n+)n("$|"([\\n]|\s)*(\s|[\\n])*[,\}\]])/g;
     const convertedToCustomJSON = originalStringify(
         value,
         (key, value) => {
-            const isNoise = typeof value === "string" && Boolean(value.match(noiseValue));
+            const isNoise = TypeUtils.isString(value) && Boolean(value.match(noiseValue));
 
-            if (isNoise) return value.toString() + "n";
+            if (isNoise) {
+                return value.toString() + "n";
+            }
 
-            if (typeof value === "bigint") return value.toString() + "n";
+            if (TypeUtils.isBigInt(value)) {
+                return value.toString() + "n";
+            }
 
-            if (typeof replacer === "function") return replacer(key, value);
+            if (TypeUtils.isFunction(replacer)) {
+                return replacer(key, value);
+            }
 
-            if (Array.isArray(replacer) && replacer.includes(key)) return value;
+            if (TypeUtils.isArray(replacer) && replacer.includes(key)) {
+                return value;
+            }
 
             return value;
         },
@@ -67,32 +85,44 @@ const Parse: typeof JSON.parse = (text, reviver) => {
         const isString = text[0] === '"';
         const isNoise = isString && Boolean(text.match(noiseValueWithQuotes));
 
-        if (isNoise) return text.substring(0, text.length - 1) + 'n"';
+        if (isNoise) {
+            return text.substring(0, text.length - 1) + 'n"';
+        }
 
         const isFractionalOrExponential = fractional || exponential;
         const isLessThanMaxSafeInt = digits && (digits.length < MAX_DIGITS || (digits.length === MAX_DIGITS && digits <= MAX_INT));
 
-        if (isString || isFractionalOrExponential || isLessThanMaxSafeInt) return text;
+        if (isString || isFractionalOrExponential || isLessThanMaxSafeInt) {
+            return text;
+        }
 
         return '"' + text + 'n"';
     });
 
     return originalParse(serializedData, (key: any, value: any) => {
-        const isCustomFormatBigInt = typeof value === "string" && Boolean(value.match(customFormat));
+        const isCustomFormatBigInt = TypeUtils.isString(value) && Boolean(value.match(customFormat));
 
-        if (isCustomFormatBigInt) return BigInt(value.substring(0, value.length - 1));
+        if (isCustomFormatBigInt) {
+            return BigInt(value.substring(0, value.length - 1));
+        }
 
-        const isNoiseValue = typeof value === "string" && Boolean(value.match(noiseValue));
+        const isNoiseValue = TypeUtils.isString(value) && Boolean(value.match(noiseValue));
 
-        if (isNoiseValue) return value.substring(0, value.length - 1); // Remove one "n" off the end of the noisy string
+        if (isNoiseValue) {
+            return value.substring(0, value.length - 1); // Remove one "n" off the end of the noisy string
+        }
 
-        if (typeof reviver !== "function") return value;
+        if (!TypeUtils.isFunction(reviver)) {
+            return value;
+        }
 
         return reviver(key, value);
     });
 };
 
-export default {
+export const JsonUtils = {
     Stringify,
     Parse,
 };
+
+export type TJsonUtils = typeof JsonUtils;

@@ -1,13 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { WebSocket, WebSocketEventMap } from "ws";
+import { WebSocket } from "ws";
 import { IncomingMessage } from "http";
-import ESocketTopic from "@/core/server/ESocketTopic";
 import Subscription from "@/core/server/Subscription";
 import User from "@/models/User";
 import ISocketClient, { TSocketSendParams } from "@/core/server/ISocketClient";
 import Hocus from "@/core/server/Hocus";
-import ESocketStatus from "@/core/server/ESocketStatus";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketStatus, ESocketTopic } from "@langboard/core/enums";
 import Logger from "@/core/utils/Logger";
 
 class SocketClient implements ISocketClient {
@@ -16,7 +15,7 @@ class SocketClient implements ISocketClient {
     #user: User;
     #subscriptions: Map<string, string[]>;
     #hocusDocNames: Set<string>;
-    #eventListeners: Partial<Record<keyof WebSocketEventMap, ((...args: any[]) => void)[]>>;
+    #eventListeners: Partial<Record<keyof WebSocket.WebSocketEventMap, ((...args: any[]) => void)[]>>;
 
     public get user(): User {
         return this.#user;
@@ -55,7 +54,7 @@ class SocketClient implements ISocketClient {
     }
 
     public send<TData = unknown>(event: TSocketSendParams<TData>): void {
-        event.topic = convertSafeEnum(ESocketTopic, event.topic);
+        event.topic = Utils.String.convertSafeEnum(ESocketTopic, event.topic);
 
         this.#ws.send(
             JSON.stringify(event),
@@ -88,7 +87,7 @@ class SocketClient implements ISocketClient {
     }
 
     public stream(topic: ESocketTopic, topicId: string, baseEvent: string) {
-        topic = convertSafeEnum(ESocketTopic, topic);
+        topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         const send = (event: "start" | "buffer" | "end", data: Record<string, unknown> = {}) => {
             this.send({

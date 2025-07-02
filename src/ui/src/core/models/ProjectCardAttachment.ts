@@ -2,8 +2,7 @@ import useCardAttachmentNameChangedHandlers from "@/controllers/socket/card/atta
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import * as User from "@/core/models/User";
-import { convertServerFileURL } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface Interface extends IBaseModel {
     card_uid: string;
@@ -40,9 +39,9 @@ class ProjectCardAttachment extends BaseModel<IStore> {
 
     public static convertModel(model: Interface): Interface {
         if (model.url) {
-            model.url = convertServerFileURL(model.url);
+            model.url = Utils.String.convertServerFileURL(model.url);
         }
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
         return model;

@@ -1,6 +1,5 @@
 import { Box, Textarea, Toast } from "@/components/base";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
@@ -8,6 +7,7 @@ import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 

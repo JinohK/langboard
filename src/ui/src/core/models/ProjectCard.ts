@@ -7,7 +7,6 @@ import * as Project from "@/core/models/Project";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import TypeUtils from "@/core/utils/TypeUtils";
 import useCardCommentAddedHandlers from "@/controllers/socket/card/comment/useCardCommentAddedHandlers";
 import useCardCommentDeletedHandlers from "@/controllers/socket/card/comment/useCardCommentDeletedHandlers";
 import useCardAssignedUsersUpdatedHandlers from "@/controllers/socket/card/useCardAssignedUsersUpdatedHandlers";
@@ -26,6 +25,7 @@ import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColum
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
 import useMetadataDeletedHandlers from "@/controllers/socket/metadata/useMetadataDeletedHandlers";
+import { Utils } from "@langboard/core/utils";
 
 export interface Interface extends IBaseModel {
     project_uid: string;
@@ -111,13 +111,13 @@ class ProjectCard extends BaseModel<IStore> {
     }
 
     public static convertModel(model: IStore): IStore {
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
-        if (TypeUtils.isString(model.deadline_at)) {
+        if (Utils.Type.isString(model.deadline_at)) {
             model.deadline_at = new Date(model.deadline_at);
         }
-        if (TypeUtils.isString(model.archived_at)) {
+        if (Utils.Type.isString(model.archived_at)) {
             model.archived_at = new Date(model.archived_at);
         }
         return model;
@@ -169,7 +169,7 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("archived_at");
     }
     public set archived_at(value: string | Date | undefined) {
-        this.update({ archived_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ archived_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 
     public get count_comment() {
@@ -190,7 +190,7 @@ class ProjectCard extends BaseModel<IStore> {
         return this.getValue("deadline_at");
     }
     public set deadline_at(value: string | Date | undefined) {
-        this.update({ deadline_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ deadline_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 
     public get column_name() {

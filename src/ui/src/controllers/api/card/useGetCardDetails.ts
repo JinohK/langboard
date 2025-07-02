@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { GlobalRelationshipType, ProjectCard, ProjectColumn, ProjectLabel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IGetCardDetailsForm {
     project_uid: string;
@@ -21,7 +21,7 @@ const useGetCardDetails = (params: IGetCardDetailsForm, options?: TQueryOptions<
     const { query } = useQueryMutation();
 
     const getCardDetails = async () => {
-        const url = format(API_ROUTES.BOARD.CARD.GET_DETAILS, { uid: params.project_uid, card_uid: params.card_uid });
+        const url = Utils.String.format(API_ROUTES.BOARD.CARD.GET_DETAILS, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

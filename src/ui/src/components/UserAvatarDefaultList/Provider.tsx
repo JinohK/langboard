@@ -4,8 +4,8 @@ import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import { useAuth } from "@/core/providers/AuthProvider";
 import useIsProjectAssignee from "@/controllers/api/board/useIsProjectAssignee";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUserAvatarDefaultListContext {
     socket: ISocketContext;

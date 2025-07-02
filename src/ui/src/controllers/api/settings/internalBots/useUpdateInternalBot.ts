@@ -3,8 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { InternalBotModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateInternalBotForm {
     display_name?: string;
@@ -21,10 +20,10 @@ const useUpdateInternalBot = (bot: InternalBotModel.TModel, options?: TMutationO
     const { mutate } = useQueryMutation();
 
     const updateInternalBot = async (params: IUpdateInternalBotForm) => {
-        const url = format(API_ROUTES.SETTINGS.INTERNAL_BOTS.UPDATE, { bot_uid: bot.uid });
+        const url = Utils.String.format(API_ROUTES.SETTINGS.INTERNAL_BOTS.UPDATE, { bot_uid: bot.uid });
         const formData = new FormData();
         Object.entries(params).forEach(([key, value]) => {
-            if (TypeUtils.isNullOrUndefined(value)) {
+            if (Utils.Type.isNullOrUndefined(value)) {
                 return;
             }
 

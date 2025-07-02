@@ -3,10 +3,10 @@ import { useLocation } from "react-router";
 import PasswordInput from "@/components/PasswordInput";
 import { Button, Flex, Form, SubmitButton } from "@/components/base";
 import useRecoveryPassword from "@/controllers/api/auth/useRecoveryPassword";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import useForm from "@/core/hooks/form/useForm";
 import SuccessResult from "@/pages/auth/AccountRecoveryPage/SuccessResult";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IResetPasswordFormProps {
     recoveryToken: string;

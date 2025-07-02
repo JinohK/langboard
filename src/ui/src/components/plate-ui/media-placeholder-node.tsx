@@ -11,9 +11,8 @@ import { PlateElement, useEditorPlugin, withHOC } from "platejs/react";
 import { useFilePicker } from "use-file-picker";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useUploadFile } from "@/components/plate-ui/uploadthing";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { useTranslation } from "react-i18next";
-import { formatBytes } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const CONTENT: Record<
     string,
@@ -139,14 +138,14 @@ export const PlaceholderElement = withHOC(PlaceholderProvider, function Placehol
                         <div>
                             {loading
                                 ? uploadingFile?.name
-                                : TypeUtils.isString(currentContent.content)
+                                : Utils.Type.isString(currentContent.content)
                                   ? t(currentContent.content)
                                   : currentContent.content}
                         </div>
 
                         {loading && !isImage && (
                             <div className="mt-1 flex items-center gap-1.5">
-                                <div>{formatBytes(uploadingFile?.size ?? 0)}</div>
+                                <div>{Utils.String.formatBytes(uploadingFile?.size ?? 0)}</div>
                                 <div>–</div>
                                 <div className="flex items-center">
                                     <Loader2Icon className="mr-1 size-3.5 animate-spin text-muted-foreground" />

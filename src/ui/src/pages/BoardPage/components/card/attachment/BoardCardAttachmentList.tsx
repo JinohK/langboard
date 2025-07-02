@@ -6,12 +6,12 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnReordered from "@/core/hooks/useColumnReordered";
 import { ProjectCardAttachment } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
 import BoardCardAttachment, { SkeletonBoardCardAttachment } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachment";
 import {
     BOARD_CARD_ATTACHMENT_DND_SETTINGS,
     BOARD_CARD_ATTACHMENT_DND_SYMBOL_SET,
 } from "@/pages/BoardPage/components/card/attachment/BoardCardAttachmentConstants";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useTranslation } from "react-i18next";
@@ -125,7 +125,7 @@ function BoardCardAttachmentList(): JSX.Element {
                 </Collapsible.Root>
             )}
 
-            {!TypeUtils.isUndefined(window) &&
+            {!Utils.Type.isUndefined(window) &&
                 isPreviewOpened &&
                 createPortal(
                     <ImagePreviewModal

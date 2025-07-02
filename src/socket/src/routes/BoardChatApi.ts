@@ -1,12 +1,11 @@
 import BotRunner from "@/core/ai/BotRunner";
-import EApiErrorCode from "@/core/server/ApiErrorCode";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
-import EHttpStatus from "@/core/server/EHttpStatus";
 import Routes from "@/core/server/Routes";
 import Logger from "@/core/utils/Logger";
 import { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
+import { EApiErrorCode, EHttpStatus } from "@langboard/core/enums";
 import { IncomingForm } from "formidable";
 
 Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => {

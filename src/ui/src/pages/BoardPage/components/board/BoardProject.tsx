@@ -1,6 +1,5 @@
 import { Box, Button, Flex } from "@/components/base";
 import useGetCards from "@/controllers/api/board/useGetCards";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import BoardFilter from "@/pages/BoardPage/components/board/BoardFilter";
@@ -12,6 +11,7 @@ import { AuthUser, Project } from "@/core/models";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { Board, SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { EHttpStatus } from "@langboard/core/enums";
 
 export interface IBoardProps {
     project: Project.TModel;

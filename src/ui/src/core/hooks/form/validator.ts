@@ -1,6 +1,6 @@
 import { EMAIL_REGEX } from "@/constants";
 import { IBaseValidationSchema, TValidationSchema } from "@/core/hooks/form/types";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 class Validator {
     public required(schemaValue: TValidationSchema["required"], value?: string | File[] | FileList): bool {
@@ -20,11 +20,11 @@ class Validator {
     }
 
     public pattern(schemaValue: TValidationSchema["pattern"], value?: string | File[] | FileList): bool {
-        return !schemaValue || (TypeUtils.isString(value) && schemaValue.test(value));
+        return !schemaValue || (Utils.Type.isString(value) && schemaValue.test(value));
     }
 
     public email(schemaValue: TValidationSchema["email"], value?: string | File[] | FileList): bool {
-        return !schemaValue || (TypeUtils.isString(value) && EMAIL_REGEX.test(value));
+        return !schemaValue || (Utils.Type.isString(value) && EMAIL_REGEX.test(value));
     }
 
     public sameWith(
@@ -49,13 +49,13 @@ class Validator {
             return true;
         }
 
-        if (TypeUtils.isString(value)) {
+        if (Utils.Type.isString(value)) {
             return false;
         }
 
         for (let i = 0; i < (value?.length ?? 0); ++i) {
             const file = value[i];
-            if (TypeUtils.isString(schemaValue)) {
+            if (Utils.Type.isString(schemaValue)) {
                 schemaValue = [schemaValue];
             }
 
@@ -86,7 +86,7 @@ class Validator {
             return true;
         }
 
-        if (!TypeUtils.isString(value)) {
+        if (!Utils.Type.isString(value)) {
             return false;
         }
 

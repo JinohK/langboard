@@ -1,12 +1,12 @@
 import { Box, Checkbox, Flex, Label, Toast } from "@/components/base";
 import useToggleBotTriggerCondition from "@/controllers/api/settings/bots/useToggleBotTriggerCondition";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { CATEGORIZED_BOT_TRIGGER_CONDITIONS, EBotTriggerCondition } from "@/core/models/bot.type";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
+import { EHttpStatus } from "@langboard/core/enums";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 

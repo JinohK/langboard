@@ -5,8 +5,7 @@ import FormErrorMessage from "@/components/FormErrorMessage";
 import { Box, Flex, Form, Input, Label, SubmitButton, Toast } from "@/components/base";
 import useUpdateProfile from "@/controllers/api/account/useUpdateProfile";
 import useForm from "@/core/hooks/form/useForm";
-import { createNameInitials } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 
@@ -46,9 +45,9 @@ function ProfilePage(): JSX.Element {
             }
 
             setTimeout(() => {
-                if (TypeUtils.isElement(focusComponentRef.current)) {
+                if (Utils.Type.isElement(focusComponentRef.current)) {
                     focusComponentRef.current.focus();
-                } else if (TypeUtils.isString(focusComponentRef.current)) {
+                } else if (Utils.Type.isString(focusComponentRef.current)) {
                     formRef.current?.[focusComponentRef.current]?.focus();
                 }
             }, 0);
@@ -66,7 +65,7 @@ function ProfilePage(): JSX.Element {
             <Form.Root onSubmit={handleSubmit} ref={formRef}>
                 <Flex justify="center" mt="11">
                     <AvatarUploader
-                        userInitials={createNameInitials(currentUser.firstname, currentUser.lastname)}
+                        userInitials={Utils.String.getInitials(currentUser.firstname, currentUser.lastname)}
                         initialAvatarUrl={currentUser.avatar}
                         dataTransferRef={dataTransferRef}
                         isDeletedRef={isAvatarDeletedRef}

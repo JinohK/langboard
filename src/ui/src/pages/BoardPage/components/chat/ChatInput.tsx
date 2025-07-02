@@ -2,12 +2,11 @@ import { Box, Button, Flex, IconComponent, Input, Textarea, Toast } from "@/comp
 import useUploadProjectChatAttachment from "@/controllers/api/board/chat/useUploadProjectChatAttachment";
 import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
-import { createUUID } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTemplateListDialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -29,7 +28,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
     const [previewElement, setPreviewElement] = useState<React.ReactNode | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const updateHeight = useCallback(() => {
-        if (!TypeUtils.isElement(chatInputRef.current, "textarea")) {
+        if (!Utils.Type.isElement(chatInputRef.current, "textarea")) {
             return;
         }
 
@@ -107,7 +106,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
             ++tried;
 
-            chatTaskIdRef.current = createUUID();
+            chatTaskIdRef.current = Utils.String.Token.uuid();
 
             return socket.send({
                 topic: ESocketTopic.Board,

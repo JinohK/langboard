@@ -1,10 +1,9 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic, { GLOBAL_TOPIC_ID } from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { EBotTriggerCondition } from "@/core/models/bot.type";
-import { StringCase } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
 
 export interface IBotSettingTriggerConditionPredefinedRawResponse {
     conditions: EBotTriggerCondition[];
@@ -27,8 +26,8 @@ const useBotSettingTriggerConditionPredefinedHandlers = ({ callback, bot }: IUse
                 const newConditions = { ...bot.conditions };
                 for (let i = 0; i < data.conditions.length; ++i) {
                     const condition = data.conditions[i];
-                    if (TypeUtils.isString(condition)) {
-                        const conditionKey = EBotTriggerCondition[new StringCase(condition).toPascal() as keyof typeof EBotTriggerCondition];
+                    if (Utils.Type.isString(condition)) {
+                        const conditionKey = EBotTriggerCondition[new Utils.String.Case(condition).toPascal() as keyof typeof EBotTriggerCondition];
                         newConditions[conditionKey] = { is_predefined: true };
                     }
                 }

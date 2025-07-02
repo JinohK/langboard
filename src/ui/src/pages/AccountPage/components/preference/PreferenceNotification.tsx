@@ -1,8 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useTranslation } from "react-i18next";
 import { Box, Flex } from "@/components/base";
-import TypeUtils from "@/core/utils/TypeUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useAccountSetting } from "@/core/providers/AccountSettingProvider";
 import { DEEP_NOTIFICATION_TYPE_MAP, TNotificationSpecificType, TNotificationType } from "@/core/models/notification.type";
@@ -49,7 +48,7 @@ function PreferenceNotificationRecursive({ typeMap, deep }: IPreferenceNotificat
         <Flex position="relative" direction="col" gap="3" ml={deep ? "4" : undefined} style={style}>
             {Object.entries(typeMap).map(([typeKey, types]) => {
                 return (
-                    <Box key={createShortUUID()} className={cn("relative", verticalLineClassNames)}>
+                    <Box key={Utils.String.Token.shortUUID()} className={cn("relative", verticalLineClassNames)}>
                         <Flex
                             position="relative"
                             weight="semibold"
@@ -74,12 +73,12 @@ function PreferenceNotificationRecursive({ typeMap, deep }: IPreferenceNotificat
                                 }}
                             />
                         </Flex>
-                        {!TypeUtils.isArray(types) ? (
+                        {!Utils.Type.isArray(types) ? (
                             <PreferenceNotificationRecursive typeMap={types} deep={++deep} />
                         ) : (
                             <Flex direction="col" gap="2">
                                 {types.map((type) => (
-                                    <Flex key={createShortUUID()} items="center" justify="between" h="8">
+                                    <Flex key={Utils.String.Token.shortUUID()} items="center" justify="between" h="8">
                                         <Box position="relative" ml="4" textSize="sm" className={cn(horizontalLineClassNames)}>
                                             {t(`notification.settings.types.${type}`)}
                                         </Box>

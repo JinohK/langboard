@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectWiki } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface ICreateWikiForm {
     project_uid: string;
@@ -18,7 +18,7 @@ const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiRe
     const { mutate } = useQueryMutation();
 
     const createWiki = async (params: ICreateWikiForm) => {
-        const url = format(API_ROUTES.BOARD.WIKI.CREATE, {
+        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

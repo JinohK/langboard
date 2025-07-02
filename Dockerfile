@@ -21,8 +21,8 @@ RUN curl -sSL https://install.python-poetry.org | python3 - --git https://github
 RUN poetry --version
 
 COPY ./src/api ./src/api
-COPY ./src/shared/core ./src/shared/core
-COPY ./src/shared/models ./src/shared/models
+COPY ./src/shared/py/core ./src/shared/py/core
+COPY ./src/shared/py/models ./src/shared/py/models
 COPY pyproject.toml poetry.lock README.md alembic.ini ./
 
 RUN poetry lock --no-update

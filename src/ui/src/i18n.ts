@@ -2,7 +2,7 @@ import i18n, { BackendModule, ReadCallback, ResourceKey, ResourceLanguage } from
 import LanguageDetector from "i18next-browser-languagedetector";
 import { initReactI18next } from "react-i18next";
 import { APP_NAME, IS_PRODUCTION, LANGUAGE_LOCALES } from "@/constants";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const jsons = import.meta.glob<{ default: Record<string, unknown> }>("./assets/locales/**/*.json");
 const tempLocales: Record<string, Record<string, () => Promise<{ default: ResourceKey }>>> = {};
@@ -56,7 +56,7 @@ i18n.use(new I18NextBackend())
         interpolation: {
             escapeValue: false,
             defaultVariables: {
-                app: new StringCase(APP_NAME).toPascal(),
+                app: new Utils.String.Case(APP_NAME).toPascal(),
             },
         },
 

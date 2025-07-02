@@ -3,7 +3,7 @@ import { ProjectCardRelationship } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { cn } from "@/core/utils/ComponentUtils";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
@@ -49,7 +49,7 @@ const BoardColumnCardRelationshipButton = memo(({ type, attributes }: IBoardColu
                 "absolute top-1/2 z-30 block -translate-y-1/2 transform rounded-full text-xs hover:bg-primary/70",
                 isParent ? "-left-3" : "-right-3"
             )}
-            title={t(`project.${new StringCase(type).toPascal()}`)}
+            title={t(`project.${new Utils.String.Case(type).toPascal()}`)}
             titleSide={isParent ? "right" : "left"}
             onClick={() => setFilters(type)}
             {...attributes}

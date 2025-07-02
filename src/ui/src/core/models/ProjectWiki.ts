@@ -8,9 +8,9 @@ import useBoardWikiPublicChangedHandlers from "@/controllers/socket/wiki/useBoar
 import useBoardWikiDetailsChangedHandlers from "@/controllers/socket/wiki/useBoardWikiDetailsChangedHandlers";
 import useBoardWikiAssigneesUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiAssigneesUpdatedHandlers";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
 import useMetadataDeletedHandlers from "@/controllers/socket/metadata/useMetadataDeletedHandlers";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface Interface extends IBaseModel {
     project_uid: string;

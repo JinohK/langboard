@@ -2,8 +2,7 @@ import * as ProjectCard from "@/core/models/ProjectCard";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import useCardCheckitemCardifiedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCardifiedHandlers";
 import useCardCheckitemCheckedChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemCheckedChangedHandlers";
 import useCardCheckitemTitleChangedHandlers from "@/controllers/socket/card/checkitem/useCardCheckitemTitleChangedHandlers";
@@ -61,13 +60,13 @@ class ProjectCheckitem extends BaseModel<Interface> {
     }
 
     public static convertModel(model: Interface): Interface {
-        if (TypeUtils.isString(model.status)) {
-            model.status = convertSafeEnum(ECheckitemStatus, model.status);
+        if (Utils.Type.isString(model.status)) {
+            model.status = Utils.String.convertSafeEnum(ECheckitemStatus, model.status);
         }
-        if (TypeUtils.isString(model.initial_timer_started_at)) {
+        if (Utils.Type.isString(model.initial_timer_started_at)) {
             model.initial_timer_started_at = new Date(model.initial_timer_started_at);
         }
-        if (TypeUtils.isString(model.timer_started_at)) {
+        if (Utils.Type.isString(model.timer_started_at)) {
             model.timer_started_at = new Date(model.timer_started_at);
         }
         return model;
@@ -140,14 +139,14 @@ class ProjectCheckitem extends BaseModel<Interface> {
         return this.getValue("initial_timer_started_at");
     }
     public set initial_timer_started_at(value: string | Date | undefined) {
-        this.update({ initial_timer_started_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ initial_timer_started_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 
     public get timer_started_at(): Date | undefined {
         return this.getValue("timer_started_at");
     }
     public set timer_started_at(value: string | Date | undefined) {
-        this.update({ timer_started_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ timer_started_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 }
 

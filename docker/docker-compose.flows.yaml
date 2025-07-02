@@ -46,8 +46,8 @@ services:
     command: uv run flows run --workers ${FLOWS_WORKERS_COUNT:-1}
     volumes:
       - ../src/flows/${PROJECT_NAME}_flows:/app/src/flows/${PROJECT_NAME}_flows
-      - ../src/shared/core:/app/src/shared/core
-      - ../src/shared/models:/app/src/shared/models
+      - ../src/shared/py/core:/app/src/shared/py/core
+      - ../src/shared/py/models:/app/src/shared/py/models
       - ../src/resources:/app/src/resources
       - ../src/flows/pyproject.toml:/app/src/flows/pyproject.toml
       - ../src/flows/uv.lock:/app/src/flows/uv.lock

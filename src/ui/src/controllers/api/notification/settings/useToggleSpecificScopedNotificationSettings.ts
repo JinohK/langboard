@@ -6,7 +6,7 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser } from "@/core/models";
 import { TNotificationSpecificType } from "@/core/models/notification.type";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const useToggleSpecificScopedNotificationSettings = <TType extends TNotificationSpecificType>(
     type: TType,
@@ -39,7 +39,7 @@ const useToggleSpecificScopedNotificationSettings = <TType extends TNotification
     }
 
     const toggleSpecificScopedNotificationSettings = async (params: TToggleSpecificScopedNotificationSettingsForm<TType>) => {
-        const formattedURL = format(url, {
+        const formattedURL = Utils.String.format(url, {
             uid: params.project_uid,
             ...(params as unknown as Record<string, string>),
         });

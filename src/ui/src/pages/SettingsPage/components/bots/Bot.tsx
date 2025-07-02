@@ -1,11 +1,11 @@
 import { Avatar, Box, Button, Flex, IconComponent, Popover, SubmitButton, Toast } from "@/components/base";
 import useDeleteBot from "@/controllers/api/settings/bots/useDeleteBot";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { BotModel } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 

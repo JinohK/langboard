@@ -171,7 +171,7 @@ async def schedule_bot_crons(
     project, bot = result
 
     bot_schedule = await BotScheduleHelper.schedule(
-        bot, form.interval_str, target_model, project, form.running_type, form.start_at, form.end_at
+        bot, form.interval_str, target_model, project, form.running_type, form.start_at, form.end_at, form.timezone
     )
     if not bot_schedule:
         return JsonResponse(content=ApiErrorCode.VA3004, status_code=status.HTTP_400_BAD_REQUEST)
@@ -217,7 +217,14 @@ async def reschedule_bot_crons(
         filterable_model = None
 
     result = await BotScheduleHelper.reschedule(
-        bot_schedule, form.interval_str, target_model, filterable_model, form.running_type, form.start_at, form.end_at
+        bot_schedule,
+        form.interval_str,
+        target_model,
+        filterable_model,
+        form.running_type,
+        form.start_at,
+        form.end_at,
+        form.timezone,
     )
     if not result:
         return JsonResponse(content=ApiErrorCode.VA3004, status_code=status.HTTP_400_BAD_REQUEST)

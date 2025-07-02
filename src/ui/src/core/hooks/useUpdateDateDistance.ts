@@ -1,10 +1,10 @@
-import { formatDateDistance } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const useUpdateDateDistance = (date: Date | undefined, timeout: number = 60000) => {
     const [t, i18n] = useTranslation();
-    const [distance, setDistance] = useState(date ? formatDateDistance(i18n, t, date) : "");
+    const [distance, setDistance] = useState(date ? Utils.String.formatDateDistance(i18n, t, date) : "");
 
     useEffect(() => {
         let runningTimeout: NodeJS.Timeout | undefined;
@@ -15,7 +15,7 @@ const useUpdateDateDistance = (date: Date | undefined, timeout: number = 60000) 
             }
 
             if (date) {
-                setDistance(formatDateDistance(i18n, t, date));
+                setDistance(Utils.String.formatDateDistance(i18n, t, date));
             }
 
             runningTimeout = setTimeout(updateCommentedAt, timeout);
@@ -31,7 +31,7 @@ const useUpdateDateDistance = (date: Date | undefined, timeout: number = 60000) 
 
     useEffect(() => {
         if (date) {
-            setDistance(formatDateDistance(i18n, t, date));
+            setDistance(Utils.String.formatDateDistance(i18n, t, date));
         }
     }, [date]);
 

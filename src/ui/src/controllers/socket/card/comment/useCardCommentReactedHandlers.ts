@@ -1,8 +1,8 @@
 import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment } from "@/core/models";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardCommentReactedRawResponse {
     comment_uid: string;

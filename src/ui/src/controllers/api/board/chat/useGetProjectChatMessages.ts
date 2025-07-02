@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ChatMessageModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import { useEffect, useRef, useState } from "react";
 
 const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions) => {
@@ -23,7 +23,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
 
         ++pageRef.current;
 
-        const url = format(API_ROUTES.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
+        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
                 refer_time: lastCurrentDateRef.current,

@@ -1,7 +1,7 @@
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { AuthUser, Project } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { ESocketTopic } from "@langboard/core/enums";
 import { createContext, useContext, useEffect } from "react";
 
 export interface IDashboardContext {

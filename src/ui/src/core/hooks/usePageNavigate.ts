@@ -1,4 +1,4 @@
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useRef } from "react";
 import { NavigateOptions, To, useNavigate } from "react-router";
 
@@ -15,7 +15,7 @@ export const usePageNavigate = () => {
     const baseNavigate = useNavigate();
     const navigate: INavigationFunction = useCallback(
         (to: To | number, options?: IPageNavigateOptions) => {
-            if (TypeUtils.isNumber(to)) {
+            if (Utils.Type.isNumber(to)) {
                 return baseNavigate(to);
             }
 
@@ -24,7 +24,7 @@ export const usePageNavigate = () => {
                 options = {};
             }
 
-            if (TypeUtils.isNullOrUndefined(options.smooth)) {
+            if (Utils.Type.isNullOrUndefined(options.smooth)) {
                 navigateOptions.viewTransition = false;
                 navigateOptions.flushSync = true;
             } else if (options.smooth) {

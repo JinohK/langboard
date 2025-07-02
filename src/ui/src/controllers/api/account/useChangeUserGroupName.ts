@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { UserGroup } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IChangeUserGroupNameForm {
     name: string;
@@ -13,7 +13,7 @@ const useChangeUserGroupName = (group: UserGroup.TModel, options?: TMutationOpti
     const { mutate } = useQueryMutation();
 
     const changeUserGroupName = async (params: IChangeUserGroupNameForm) => {
-        const url = format(API_ROUTES.ACCOUNT.USER_GROUP.CHANGE_NAME, {
+        const url = Utils.String.format(API_ROUTES.ACCOUNT.USER_GROUP.CHANGE_NAME, {
             group_uid: group.uid,
         });
         const res = await api.put(

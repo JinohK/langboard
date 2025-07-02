@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { StringCase } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import clsx, { ClassValue } from "clsx";
 import { cloneElement, forwardRef } from "react";
 import { createRoot } from "react-dom/client";
@@ -13,9 +12,9 @@ export function cn(...inputs: ClassValue[]): string {
 }
 
 function setRef<T>(ref: TPossibleRef<T>, value: T) {
-    if (TypeUtils.isFunction(ref)) {
+    if (Utils.Type.isFunction(ref)) {
         ref(value);
-    } else if (!TypeUtils.isNullOrUndefined(ref)) {
+    } else if (!Utils.Type.isNullOrUndefined(ref)) {
         ref.current = value;
     }
 }
@@ -74,13 +73,13 @@ export const measureTextAreaHeight = (textarea: HTMLTextAreaElement): number => 
 };
 
 export const setElementStyles = (elements: HTMLElement | HTMLElement[], styles: Record<string, string>) => {
-    if (!TypeUtils.isArray(elements)) {
+    if (!Utils.Type.isArray(elements)) {
         elements = [elements];
     }
 
     Object.entries(styles).forEach(([key, value]) => {
         elements.forEach((element) => {
-            element.style.setProperty(new StringCase(key).toKebab(), value);
+            element.style.setProperty(new Utils.String.Case(key).toKebab(), value);
         });
     });
 };

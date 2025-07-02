@@ -11,7 +11,7 @@ import { SINGLE_ROW_IDLE } from "@/core/helpers/dnd/createDndSingleRowEvents";
 import { singleDndHelpers } from "@/core/helpers/dnd";
 import { BOARD_SETTINGS_LABEL_DND_SYMBOL_SET } from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelConstants";
 import invariant from "tiny-invariant";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 
 export interface IBoardSettingsLabelProps {
     label: ProjectLabel.TModel;
@@ -39,7 +39,7 @@ function BoardSettingsLabel({ label }: IBoardSettingsLabelProps): JSX.Element {
                 // Not using react for this.
                 const rect = outer.getBoundingClientRect();
                 const preview = outer.cloneNode(true);
-                invariant(TypeUtils.isElement(preview, "div"));
+                invariant(Utils.Type.isElement(preview, "div"));
                 preview.style.width = `${rect.width}px`;
                 preview.style.height = `${rect.height}px`;
 

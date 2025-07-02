@@ -3,8 +3,7 @@ import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
-import { convertSafeEnum } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
 import { ENotificationType } from "@/core/models/notification.type";
 
 export interface Interface extends IBaseModel {
@@ -33,14 +32,14 @@ class UserNotification extends BaseModel<Interface> {
     }
 
     public static convertModel(model: Interface): Interface {
-        if (TypeUtils.isString(model.read_at)) {
+        if (Utils.Type.isString(model.read_at)) {
             model.read_at = new Date(model.read_at);
         }
-        if (TypeUtils.isString(model.created_at)) {
+        if (Utils.Type.isString(model.created_at)) {
             model.created_at = new Date(model.created_at);
         }
-        if (TypeUtils.isString(model.type)) {
-            model.type = convertSafeEnum(ENotificationType, model.type);
+        if (Utils.Type.isString(model.type)) {
+            model.type = Utils.String.convertSafeEnum(ENotificationType, model.type);
         }
         if (model.notifier_bot) {
             const botAsUser = { ...model.notifier_bot } as unknown as User.Interface;
@@ -88,7 +87,7 @@ class UserNotification extends BaseModel<Interface> {
         return this.getValue("read_at");
     }
     public set read_at(value: string | Date | undefined) {
-        this.update({ read_at: TypeUtils.isString(value) ? new Date(value) : value });
+        this.update({ read_at: Utils.Type.isString(value) ? new Date(value) : value });
     }
 
     public get created_at(): Date {

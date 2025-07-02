@@ -4,7 +4,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { MetadataModel } from "@/core/models";
-import { format } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 const useGetMetadata = (form: TMetadataForm, options?: TQueryOptions) => {
     const { query } = useQueryMutation();
@@ -12,10 +12,10 @@ const useGetMetadata = (form: TMetadataForm, options?: TQueryOptions) => {
     let url: string;
     switch (form.type) {
         case "card":
-            url = format(API_ROUTES.METADATA.CARD, { uid: form.project_uid, card_uid: form.uid });
+            url = Utils.String.format(API_ROUTES.METADATA.CARD, { uid: form.project_uid, card_uid: form.uid });
             break;
         case "project_wiki":
-            url = format(API_ROUTES.METADATA.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.uid });
+            url = Utils.String.format(API_ROUTES.METADATA.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.uid });
             break;
         default:
             throw new Error("Invalid metadata type");

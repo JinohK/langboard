@@ -1,7 +1,7 @@
 import { READONLY_DATABASE_URL, PROJECT_NAME, MAIN_DATABASE_URL, DB_TIMEOUT, DB_TCP_USER_TIMEOUT } from "@/Constants";
 import { DataSource } from "typeorm";
-import type { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions";
-import type { SqliteConnectionOptions } from "typeorm/driver/sqlite/SqliteConnectionOptions";
+import type { PostgresConnectionOptions } from "typeorm/driver/postgres/PostgresConnectionOptions.js";
+import type { SqliteConnectionOptions } from "typeorm/driver/sqlite/SqliteConnectionOptions.js";
 import { types } from "pg";
 import { ALL_ENTITIES } from "@/models";
 import DbType from "@/core/db/DbType";

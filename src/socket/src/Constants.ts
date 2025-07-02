@@ -3,7 +3,7 @@ import { fileURLToPath } from "url";
 import * as dotenv from "dotenv";
 import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
-import { StringCase } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 if (fs.existsSync("../../../.env")) {
     dotenv.config({ path: "../../../.env" });
@@ -88,7 +88,7 @@ export const REFRESH_TOKEN_NAME = `refresh_token_${PROJECT_SHORT_NAME}`;
 
 // SMTP
 export const MAIL_FROM = getEnv<string>({ key: "MAIL_FROM" });
-export const MAIL_FROM_NAME = getEnv<string>({ key: "MAIL_FROM_NAME", defaultValue: `${new StringCase(PROJECT_NAME).toPascal()} Team` });
+export const MAIL_FROM_NAME = getEnv<string>({ key: "MAIL_FROM_NAME", defaultValue: `${new Utils.String.Case(PROJECT_NAME).toPascal()} Team` });
 export const MAIL_USERNAME = getEnv<string>({ key: "MAIL_USERNAME", defaultValue: "" });
 export const MAIL_PASSWORD = getEnv<string>({ key: "MAIL_PASSWORD", defaultValue: "" });
 export const MAIL_SERVER = getEnv<string>({ key: "MAIL_SERVER" });

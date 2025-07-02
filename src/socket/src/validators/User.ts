@@ -1,6 +1,6 @@
-import ESocketTopic from "@/core/server/ESocketTopic";
 import Subscription from "@/core/server/Subscription";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
+import { ESocketTopic } from "@langboard/core/enums";
 
 Subscription.registerValidator(ESocketTopic.User, async (context) => {
     if (context.client.user.uid === context.topicId) {

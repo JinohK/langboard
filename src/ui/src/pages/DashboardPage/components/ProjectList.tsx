@@ -1,5 +1,5 @@
 import { cn } from "@/core/utils/ComponentUtils";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 import ProjectItem, { SkeletonProjectItem } from "@/pages/DashboardPage/components/ProjectItem";
 import { Box } from "@/components/base";
 import { Project } from "@/core/models";
@@ -10,7 +10,7 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 export function SkeletonProjectList({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
     const skeletonCards = [];
     for (let i = 0; i < 4; ++i) {
-        skeletonCards.push(<SkeletonProjectItem key={createShortUUID()} />);
+        skeletonCards.push(<SkeletonProjectItem key={Utils.String.Token.shortUUID()} />);
     }
 
     return (
@@ -50,10 +50,14 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
                 loadMore={nextPage}
                 hasMore={hasMore}
                 totalCount={projects.length}
-                loader={<SkeletonProjectList key={createShortUUID()} />}
+                loader={<SkeletonProjectList key={Utils.String.Token.shortUUID()} />}
             >
                 {items.map((project) => (
-                    <ProjectItem key={`${project.uid}-${createShortUUID()}`} project={project} updateStarredProjects={updateStarredProjects} />
+                    <ProjectItem
+                        key={`${project.uid}-${Utils.String.Token.shortUUID()}`}
+                        project={project}
+                        updateStarredProjects={updateStarredProjects}
+                    />
                 ))}
             </InfiniteScroller.Grid>
         </>

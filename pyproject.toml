@@ -5,8 +5,8 @@ description = ""
 authors = ["Yamon <battlecruser@yamon.io>"]
 readme = "README.md"
 license = "LICENSE"
-packages = [{include = "langboard", from = "src/api"}, {include = "core", from = "src/shared"}, {include = "models", from = "src/shared"}]
-include = ["src/api/langboard/*", "src/api/langboard/**/*", "src/shared/core/*", "src/shared/core/**/*", "src/shared/models/*", "src/shared/models/**/*"]
+packages = [{include = "langboard", from = "src/api"}, {include = "core", from = "src/shared/py"}, {include = "models", from = "src/shared/py"}]
+include = ["src/api/langboard/*", "src/api/langboard/**/*", "src/shared/py/core/*", "src/shared/py/core/**/*", "src/shared/py/models/*", "src/shared/py/models/**/*"]
 
 
 [tool.poetry.scripts]

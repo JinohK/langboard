@@ -6,12 +6,12 @@ import { FormOnlyLayout } from "@/components/Layout";
 import { Box, Button } from "@/components/base";
 import useAuthEmail from "@/controllers/api/auth/useAuthEmail";
 import useValidateRecoveryToken from "@/controllers/api/auth/useValidateRecoveryToken";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
 import { ROUTES } from "@/core/routing/constants";
 import ResetPasswordForm from "@/pages/auth/AccountRecoveryPage/ResetPasswordForm";
 import SendResetLinkForm from "@/pages/auth/AccountRecoveryPage/SendResetLinkForm";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { EHttpStatus } from "@langboard/core/enums";
 
 function AccountRecoveryPage(): JSX.Element {
     const { setPageAliasRef } = usePageHeader();

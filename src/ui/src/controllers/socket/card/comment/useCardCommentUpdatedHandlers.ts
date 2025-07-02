@@ -1,8 +1,8 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
+import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardCommentUpdatedRawResponse {
     comment_uid: string;

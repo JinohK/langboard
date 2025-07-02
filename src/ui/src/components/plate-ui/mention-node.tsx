@@ -20,7 +20,7 @@ import {
 } from "@/components/plate-ui/inline-combobox";
 import { useTranslation } from "react-i18next";
 import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
-import { createShortUUID } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
 
 export type TMentionableUser = TUserLikeModel & {
     key: string;
@@ -151,7 +151,7 @@ export function MentionInputElement(props: PlateElementProps<TComboboxInputEleme
                     <InlineComboboxGroup>
                         {mentionables.map((mentionable) => (
                             <MentionInputComboboxItem
-                                key={createShortUUID()}
+                                key={Utils.String.Token.shortUUID()}
                                 search={search}
                                 userOrBot={mentionable}
                                 editor={editor}

@@ -1,10 +1,9 @@
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import useSocketHandler from "@/core/helpers/SocketHandler";
 import useSocketStreamHandler from "@/core/hooks/useSocketStreamHandler";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { getTopicWithId } from "@/core/stores/SocketStore";
-import { createUUID } from "@/core/utils/StringUtils";
-import TypeUtils from "@/core/utils/TypeUtils";
+import { Utils } from "@langboard/core/utils";
+import { ESocketTopic } from "@langboard/core/enums";
 import { useEffect, useState } from "react";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -17,7 +16,7 @@ export interface IUseSwitchSocketHandlersProps {
 }
 
 const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchSocketHandlersProps) => {
-    handlers = TypeUtils.isArray(handlers) ? handlers : [handlers];
+    handlers = Utils.Type.isArray(handlers) ? handlers : [handlers];
     const [subscribedTopics, setSubscribedTopics] = useState<ESocketTopic[]>([]);
 
     useEffect(() => {
@@ -25,7 +24,7 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
         for (let i = 0; i < handlers.length; ++i) {
             const { topic, topicId } = getTopicWithId(handlers[i]);
 
-            const key = createUUID();
+            const key = Utils.String.Token.uuid();
             notifiers.push([topic, topicId, key]);
             socket.subscribeTopicNotifier({
                 topic,

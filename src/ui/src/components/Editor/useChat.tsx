@@ -2,12 +2,10 @@
 "use client";
 
 import * as React from "react";
-import EHttpStatus from "@/core/helpers/EHttpStatus";
-import ESocketTopic from "@/core/helpers/ESocketTopic";
 import { ISocketContext } from "@/core/providers/SocketProvider";
-import TypeUtils from "@/core/utils/TypeUtils";
 import { useChat as useBaseChat } from "@ai-sdk/react";
-import { generateToken } from "@/core/utils/StringUtils";
+import { Utils } from "@langboard/core/utils";
+import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 import useSocketStreamHandler from "@/core/hooks/useSocketStreamHandler";
 
 export interface IUseChat {
@@ -34,7 +32,7 @@ export const useChat = (props: IUseChat) => {
     const chat = useBaseChat({
         id: "editor",
         fetch: async (_, init) => {
-            if (!TypeUtils.isString(init?.body)) {
+            if (!Utils.Type.isString(init?.body)) {
                 return new Response("Invalid request", { status: EHttpStatus.HTTP_400_BAD_REQUEST });
             }
 
@@ -42,7 +40,7 @@ export const useChat = (props: IUseChat) => {
 
             abortControllerRef.current = new AbortController();
 
-            const key = generateToken(8);
+            const key = Utils.String.Token.generate(8);
 
             const stream = createStream({
                 ...props,
