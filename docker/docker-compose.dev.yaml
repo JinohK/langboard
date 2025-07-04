@@ -16,6 +16,10 @@ services:
     environment:
       - ENVIRONMENT=development
 
+  socket:
+    environment:
+      - ENVIRONMENT=development
+
 networks:
   net:
     name: ${PROJECT_NAME}_network
