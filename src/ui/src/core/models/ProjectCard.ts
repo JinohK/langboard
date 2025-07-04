@@ -1,7 +1,5 @@
 import * as BotModel from "@/core/models/BotModel";
-import * as ProjectCardAttachment from "@/core/models/ProjectCardAttachment";
 import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
-import * as ProjectChecklist from "@/core/models/ProjectChecklist";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as Project from "@/core/models/Project";
 import * as User from "@/core/models/User";
@@ -48,8 +46,6 @@ export interface IStore extends Interface {
     project_bots: BotModel.Interface[];
     labels: ProjectLabel.Interface[];
     relationships: ProjectCardRelationship.Interface[];
-    attachments: ProjectCardAttachment.IStore[];
-    checklists: ProjectChecklist.IStore[];
 
     // variable set from the client side
     isHoverCardOpened?: bool;
@@ -63,8 +59,6 @@ class ProjectCard extends BaseModel<IStore> {
             project_bots: BotModel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
             relationships: ProjectCardRelationship.Model.MODEL_NAME,
-            attachments: ProjectCardAttachment.Model.MODEL_NAME,
-            checklists: ProjectChecklist.Model.MODEL_NAME,
         };
     }
     override get FOREIGN_MODELS() {
@@ -233,20 +227,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set relationships(value: (ProjectCardRelationship.TModel | ProjectCardRelationship.Interface)[]) {
         this.update({ relationships: value });
-    }
-
-    public get attachments(): ProjectCardAttachment.TModel[] {
-        return this.getForeignValue("attachments");
-    }
-    public set attachments(value: (ProjectCardAttachment.TModel | ProjectCardAttachment.IStore)[]) {
-        this.update({ attachments: value as ProjectCardAttachment.TModel[] });
-    }
-
-    public get checklists(): ProjectChecklist.TModel[] {
-        return this.getForeignValue("checklists");
-    }
-    public set checklists(value: (ProjectChecklist.TModel | ProjectChecklist.IStore)[]) {
-        this.update({ checklists: value });
     }
 
     public get isHoverCardOpened() {

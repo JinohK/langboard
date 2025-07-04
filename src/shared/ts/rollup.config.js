@@ -3,6 +3,11 @@ import commonjs from "@rollup/plugin-commonjs";
 import resolve from "@rollup/plugin-node-resolve";
 import dts from "rollup-plugin-dts";
 import globals from "./package.json" with { type: "json" };
+import fs from "fs";
+
+if (!fs.existsSync("./dist")) {
+    fs.mkdirSync("./dist");
+}
 
 const getExternal = (type) => {
     return [...Object.keys(globals[type]), ...Object.keys(globals[type]).map((dep) => new RegExp(`^${dep}(/.*)?`))];

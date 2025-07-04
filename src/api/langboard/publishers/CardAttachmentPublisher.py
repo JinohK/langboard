@@ -19,7 +19,7 @@ class CardAttachmentPublisher(BaseSocketPublisher):
         publish_model = SocketPublishModel(
             topic=SocketTopic.BoardCard,
             topic_id=card.get_uid(),
-            event="board:card:attachment:uploaded",
+            event=f"board:card:attachment:uploaded:{card.get_uid()}",
             data_keys=list(model.keys()),
         )
 

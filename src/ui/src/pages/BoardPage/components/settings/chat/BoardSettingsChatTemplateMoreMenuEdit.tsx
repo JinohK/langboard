@@ -1,4 +1,4 @@
-import { Flex, Input, Textarea, Toast } from "@/components/base";
+import { Flex, Floating, Toast } from "@/components/base";
 import MoreMenu from "@/components/MoreMenu";
 import useUpdateProjectChatTemplate from "@/controllers/api/board/chat/useUpdateProjectChatTemplate";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -66,9 +66,9 @@ function BoardSettingsChatTemplateMoreMenuEdit() {
     return (
         <MoreMenu.DialogItem menuName={t("common.Edit")} onSave={editChatTemplate}>
             <Flex direction="col" gap="2">
-                <Input placeholder={t("project.settings.Template name")} defaultValue={name} ref={nameInputRef} />
-                <Textarea
-                    placeholder={t("project.settings.Template")}
+                <Floating.LabelInput label={t("project.settings.Template name")} defaultValue={name} ref={nameInputRef} />
+                <Floating.LabelTextarea
+                    label={t("project.settings.Template")}
                     defaultValue={template}
                     resize="none"
                     className="h-48"

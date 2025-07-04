@@ -26,10 +26,8 @@ from ...core.service import ServiceHelper
 from ...publishers import CardPublisher
 from ...tasks.activities import CardActivityTask
 from ...tasks.bot import CardBotTask
-from .CardAttachmentService import CardAttachmentService
 from .CardRelationshipService import CardRelationshipService
 from .CheckitemService import CheckitemService
-from .ChecklistService import ChecklistService
 from .NotificationService import NotificationService
 from .ProjectLabelService import ProjectLabelService
 from .ProjectService import ProjectService
@@ -57,15 +55,9 @@ class CardService(BaseService):
 
         api_card = card.api_response()
 
-        checklist_service = self._get_service(ChecklistService)
-        api_card["checklists"] = await checklist_service.get_list(card, as_api=True)
-
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
         api_card["project_bots"] = await project_service.get_assigned_bots(card.project_id, as_api=True)
-
-        card_attachment_service = self._get_service(CardAttachmentService)
-        api_card["attachments"] = await card_attachment_service.get_board_list(card)
 
         project_label_service = self._get_service(ProjectLabelService)
         api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
@@ -102,7 +94,6 @@ class CardService(BaseService):
 
         project_label_service = self._get_service(ProjectLabelService)
         card_relationship_service = self._get_service(CardRelationshipService)
-        checklist_service = self._get_service(ChecklistService)
 
         raw_members = await self.get_assigned_users_by_project(project)
         members: dict[int, list[str]] = {}
@@ -128,20 +119,12 @@ class CardService(BaseService):
                 labels[card_label.card_id] = []
             labels[card_label.card_id].append(label.api_response())
 
-        raw_checklists = await checklist_service.get_list_only_by_project(project)
-        checklists: dict[int, list[dict[str, Any]]] = {}
-        for checklist in raw_checklists:
-            if checklist.card_id not in checklists:
-                checklists[checklist.card_id] = []
-            checklists[checklist.card_id].append(checklist.api_response())
-
         for card, count_comment in raw_cards:
             api_card = card.api_response()
             api_card["count_comment"] = count_comment
             api_card["member_uids"] = members.get(card.id, [])
             api_card["relationships"] = relationships.get(card.id, [])
             api_card["labels"] = labels.get(card.id, [])
-            api_card["checklists"] = checklists.get(card.id, [])
             cards.append(api_card)
 
         return cards
@@ -334,7 +317,7 @@ class CardService(BaseService):
                         )
                     )
 
-        api_card = card.board_api_response(0, [user.get_uid() for user in users], [], [], [])
+        api_card = card.board_api_response(0, [user.get_uid() for user in users], [], [])
         model = {"card": api_card}
 
         await CardPublisher.created(project, column, model)

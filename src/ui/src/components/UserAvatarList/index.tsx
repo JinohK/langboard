@@ -66,7 +66,7 @@ export const UserAvatarList = memo(
             <Flex position="relative" className={cn("rtl:space-x-reverse", SPACING_MAP[spacing], className)} ref={ref} {...flexProps}>
                 {userOrBots.slice(0, maxVisible).map((userOrBot) => (
                     <UserAvatar.Root
-                        key={`user-avatar-${userOrBot.uid}-${Utils.String.Token.shortUUID()}`}
+                        key={`user-avatar-${userOrBot.MODEL_NAME}-${userOrBot.uid}`}
                         userOrBot={userOrBot}
                         avatarSize={size}
                         listAlign={listAlign}

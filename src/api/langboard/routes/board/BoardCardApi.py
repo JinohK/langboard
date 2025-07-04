@@ -49,31 +49,8 @@ from .scopes import (
                     Card,
                     {
                         "schema": {
-                            "checklists": [
-                                (
-                                    Checklist,
-                                    {
-                                        "schema": {
-                                            "checkitems": [
-                                                (
-                                                    Checkitem,
-                                                    {
-                                                        "schema": {
-                                                            "card_uid": "string",
-                                                            "timer_started_at?": "string",
-                                                            "cardified_card?": "string",
-                                                            "user?": User,
-                                                        }
-                                                    },
-                                                ),
-                                            ]
-                                        }
-                                    },
-                                ),
-                            ],
                             "project_members": [User],
                             "project_bots": [Bot],
-                            "attachments": [CardAttachment],
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",
                             "relationships": [CardRelationship],
@@ -81,6 +58,29 @@ from .scopes import (
                         }
                     },
                 ),
+                "checklists": [
+                    (
+                        Checklist,
+                        {
+                            "schema": {
+                                "checkitems": [
+                                    (
+                                        Checkitem,
+                                        {
+                                            "schema": {
+                                                "card_uid": "string",
+                                                "timer_started_at?": "string",
+                                                "cardified_card?": "string",
+                                                "user?": User,
+                                            }
+                                        },
+                                    ),
+                                ]
+                            }
+                        },
+                    ),
+                ],
+                "attachments": [CardAttachment],
                 "global_relationships": [GlobalCardRelationshipType],
                 "project_columns": [ProjectColumn],
                 "project_labels": [ProjectLabel],
@@ -110,9 +110,14 @@ async def get_card_detail(
     project_columns = await service.project_column.get_all_by_project(project, as_api=True)
     project_labels = await service.project_label.get_all(project, as_api=True)
 
+    checklists = await service.checklist.get_list(card, as_api=True)
+    attachments = await service.card_attachment.get_board_list(card)
+
     return JsonResponse(
         content={
             "card": api_card,
+            "checklists": checklists,
+            "attachments": attachments,
             "global_relationships": global_relationships,
             "project_columns": project_columns,
             "project_labels": project_labels,
@@ -160,10 +165,6 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
                     Card,
                     {
                         "schema": {
-                            "checklists": [(Checklist, {"schema": {"checkitems": [Checkitem]}})],
-                            "project_members": [User],
-                            "project_bots": [Bot],
-                            "attachments": [CardAttachment],
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",
                             "relationships": [CardRelationship],

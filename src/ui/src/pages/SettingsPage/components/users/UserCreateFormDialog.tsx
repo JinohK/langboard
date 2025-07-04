@@ -186,26 +186,24 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                         </Box>
                         <Box>
                             <Form.Field name="affiliation">
-                                <Form.Control asChild>
-                                    <Input
-                                        className="w-full"
-                                        placeholder={t("user.What organization are you affiliated with?")}
-                                        autoComplete="affiliation"
-                                        disabled={isValidating}
-                                    />
-                                </Form.Control>
+                                <Input
+                                    className="w-full"
+                                    placeholder={t("user.What organization are you affiliated with?")}
+                                    autoComplete="affiliation"
+                                    isFormControl
+                                    disabled={isValidating}
+                                />
                             </Form.Field>
                         </Box>
                         <Box>
                             <Form.Field name="position">
-                                <Form.Control asChild>
-                                    <Input
-                                        className="w-full"
-                                        placeholder={t("user.What is your position in your organization?")}
-                                        autoComplete="position"
-                                        disabled={isValidating}
-                                    />
-                                </Form.Control>
+                                <Input
+                                    className="w-full"
+                                    placeholder={t("user.What is your position in your organization?")}
+                                    autoComplete="position"
+                                    isFormControl
+                                    disabled={isValidating}
+                                />
                             </Form.Field>
                         </Box>
                         <Box>

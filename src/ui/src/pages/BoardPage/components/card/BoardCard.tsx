@@ -20,7 +20,7 @@ import { usePageHeader } from "@/core/providers/PageHeaderProvider";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useSocket } from "@/core/providers/SocketProvider";
 import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCardLabelList";
-import { AuthUser } from "@/core/models";
+import { AuthUser, ProjectCardAttachment, ProjectChecklist } from "@/core/models";
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 
@@ -154,8 +154,8 @@ export function SkeletonBoardCard(): JSX.Element {
 
 function BoardCardResult(): JSX.Element {
     const { card, setCurrentEditor } = useBoardCard();
-    const attachments = card.useForeignField("attachments");
-    const checklists = card.useForeignField("checklists");
+    const attachments = ProjectCardAttachment.Model.useModels((model) => model.card_uid === card.uid);
+    const checklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
 
     useEffect(() => {
         return () => {

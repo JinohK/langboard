@@ -61,7 +61,7 @@ clean_python_cache: ## clean Python cache
 clean_ts_core_cache: ## clean Yarn cache
 	@echo "Cleaning ts core cache..."
 	cd $(TS_CORE_DIR) && yarn cache clean --force
-	rm -rf $(TS_CORE_DIR)/node_modules $(TS_CORE_DIR)/build
+	rm -rf $(TS_CORE_DIR)/node_modules $(TS_CORE_DIR)/dist $(TS_CORE_DIR)/.rollup.cache
 	@printf "$(GREEN)Yarn cache and ts core directories cleaned.$(NC)"
 
 clean_ui_cache: ## clean Yarn cache
@@ -73,7 +73,7 @@ clean_ui_cache: ## clean Yarn cache
 clean_socket_cache: ## clean Socket cache
 	@echo "Cleaning socket cache..."
 	cd $(SOCKET_DIR) && yarn cache clean --force
-	rm -rf $(SOCKET_DIR)/node_modules $(SOCKET_DIR)/dist
+	rm -rf $(SOCKET_DIR)/node_modules $(SOCKET_DIR)/dist $(SOCKET_DIR)/.rollup.cache
 	@printf "$(GREEN)Socket cache and directories cleaned.$(NC)"
 
 format: ## run code formatters

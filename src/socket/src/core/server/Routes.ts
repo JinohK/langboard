@@ -41,7 +41,7 @@ class _Routes {
         const url = new URL(!Utils.String.isValidURL(req.url) ? `http://localhost${req.url}` : req.url);
 
         if (method === "OPTIONS") {
-            this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_204_NO_CONTENT));
+            this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_200_OK));
             return;
         }
 
@@ -127,6 +127,9 @@ class _Routes {
             "X-Forwarded-Host",
             "X-Real-IP",
             "X-Forwarded-For",
+            "Sec-Fetch-Site",
+            "Sec-Fetch-Mode",
+            "Sec-Fetch-Dest",
         ];
 
         return {
@@ -135,6 +138,7 @@ class _Routes {
             "Access-Control-Allow-Headers": allowedHeaders.join(", "),
             "Access-Control-Allow-Credentials": "true",
             "Access-Control-Max-Age": "600",
+            Vary: "Origin",
         };
     }
 

@@ -53,7 +53,6 @@ class Card(SoftDeleteModel, table=True):
         member_uids: list[str],
         relationships: list[dict[str, Any]],
         labels: list[dict[str, Any]],
-        checklists: list[dict[str, Any]],
     ) -> dict[str, Any]:
         return {
             **self.api_response(),
@@ -61,7 +60,6 @@ class Card(SoftDeleteModel, table=True):
             "member_uids": member_uids,
             "relationships": relationships,
             "labels": labels,
-            "checklists": checklists,
         }
 
     def notification_data(self) -> dict[str, Any]:

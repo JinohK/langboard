@@ -3,8 +3,7 @@ import useGetProjectChatTemplates from "@/controllers/api/board/chat/useGetProje
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ChatTemplateModel } from "@/core/models";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
-import { Utils } from "@langboard/core/utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IChatTemplateListDialogProps {
@@ -68,6 +67,7 @@ function ChatTemplateList(props: IChatTemplateListProps) {
     const { projectUID } = useBoardChat();
     const chatTemplates = ChatTemplateModel.Model.useModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
     const { mutate } = useGetProjectChatTemplates();
+    const [updated, updateScroll] = useReducer((x) => x + 1, 0);
 
     useEffect(() => {
         mutate(
@@ -83,10 +83,10 @@ function ChatTemplateList(props: IChatTemplateListProps) {
     }, []);
 
     return (
-        <ScrollArea.Root>
+        <ScrollArea.Root mutable={updated}>
             <Flex direction="col" w="full" h="full" className="max-h-[calc(70vh_-_theme(spacing.11))] border-t">
                 {chatTemplates.map((chatTemplate) => (
-                    <ChatTemplate key={Utils.String.Token.shortUUID()} chatTemplate={chatTemplate} {...props} />
+                    <ChatTemplate key={`chat-template-list-${chatTemplate.uid}`} chatTemplate={chatTemplate} updateScroll={updateScroll} {...props} />
                 ))}
             </Flex>
         </ScrollArea.Root>
@@ -95,18 +95,26 @@ function ChatTemplateList(props: IChatTemplateListProps) {
 
 interface ChatTemplateProps extends IChatTemplateListProps {
     chatTemplate: ChatTemplateModel.TModel;
+    updateScroll: () => void;
 }
 
-function ChatTemplate({ selectTemplate, chatTemplate }: ChatTemplateProps) {
+function ChatTemplate({ selectTemplate, chatTemplate, updateScroll }: ChatTemplateProps) {
     const [t] = useTranslation();
     const name = chatTemplate.useField("name");
     const template = chatTemplate.useField("template");
+    const [isOpened, setIsOpened] = useState(false);
     const handleSelect = useCallback(() => {
         selectTemplate(template);
-    }, [selectTemplate, template]);
+    }, [selectTemplate]);
+
+    useEffect(() => {
+        setTimeout(() => {
+            updateScroll();
+        }, 350);
+    }, [isOpened]);
 
     return (
-        <Collapsible.Root className="border-b">
+        <Collapsible.Root className="border-b" open={isOpened} onOpenChange={setIsOpened}>
             <Collapsible.Trigger asChild>
                 <Button
                     type="button"

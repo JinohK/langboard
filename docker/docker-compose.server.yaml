@@ -139,9 +139,9 @@ services:
       dockerfile: socket/Dockerfile
     environment:
       <<:
-        - *server-common-env
         - *server-env
       SOCKET_PORT: ${SOCKET_PORT}
+      UI_PORT: ${NGINX_UI_EXPOSE_PORT}
     working_dir: /app
     volumes:
       - ../src/socket/package.json:/app/package.json

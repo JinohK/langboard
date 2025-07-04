@@ -72,7 +72,7 @@ const BotAppApiToken = memo(() => {
                     label={t("settings.Bot App API token")}
                     autoComplete="off"
                     defaultValue={appApiToken}
-                    wrapperClassNames="max-w-[calc(100%_-_theme(spacing.10))] w-full"
+                    wrapperProps={{ className: "max-w-[calc(100%_-_theme(spacing.10))]" }}
                     disabled
                 />
                 <Button size="icon-sm" onClick={generate} title={t("settings.Generate new API token")}>

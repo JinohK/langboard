@@ -205,7 +205,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                         disabled={isSending}
                         onChange={onAttachmentChange}
                         ref={chatAttachmentRef}
-                        className="hidden"
+                        wrapperProps={{ className: "hidden" }}
                     />
                     <Button
                         type="button"

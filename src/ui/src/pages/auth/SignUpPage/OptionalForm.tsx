@@ -61,27 +61,23 @@ function OptionalForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 avatarSize="3xl"
             />
             <Form.Field name="affiliation">
-                <Form.Control asChild>
-                    <Input
-                        className="w-full"
-                        placeholder={t("user.What organization are you affiliated with?")}
-                        autoFocus
-                        autoComplete="affiliation"
-                        defaultValue={values.affiliation ?? ""}
-                        disabled={isValidating}
-                    />
-                </Form.Control>
+                <Input
+                    placeholder={t("user.What organization are you affiliated with?")}
+                    autoFocus
+                    autoComplete="affiliation"
+                    isFormControl
+                    defaultValue={values.affiliation ?? ""}
+                    disabled={isValidating}
+                />
             </Form.Field>
             <Form.Field name="position">
-                <Form.Control asChild>
-                    <Input
-                        className="w-full"
-                        placeholder={t("user.What is your position in your organization?")}
-                        autoComplete="position"
-                        defaultValue={values.position ?? ""}
-                        disabled={isValidating}
-                    />
-                </Form.Control>
+                <Input
+                    placeholder={t("user.What is your position in your organization?")}
+                    autoComplete="position"
+                    isFormControl
+                    defaultValue={values.position ?? ""}
+                    disabled={isValidating}
+                />
             </Form.Field>
             <Flex
                 items="center"

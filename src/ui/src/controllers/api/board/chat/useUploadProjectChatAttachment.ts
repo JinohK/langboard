@@ -28,6 +28,7 @@ const useUploadProjectChatAttachment = (options?: TMutationOptions<IUploadProjec
         formData.append("attachment", params.attachment);
         const res = await api.post(url, formData, {
             baseURL: SOCKET_URL,
+            withCredentials: true,
             onUploadProgress: params.onUploadProgress,
             signal: params.abortController?.signal,
             env: {

@@ -88,7 +88,7 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
                 </Button>
             </Popover.Trigger>
             <Popover.Content align="end" className="w-[min(theme(spacing.96),80vw)]">
-                <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />
+                <Input wrapperProps={{ className: "hidden" }} disabled={isValidating} {...getInputProps()} ref={inputRef} />
                 <Box mb="2" textSize="sm" weight="semibold">
                     {t("card.Attach file")}
                 </Box>

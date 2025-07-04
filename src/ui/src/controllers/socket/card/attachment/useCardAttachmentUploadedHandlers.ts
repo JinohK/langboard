@@ -18,7 +18,7 @@ const useCardAttachmentUploadedHandlers = ({ callback, cardUID }: IUseCardAttach
         eventKey: `board-card-attachment-uploaded-${cardUID}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,
-            params: cardUID ? { uid: cardUID } : undefined,
+            params: { uid: cardUID },
             callback,
             responseConverter: (data) => {
                 ProjectCardAttachment.Model.fromOne(data.attachment, true);

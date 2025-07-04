@@ -10,17 +10,19 @@ export type FileItem = {
     type: string;
 };
 
-interface ImagePreviewModalProps {
+interface ImagePreviewDialogProps {
     files: { name: string; url: string }[];
     initialIndex: number;
     onClose: () => void;
 }
 
-const ImagePreviewModal = ({ files, initialIndex, onClose }: ImagePreviewModalProps) => {
+const ImagePreviewDialog = ({ files, initialIndex, onClose }: ImagePreviewDialogProps) => {
     const [t] = useTranslation();
     const [currentIndex, setCurrentIndex] = useState(initialIndex);
     const [zoom, setZoom] = useState(1);
     const currentFile = useMemo(() => files[currentIndex], [files, currentIndex]);
+    const currentFileUrl = useMemo(() => currentFile?.url, [currentFile]);
+    const currentFileName = useMemo(() => currentFile?.name, [currentFile]);
     const mimeType = useMemo(() => !!currentFile && mimeTypes.lookup(currentFile.url), [currentFile]);
     const updateZoom = (type: "in" | "out") => {
         setZoom((prev) => {
@@ -99,15 +101,20 @@ const ImagePreviewModal = ({ files, initialIndex, onClose }: ImagePreviewModalPr
                 justify="center"
                 position="fixed"
                 z="50"
-                className="inset-0 overflow-hidden bg-black bg-opacity-50"
+                className="inset-0 overflow-hidden bg-opacity-50 backdrop-blur-sm"
                 onWheel={handleWheel}
                 onClick={onClose}
             >
-                <Box onClick={(e) => e.stopPropagation()}>
+                <Box
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                    }}
+                >
                     <Flex items="center" justify="center" p="4" style={{ transform: `scale(${zoom})`, transition: "transform 0.2s ease-in-out" }}>
                         {!!mimeType && mimeType.startsWith("image/") ? (
                             <CachedImage
-                                src={currentFile.url}
+                                src={currentFileUrl}
                                 alt={mimeType}
                                 className="max-h-full max-w-full"
                                 onDragStart={handleDrag}
@@ -120,7 +127,7 @@ const ImagePreviewModal = ({ files, initialIndex, onClose }: ImagePreviewModalPr
                                 <Box textSize="2xl" weight="semibold" mb="2" className="text-gray-500">
                                     {t("common.No preview")}
                                 </Box>
-                                <Box>{currentFile.name}</Box>
+                                <Box>{currentFileName}</Box>
                             </Flex>
                         )}
                     </Flex>
@@ -144,7 +151,7 @@ const ImagePreviewModal = ({ files, initialIndex, onClose }: ImagePreviewModalPr
                                 variant="ghost"
                                 className="h-auto w-10 p-0 text-center"
                             />
-                            <span className="text-xs text-gray-500">/ {files.length}</span>
+                            <span className="text-nowrap text-xs text-gray-500">/ {files.length}</span>
                         </Label>
                         <Flex items="center">
                             <Button variant="ghost" size="icon-sm" onClick={goPrev}>
@@ -176,4 +183,4 @@ const ImagePreviewModal = ({ files, initialIndex, onClose }: ImagePreviewModalPr
     );
 };
 
-export default ImagePreviewModal;
+export default ImagePreviewDialog;

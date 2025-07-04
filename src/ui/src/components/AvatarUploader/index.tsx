@@ -132,8 +132,6 @@ function AvatarUploader({
         setAvatarUrl(initialAvatarUrl);
     }, [initialAvatarUrl]);
 
-    const input = <Input className="hidden" disabled={isValidating} {...getInputProps()} ref={inputRef} />;
-
     const avatar = (
         <>
             <Flex justify="center" position="relative" cursor="pointer" className="transition-all duration-200 hover:opacity-80">
@@ -143,7 +141,13 @@ function AvatarUploader({
                         {isBot ? <IconComponent icon="bot" className="size-2/3" /> : userInitials}
                     </Avatar.Fallback>
                 </Avatar.Root>
-                {!notInForm ? <Form.Control asChild>{input}</Form.Control> : input}
+                <Input
+                    wrapperProps={{ className: "hidden" }}
+                    disabled={isValidating}
+                    {...getInputProps()}
+                    isFormControl={!notInForm}
+                    ref={inputRef}
+                />
             </Flex>
             {errorMessage && <FormErrorMessage error={errorMessage} icon="circle-alert" wrapperClassName="justify-center" notInForm={notInForm} />}
         </>

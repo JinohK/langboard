@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectColumn, ProjectCard, GlobalRelationshipType } from "@/core/models";
+import { ProjectColumn, ProjectCard, GlobalRelationshipType, ProjectChecklist } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 
 export interface IGetCardsForm {
@@ -28,6 +28,7 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
         ProjectCard.Model.fromArray(res.data.cards);
         GlobalRelationshipType.Model.fromArray(res.data.global_relationships, true);
         ProjectColumn.Model.fromArray(res.data.columns);
+        ProjectChecklist.Model.fromArray(res.data.checklists, true);
 
         ProjectCard.Model.getModels(
             (model) => model.project_uid === params.project_uid && !res.data.cards.some((card: ProjectCard.TModel) => card.uid === model.uid)

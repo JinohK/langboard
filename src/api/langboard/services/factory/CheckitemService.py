@@ -376,7 +376,7 @@ class CheckitemService(BaseService):
             checkitem.cardified_id = new_card.id
             db.update(checkitem)
 
-        api_card = new_card.board_api_response(0, [], [], [], [])
+        api_card = new_card.board_api_response(0, [], [], [])
         await CheckitemPublisher.cardified(card, checkitem, target_column, api_card)
         CardCheckitemActivityTask.card_checkitem_cardified(user_or_bot, project, card, checkitem)
         CardCheckitemBotTask.card_checkitem_cardified(user_or_bot, project, card, checkitem, new_card)

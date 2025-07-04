@@ -101,45 +101,39 @@ function ProfilePage(): JSX.Element {
                         <Form.Field name="firstname">
                             <Label display="grid" w="full" items="center" gap="1.5">
                                 <Box>{t("user.First Name")}</Box>
-                                <Form.Control asChild>
-                                    <Input autoComplete="firstname" disabled={isValidating} defaultValue={currentUser.firstname} />
-                                </Form.Control>
+                                <Input autoComplete="firstname" isFormControl disabled={isValidating} defaultValue={currentUser.firstname} />
                             </Label>
                             {errors.firstname && <FormErrorMessage error={errors.firstname} />}
                         </Form.Field>
                         <Form.Field name="lastname">
                             <Label display="grid" w="full" items="center" gap="1.5">
                                 <Box>{t("user.Last Name")}</Box>
-                                <Form.Control asChild>
-                                    <Input autoComplete="lastname" disabled={isValidating} defaultValue={currentUser.lastname} />
-                                </Form.Control>
+                                <Input autoComplete="lastname" isFormControl disabled={isValidating} defaultValue={currentUser.lastname} />
                             </Label>
                             {errors.lastname && <FormErrorMessage error={errors.lastname} />}
                         </Form.Field>
                         <Form.Field name="affiliation">
                             <Label display="grid" w="full" items="center" gap="1.5">
                                 <Box>{t("user.Affiliation")}</Box>
-                                <Form.Control asChild>
-                                    <Input
-                                        autoComplete="affiliation"
-                                        placeholder={t("user.What organization are you affiliated with?")}
-                                        disabled={isValidating}
-                                        defaultValue={currentUser.affiliation}
-                                    />
-                                </Form.Control>
+                                <Input
+                                    autoComplete="affiliation"
+                                    isFormControl
+                                    placeholder={t("user.What organization are you affiliated with?")}
+                                    disabled={isValidating}
+                                    defaultValue={currentUser.affiliation}
+                                />
                             </Label>
                         </Form.Field>
                         <Form.Field name="position">
                             <Label display="grid" w="full" items="center" gap="1.5">
                                 <Box>{t("user.Position")}</Box>
-                                <Form.Control asChild>
-                                    <Input
-                                        autoComplete="position"
-                                        placeholder={t("user.What is your position in your organization?")}
-                                        disabled={isValidating}
-                                        defaultValue={currentUser.position}
-                                    />
-                                </Form.Control>
+                                <Input
+                                    autoComplete="position"
+                                    isFormControl
+                                    placeholder={t("user.What is your position in your organization?")}
+                                    disabled={isValidating}
+                                    defaultValue={currentUser.position}
+                                />
                             </Label>
                         </Form.Field>
                     </Flex>

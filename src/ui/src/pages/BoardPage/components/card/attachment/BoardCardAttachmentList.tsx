@@ -1,5 +1,5 @@
 import { Button, Collapsible, Flex } from "@/components/base";
-import ImagePreviewModal from "@/components/ImagePreviewModal";
+import ImagePreviewDialog from "@/components/ImagePreviewDialog";
 import useChangeCardAttachmentOrder from "@/controllers/api/card/attachment/useChangeCardAttachmentOrder";
 import { singleDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -32,7 +32,7 @@ function BoardCardAttachmentList(): JSX.Element {
     const { projectUID, card, socket, viewportRef } = useBoardCard();
     const { mutate: changeCardAttachmentOrderMutate } = useChangeCardAttachmentOrder();
     const updater = useReducer((x) => x + 1, 0);
-    const flatAttachments = card.useForeignField("attachments");
+    const flatAttachments = ProjectCardAttachment.Model.useModels((model) => model.card_uid === card.uid);
     const attachmentsMap = useMemo<Record<string, ProjectCardAttachment.TModel>>(() => {
         const map: Record<string, ProjectCardAttachment.TModel> = {};
         flatAttachments.forEach((attachment) => {
@@ -128,7 +128,7 @@ function BoardCardAttachmentList(): JSX.Element {
             {!Utils.Type.isUndefined(window) &&
                 isPreviewOpened &&
                 createPortal(
-                    <ImagePreviewModal
+                    <ImagePreviewDialog
                         files={attachments.map((attachment) => ({ name: attachment.name, url: attachment.url }))}
                         initialIndex={initialPreviewIndex.current}
                         onClose={() => setIsPreviewOpened(false)}

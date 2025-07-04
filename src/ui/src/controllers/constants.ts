@@ -283,7 +283,7 @@ export const SOCKET_SERVER_EVENTS = {
             EDITOR_STOP_EDITING: "board:card:editor:stop:{uid}",
             DELETED: "board:card:deleted:{uid}",
             ATTACHMENT: {
-                UPLOADED: "board:card:attachment:uploaded",
+                UPLOADED: "board:card:attachment:uploaded:{uid}",
                 NAME_CHANGED: "board:card:attachment:name:changed:{uid}",
                 ORDER_CHANGED: "board:card:attachment:order:changed",
                 DELETED: "board:card:attachment:deleted",

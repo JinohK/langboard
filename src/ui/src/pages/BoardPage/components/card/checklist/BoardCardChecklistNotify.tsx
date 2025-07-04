@@ -36,7 +36,7 @@ function BoardCardChecklistNotify() {
             });
 
             Toast.Add.promise(promise, {
-                loading: t("common.Deleting..."),
+                loading: t("card.Notifying..."),
                 error: (error) => {
                     const messageRef = { message: "" };
                     const { handle } = setupApiErrorHandler({}, messageRef);

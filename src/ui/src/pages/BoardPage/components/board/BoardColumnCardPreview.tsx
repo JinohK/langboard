@@ -23,7 +23,7 @@ function BoardColumnCardPreview() {
     const labels = card.useForeignField("labels");
     const cardMemberUIDs = card.useField("member_uids");
     const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
-    const flatChecklists = card.useForeignField("checklists");
+    const flatChecklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
     const checklists = useMemo(() => flatChecklists.sort((a, b) => a.order - b.order).slice(0, 3), [flatChecklists]);
 
     return (

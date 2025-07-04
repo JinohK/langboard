@@ -4,7 +4,7 @@ import { ProjectCard } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface ICardColumnChangedRawResponse {
-    column_uid: string;
+    to_column_uid: string;
     column_name: string;
 }
 
@@ -22,7 +22,7 @@ const useCardColumnChangedHandlers = ({ callback, card }: IUseCardColumnChangedH
             params: { uid: card.uid },
             callback,
             responseConverter: (data) => {
-                card.column_uid = data.column_uid;
+                card.column_uid = data.to_column_uid;
                 card.column_name = data.column_name;
                 return {};
             },

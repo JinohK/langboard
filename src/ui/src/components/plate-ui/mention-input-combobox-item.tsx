@@ -73,7 +73,11 @@ const MentionInputComboboxItemInner = ({ search, value, username, names, userOrB
         <InlineComboboxItem
             key={Utils.String.Token.shortUUID()}
             value={value}
-            onClick={() => onSelectItem(editor, userOrBot, search)}
+            onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onSelectItem(editor, userOrBot, search);
+            }}
             className="h-auto p-0"
         >
             <UserAvatar.Root

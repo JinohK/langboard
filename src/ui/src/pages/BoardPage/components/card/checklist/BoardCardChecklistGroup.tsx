@@ -1,7 +1,7 @@
 import { Box, Button, Collapsible, Flex } from "@/components/base";
 import useChangeCardChecklistOrder from "@/controllers/api/card/checklist/useChangeCardChecklistOrder";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ProjectCheckitem } from "@/core/models";
+import { ProjectCheckitem, ProjectChecklist } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import BoardCardChecklist from "@/pages/BoardPage/components/card/checklist/BoardCardChecklist";
 import SkeletonBoardCardCheckitem from "@/pages/BoardPage/components/card/checklist/SkeletonBoardCardCheckitem";
@@ -27,7 +27,7 @@ function BoardCardChecklistGroup(): JSX.Element {
     const [t] = useTranslation();
     const { projectUID, card, socket, viewportRef } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
-    const flatChecklists = card.useForeignField("checklists");
+    const flatChecklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
     const checkitemsMap = useMemo<Record<string, ProjectCheckitem.TModel>>(() => {
         const map: Record<string, ProjectCheckitem.TModel> = {};
         flatChecklists.forEach((checklist) => {

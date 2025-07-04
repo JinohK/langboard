@@ -207,11 +207,11 @@ async def get_project_columns(project_uid: str, service: Service = Service.scope
                                 "member_uids": "string[]",
                                 "relationships": [CardRelationship],
                                 "labels": [ProjectLabel],
-                                "checklists": [Checklist],
                             }
                         },
                     )
                 ],
+                "checklists": [Checklist],
                 "global_relationships": [GlobalCardRelationshipType],
                 "columns": [ProjectColumn],
             }
@@ -231,7 +231,15 @@ async def get_project_cards(project_uid: str, service: Service = Service.scope()
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
     columns = await service.project_column.get_all_by_project(project, as_api=True)
     cards = await service.card.get_board_list(project)
-    return JsonResponse(content={"cards": cards, "global_relationships": global_relationships, "columns": columns})
+    checklists = await service.checklist.get_list_only_by_project(project)
+    return JsonResponse(
+        content={
+            "cards": cards,
+            "checklists": [checklist.api_response() for checklist in checklists],
+            "global_relationships": global_relationships,
+            "columns": columns,
+        }
+    )
 
 
 @AppRouter.api.put(

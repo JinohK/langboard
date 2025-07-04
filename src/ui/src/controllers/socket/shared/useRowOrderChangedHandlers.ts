@@ -3,9 +3,10 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 import { ESocketTopic } from "@langboard/core/enums";
+import { isModel } from "@/core/models/ModelRegistry";
 
 interface IBaseRowOrderChangedResponse {
-    move_type: "from_column" | "to_column" | "in_column";
+    move_type: "to_column" | "in_column";
     column_uid?: string;
     uid: string;
     order: number;
@@ -17,7 +18,7 @@ interface IInColumnRowOrderChangedResponse extends IBaseRowOrderChangedResponse 
 }
 
 interface IMovedColumnRowOrderChangedResponse extends IBaseRowOrderChangedResponse {
-    move_type: "from_column" | "to_column";
+    move_type: "to_column";
     column_uid: string;
 }
 
@@ -66,8 +67,8 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
                         model[targetModelColumn as "uid"] = data.column_uid;
                     }
 
-                    if (data.move_type !== "in_column" && type === "ProjectCard") {
-                        (model as ProjectCard.TModel).archived_at = (data as unknown as Record<string, Date>).archived_at;
+                    if (data.move_type !== "in_column" && isModel(model, "ProjectCard")) {
+                        model.archived_at = (data as unknown as Record<string, Date>).archived_at;
                     }
                 }
                 return data;

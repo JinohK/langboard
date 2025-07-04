@@ -64,7 +64,7 @@ const CachedImage = memo(
                 .catch(() => {
                     setImage(fallback ?? <Skeleton className={classNames} />);
                 });
-        }, []);
+        }, [src]);
 
         return <SuspenseComponent className={classNames}>{image}</SuspenseComponent>;
     }),
