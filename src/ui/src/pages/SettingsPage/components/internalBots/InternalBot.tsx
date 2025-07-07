@@ -65,7 +65,7 @@ const InternalBot = memo(({ internalBot }: IInternalBotProps) => {
         navigate(ROUTES.SETTINGS.INTERNAL_BOT_DETAILS(internalBot.uid), { smooth: true });
     };
 
-    const changeOpenState = (opened: boolean) => {
+    const changeOpenState = (opened: bool) => {
         if (isValidating) {
             return;
         }

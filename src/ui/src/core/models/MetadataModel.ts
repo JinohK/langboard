@@ -16,14 +16,14 @@ class MetadataModel extends BaseModel<Interface> {
     public get type() {
         return this.getValue("type");
     }
-    public set type(value: TType) {
+    public set type(value) {
         this.update({ type: value });
     }
 
     public get metadata() {
         return this.getValue("metadata");
     }
-    public set metadata(value: Record<string, string>) {
+    public set metadata(value) {
         this.update({ metadata: value });
     }
 }

@@ -176,7 +176,7 @@ class ProjectCard extends BaseModel<IStore> {
     public get member_uids() {
         return this.getValue("member_uids");
     }
-    public set member_uids(value: string[]) {
+    public set member_uids(value) {
         this.update({ member_uids: value });
     }
 

@@ -19,7 +19,7 @@ const createDndSingleDataHelper = <TRowModel extends TOrderableModel<TOrderableM
         return Boolean(value[root]) && Boolean(value[row]);
     };
 
-    const isDraggingARow = ({ source }: { source: { data: Record<string | symbol, unknown> } }): boolean => {
+    const isDraggingARow = ({ source }: { source: { data: Record<string | symbol, unknown> } }): bool => {
         return isRowData(source.data);
     };
 

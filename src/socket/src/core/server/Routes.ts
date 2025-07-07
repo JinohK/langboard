@@ -41,7 +41,7 @@ class _Routes {
         const url = new URL(!Utils.String.isValidURL(req.url) ? `http://localhost${req.url}` : req.url);
 
         if (method === "OPTIONS") {
-            this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_200_OK));
+            this.#respond(res, JsonResponse({}, EHttpStatus.HTTP_200_OK), true);
             return;
         }
 
@@ -110,7 +110,7 @@ class _Routes {
         return params;
     }
 
-    #getCorsHeaders() {
+    #getCorsHeaders(isPreflight: bool = false) {
         const origins = [PUBLIC_UI_URL];
         const allowedMethods = ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"];
         const allowedHeaders = [
@@ -132,21 +132,29 @@ class _Routes {
             "Sec-Fetch-Dest",
         ];
 
-        return {
+        const default_headers = {
             "Access-Control-Allow-Origin": origins.join(", "),
+            "Access-Control-Allow-Credentials": "true",
+        };
+
+        if (!isPreflight) {
+            return default_headers;
+        }
+
+        return {
+            ...default_headers,
             "Access-Control-Allow-Methods": allowedMethods.join(", "),
             "Access-Control-Allow-Headers": allowedHeaders.join(", "),
-            "Access-Control-Allow-Credentials": "true",
             "Access-Control-Max-Age": "600",
             Vary: "Origin",
         };
     }
 
-    #respond(res: ServerResponse, response: TRouteResponse) {
+    #respond(res: ServerResponse, response: TRouteResponse, isPreflight: bool = false) {
         const { type, statusCode, body } = response;
         const convertedHeaders: Record<string, any> = {
             "Content-Type": "application/json",
-            ...this.#getCorsHeaders(),
+            ...this.#getCorsHeaders(isPreflight),
         };
 
         switch (type) {

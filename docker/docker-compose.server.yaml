@@ -91,6 +91,7 @@ services:
       <<: *server-env
       API_HOST: ${PROJECT_NAME}_api
       API_PORT: ${API_PORT}
+      DOMAIN: ${DOMAIN}
       CRON_TAB_FILE: ${CRON_TAB_FILE}
       SENTRY_DSN: ${SENTRY_DSN}
       LOCAL_STORAGE_DIR: ${LOCAL_STORAGE_DIR}
@@ -142,6 +143,7 @@ services:
         - *server-env
       SOCKET_PORT: ${SOCKET_PORT}
       UI_PORT: ${NGINX_UI_EXPOSE_PORT}
+      LOGGING_DIR: ${SOCKET_LOGGING_DIR}
     working_dir: /app
     volumes:
       - ../src/socket/package.json:/app/package.json

@@ -10,7 +10,8 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "baseUrl": "."
+    "baseUrl": ".",
+    "types": ["@langboard/core/global"]
   },
   "include": ["vite.config.ts"]
 }

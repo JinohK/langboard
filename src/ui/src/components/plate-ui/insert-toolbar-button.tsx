@@ -41,7 +41,7 @@ interface Item {
     icon: React.ReactNode;
     value: string;
     onSelect: (editor: PlateEditor, value: string) => void;
-    focusEditor?: boolean;
+    focusEditor?: bool;
     label?: string;
 }
 

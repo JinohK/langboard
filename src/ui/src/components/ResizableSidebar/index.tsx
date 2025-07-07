@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import { Box, Button, Floating, IconComponent } from "@/components/base";
-import setupResizeEvent from "@/core/events/setupResizeEvent";
+import useResizeEvent from "@/core/hooks/useResizeEvent";
 import { cn } from "@/core/utils/ComponentUtils";
 import { ScreenMap } from "@/core/utils/VariantUtils";
 import { Utils } from "@langboard/core/utils";
@@ -28,7 +28,6 @@ function ResizableSidebar({
     floatingFullScreen = false,
     hidden,
 }: IResizableSidebarProps) {
-    const isResizing = useRef(false);
     const [isCollapsed, setIsCollapsed] = useState(defaultCollapsed);
     const [isMobile, setIsMobile] = useState(window.innerWidth < ScreenMap.size.md);
 
@@ -38,18 +37,14 @@ function ResizableSidebar({
         throw new Error("collapsableWidth must be greater than 100");
     }
 
-    useEffect(() => {
-        const { destroy: destroyResizeEvent } = setupResizeEvent({
-            resizingRef: isResizing,
+    useResizeEvent(
+        {
             doneCallback: () => {
                 setIsMobile(window.innerWidth < ScreenMap.size.md);
             },
-        });
-
-        return () => {
-            destroyResizeEvent();
-        };
-    }, []);
+        },
+        [setIsMobile]
+    );
 
     const sidebarId = `resizable-sidebar-${Utils.String.Token.shortUUID()}`;
     const setCollapsedAttr = (collapsed: bool, sidebar?: HTMLElement, widthSize?: number) => {

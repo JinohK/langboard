@@ -33,35 +33,35 @@ class ChatMessageModel extends BaseModel<Interface> {
     public get filterable_table() {
         return this.getValue("filterable_table");
     }
-    public set filterable_table(value: string) {
+    public set filterable_table(value) {
         this.update({ filterable_table: value });
     }
 
     public get filterable_uid() {
         return this.getValue("filterable_uid");
     }
-    public set filterable_uid(value: string) {
+    public set filterable_uid(value) {
         this.update({ filterable_uid: value });
     }
 
     public get sender_uid() {
         return this.getValue("sender_uid");
     }
-    public set sender_uid(value: string | undefined) {
+    public set sender_uid(value) {
         this.update({ sender_uid: value });
     }
 
     public get receiver_uid() {
         return this.getValue("receiver_uid");
     }
-    public set receiver_uid(value: string | undefined) {
+    public set receiver_uid(value) {
         this.update({ receiver_uid: value });
     }
 
     public get message() {
         return this.getValue("message");
     }
-    public set message(value: IChatContent) {
+    public set message(value) {
         this.update({ message: value });
     }
 
@@ -75,14 +75,14 @@ class ChatMessageModel extends BaseModel<Interface> {
     public get isReceived() {
         return this.getValue("isReceived");
     }
-    public set isReceived(value: bool) {
+    public set isReceived(value) {
         this.update({ isReceived: value });
     }
 
     public get isPending() {
         return this.getValue("isPending");
     }
-    public set isPending(value: bool | undefined) {
+    public set isPending(value) {
         this.update({ isPending: value });
     }
 }

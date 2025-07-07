@@ -1,4 +1,4 @@
-import { memo, Suspense, useEffect, useRef, useState } from "react";
+import { memo, Suspense, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router";
 import { DashboardStyledLayout } from "@/components/Layout";
@@ -42,120 +42,15 @@ const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
 
 const BoardProxy = memo((): JSX.Element => {
     const { setPageAliasRef } = usePageHeader();
-    const [t] = useTranslation();
     const socket = useSocket();
     const navigate = usePageNavigateRef();
-    const { currentUser } = useAuth();
     const [projectUID, pageRoute] = location.pathname.split("/").slice(2);
-    const [isReady, setIsReady] = useState(false);
-    const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
-    const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
-    const { selectCardViewType } = useBoardRelationshipController();
     const [projectTitle, setProjectTitle] = useState("");
-    const setProjectTitleRef = useRef<(title: string) => void>(setProjectTitle);
-    setProjectTitleRef.current = (title: string) => {
-        if (pageRoute !== "card") {
-            setPageAliasRef.current(title);
-        }
-
-        setProjectTitle(() => title);
-    };
     if (!projectUID) {
         return <Navigate to={ROUTES.ERROR(EHttpStatus.HTTP_404_NOT_FOUND)} replace />;
     }
 
     const { data, isFetching, error, refetch } = useIsProjectAvailable({ uid: projectUID });
-    const { on: onIsBoardChatAvailable, send: sendIsBoardChatAvailable } = useIsBoardChatAvailableHandlers({
-        projectUID,
-        callback: (result) => {
-            if (result.available) {
-                setResizableSidebar(() => ({
-                    children: (
-                        <Suspense>
-                            <BoardChatProvider projectUID={projectUID} bot={result.bot}>
-                                <ChatSidebar />
-                            </BoardChatProvider>
-                        </Suspense>
-                    ),
-                    initialWidth: 280,
-                    collapsableWidth: 210,
-                    floatingIcon: "message-circle",
-                    floatingTitle: t("project.Chat with AI"),
-                    floatingFullScreen: true,
-                }));
-            } else {
-                setResizableSidebar(() => ({
-                    children: <></>,
-                    initialWidth: 280,
-                    collapsableWidth: 210,
-                    hidden: true,
-                }));
-            }
-            setIsReady(() => true);
-        },
-    });
-    const { on: onBoardAssignedUsersUpdated } = useBoardAssignedUsersUpdatedHandlers({
-        projectUID,
-        callback: (result) => {
-            if (!currentUser || (!result.assigned_user_uids.includes(currentUser.uid) && !currentUser.is_admin)) {
-                Toast.Add.error(t("errors.Forbidden"));
-            }
-        },
-    });
-    const { on: onProjectDeleted } = useProjectDeletedHandlers({
-        topic: ESocketTopic.Board,
-        projectUID,
-        callback: () => {
-            Toast.Add.error(t("project.errors.Project closed."));
-            navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
-        },
-    });
-    const { on: onProjectDetailsChanged } = useBoardDetailsChangedHandlers({
-        projectUID,
-        callback: (res) => {
-            const title = res.title;
-            if (title) {
-                setProjectTitleRef.current(title);
-            }
-        },
-    });
-    const { on: onBoardAssignedInternalBotChanged } = useBoardAssignedInternalBotChangedHandlers({
-        projectUID,
-        callback: (data) => {
-            const internalBot = InternalBotModel.Model.getModel(data.internal_bot_uid);
-            const project = Project.Model.getModel(projectUID);
-            if (internalBot && project) {
-                const existingBots = [...project.internal_bots];
-                const targetBotIndex = existingBots.findIndex((bot) => bot.bot_type === internalBot.bot_type);
-                if (targetBotIndex !== -1 && existingBots[targetBotIndex].uid !== internalBot.uid) {
-                    existingBots.splice(targetBotIndex, 1);
-                }
-                existingBots.push(internalBot);
-                project.internal_bots = existingBots;
-            }
-
-            if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
-                return;
-            }
-
-            sendIsBoardChatAvailable({});
-        },
-    });
-    const internalBotUpdatedHandlers = useInternalBotUpdatedHandlers({
-        callback: (data) => {
-            const internalBot = InternalBotModel.Model.getModel(data.uid);
-            if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
-                return;
-            }
-
-            sendIsBoardChatAvailable({});
-        },
-    });
-
-    useSwitchSocketHandlers({
-        socket,
-        handlers: internalBotUpdatedHandlers,
-    });
 
     useEffect(() => {
         if (!error) {
@@ -187,22 +82,187 @@ const BoardProxy = memo((): JSX.Element => {
             return;
         }
 
-        setProjectTitleRef.current(data.title);
+        if (pageRoute !== "card") {
+            setPageAliasRef.current(data.title);
+        }
 
-        socket.subscribe(ESocketTopic.Board, [projectUID], () => {
-            onIsBoardChatAvailable();
-            onBoardAssignedUsersUpdated();
-            onProjectDeleted();
-            onProjectDetailsChanged();
-            onBoardAssignedInternalBotChanged();
-            sendIsBoardChatAvailable({});
-        });
+        setProjectTitle(() => data.title);
+
+        socket.subscribe(ESocketTopic.Board, [projectUID]);
         socket.subscribe(ESocketTopic.BoardSettings, [projectUID]);
 
         return () => {
             socket.unsubscribe(ESocketTopic.Board, [projectUID]);
             socket.unsubscribe(ESocketTopic.BoardSettings, [projectUID]);
         };
+    }, [isFetching]);
+
+    return (
+        <BoardProxyDisplay
+            projectUID={projectUID}
+            pageRoute={pageRoute}
+            isFetching={isFetching}
+            projectTitle={projectTitle}
+            setProjectTitle={setProjectTitle}
+        />
+    );
+});
+
+interface IBoardProxyDisplayProps {
+    projectUID: string;
+    pageRoute: string;
+    isFetching: bool;
+    projectTitle: string;
+    setProjectTitle: React.Dispatch<React.SetStateAction<string>>;
+}
+
+function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, setProjectTitle }: IBoardProxyDisplayProps): JSX.Element {
+    const [t] = useTranslation();
+    const { setPageAliasRef } = usePageHeader();
+    const socket = useSocket();
+    const { currentUser } = useAuth();
+    const navigate = usePageNavigateRef();
+    const [isReady, setIsReady] = useState(false);
+    const { selectCardViewType } = useBoardRelationshipController();
+    const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
+    const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
+    const isBoardChatAvailableHandlers = useMemo(
+        () =>
+            useIsBoardChatAvailableHandlers({
+                projectUID,
+                callback: (result) => {
+                    if (result.available) {
+                        setResizableSidebar(() => ({
+                            children: (
+                                <Suspense>
+                                    <BoardChatProvider projectUID={projectUID} bot={result.bot}>
+                                        <ChatSidebar />
+                                    </BoardChatProvider>
+                                </Suspense>
+                            ),
+                            initialWidth: 280,
+                            collapsableWidth: 210,
+                            floatingIcon: "message-circle",
+                            floatingTitle: t("project.Chat with AI"),
+                            floatingFullScreen: true,
+                        }));
+                    } else {
+                        setResizableSidebar(() => ({
+                            children: <></>,
+                            initialWidth: 280,
+                            collapsableWidth: 210,
+                            hidden: true,
+                        }));
+                    }
+                    setIsReady(() => true);
+                },
+            }),
+        [projectUID, setResizableSidebar, setIsReady]
+    );
+    const boardAssignedUsersUpdatedHandlers = useMemo(
+        () =>
+            useBoardAssignedUsersUpdatedHandlers({
+                projectUID,
+                callback: (result) => {
+                    if (!currentUser || (!result.assigned_user_uids.includes(currentUser.uid) && !currentUser.is_admin)) {
+                        Toast.Add.error(t("errors.Forbidden"));
+                    }
+                },
+            }),
+        [projectUID, currentUser]
+    );
+    const projectDeletedHandlers = useMemo(
+        () =>
+            useProjectDeletedHandlers({
+                topic: ESocketTopic.Board,
+                projectUID,
+                callback: () => {
+                    Toast.Add.error(t("project.errors.Project closed."));
+                    navigate(ROUTES.DASHBOARD.PROJECTS.ALL, { replace: true });
+                },
+            }),
+        [projectUID, navigate]
+    );
+    const boardDetailsChangedHandlers = useMemo(
+        () =>
+            useBoardDetailsChangedHandlers({
+                projectUID,
+                callback: (res) => {
+                    const title = res.title;
+                    if (title) {
+                        if (pageRoute !== "card") {
+                            setPageAliasRef.current(title);
+                        }
+
+                        setProjectTitle(() => title);
+                    }
+                },
+            }),
+        [projectUID, setProjectTitle]
+    );
+    const boardAssignedInternalBotChangedHandlers = useMemo(
+        () =>
+            useBoardAssignedInternalBotChangedHandlers({
+                projectUID,
+                callback: (data) => {
+                    const internalBot = InternalBotModel.Model.getModel(data.internal_bot_uid);
+                    const project = Project.Model.getModel(projectUID);
+                    if (internalBot && project) {
+                        const existingBots = [...project.internal_bots];
+                        const targetBotIndex = existingBots.findIndex((bot) => bot.bot_type === internalBot.bot_type);
+                        if (targetBotIndex !== -1 && existingBots[targetBotIndex].uid !== internalBot.uid) {
+                            existingBots.splice(targetBotIndex, 1);
+                        }
+                        existingBots.push(internalBot);
+                        project.internal_bots = existingBots;
+                    }
+
+                    if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
+                        return;
+                    }
+
+                    isBoardChatAvailableHandlers.send({});
+                },
+            }),
+        [projectUID, isBoardChatAvailableHandlers]
+    );
+    const internalBotUpdatedHandlers = useMemo(
+        () =>
+            useInternalBotUpdatedHandlers({
+                callback: (data) => {
+                    const internalBot = InternalBotModel.Model.getModel(data.uid);
+                    if (internalBot && internalBot.bot_type !== InternalBotModel.EInternalBotType.ProjectChat) {
+                        return;
+                    }
+
+                    isBoardChatAvailableHandlers.send({});
+                },
+            }),
+        [projectUID, isBoardChatAvailableHandlers]
+    );
+
+    useSwitchSocketHandlers({
+        socket,
+        handlers: [
+            isBoardChatAvailableHandlers,
+            boardAssignedUsersUpdatedHandlers,
+            projectDeletedHandlers,
+            boardDetailsChangedHandlers,
+            boardAssignedInternalBotChangedHandlers,
+            internalBotUpdatedHandlers,
+        ],
+        dependencies: [
+            isBoardChatAvailableHandlers,
+            boardAssignedUsersUpdatedHandlers,
+            projectDeletedHandlers,
+            boardDetailsChangedHandlers,
+            boardAssignedInternalBotChangedHandlers,
+            internalBotUpdatedHandlers,
+        ],
+    });
+
+    useEffect(() => {
+        isBoardChatAvailableHandlers.send({});
     }, [isFetching]);
 
     const headerNavs: IHeaderNavItem[] = [
@@ -272,6 +332,6 @@ const BoardProxy = memo((): JSX.Element => {
             {isReady && currentUser ? <PageComponent projectUID={projectUID} currentUser={currentUser} /> : <SkeletonComponent />}
         </DashboardStyledLayout>
     );
-});
+}
 
 export default BoardProxy;

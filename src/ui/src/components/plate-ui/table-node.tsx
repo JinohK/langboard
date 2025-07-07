@@ -182,7 +182,7 @@ export function TableCellElement({
     isHeader,
     ...props
 }: PlateElementProps<TTableCellElement> & {
-    isHeader?: boolean;
+    isHeader?: bool;
 }) {
     const { api } = useEditorPlugin(TablePlugin);
     const readOnly = useReadOnly();

@@ -409,8 +409,8 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     public get uid() {
         return this.getValue("uid");
     }
-    public set uid(value: string) {
-        this.update({ uid: value } as any);
+    public set uid(value) {
+        this.update({ uid: value });
     }
 
     public get MODEL_NAME(): keyof IModelMap {

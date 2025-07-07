@@ -28,7 +28,7 @@ export const AlertVariants = cva("relative w-full rounded-lg border p-4 text-sm 
 export interface AlertProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof AlertVariants> {
     icon?: React.ComponentProps<typeof IconComponent>["icon"];
     title?: string;
-    dismissible?: boolean;
+    dismissible?: bool;
     onDismiss?: () => void;
 }
 

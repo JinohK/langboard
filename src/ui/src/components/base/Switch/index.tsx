@@ -62,7 +62,7 @@ export interface SwitchProps extends React.ComponentPropsWithoutRef<typeof Switc
     label?: string;
     description?: string;
     error?: string;
-    animated?: boolean;
+    animated?: bool;
 }
 
 const Switch = React.forwardRef<React.ComponentRef<typeof SwitchPrimitive.Root>, SwitchProps>(

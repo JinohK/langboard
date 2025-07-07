@@ -59,7 +59,7 @@ export function AIMenu(props: IAIMenuProps) {
         }
     }, [streaming]);
 
-    const setOpen = (open: boolean) => {
+    const setOpen = (open: bool) => {
         if (open) {
             api.aiChat.show();
         } else {
@@ -332,7 +332,7 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
         label: string;
         value: string;
         component?: React.ComponentType<{ menuState: EditorChatState }>;
-        filterItems?: boolean;
+        filterItems?: bool;
         items?: { label: string; value: string }[];
         shortcut?: string;
         onSelect?: ({ aiEditor, editor }: { aiEditor: SlateEditor; editor: PlateEditor }) => void;

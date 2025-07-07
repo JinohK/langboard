@@ -76,24 +76,38 @@ class CheckitemPublisher(BaseSocketPublisher):
     ):
         model = {"uid": checkitem.get_uid(), "order": checkitem.order}
         topic_id = card.get_uid()
+        publish_models: list[SocketPublishModel] = []
         if old_checklist and new_checklist:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.BoardCard,
-                topic_id=topic_id,
-                event=f"board:card:checkitem:order:changed:{new_checklist.get_uid()}",
-                data_keys=["uid", "order"],
-                custom_data={"move_type": "to_column", "column_uid": new_checklist.get_uid()},
+            publish_models.extend(
+                [
+                    SocketPublishModel(
+                        topic=SocketTopic.BoardCard,
+                        topic_id=topic_id,
+                        event=f"board:card:checkitem:order:changed:{old_checklist.get_uid()}",
+                        data_keys=["uid", "order"],
+                        custom_data={"move_type": "from_column", "column_uid": old_checklist.get_uid()},
+                    ),
+                    SocketPublishModel(
+                        topic=SocketTopic.BoardCard,
+                        topic_id=topic_id,
+                        event=f"board:card:checkitem:order:changed:{new_checklist.get_uid()}",
+                        data_keys=["uid", "order"],
+                        custom_data={"move_type": "to_column", "column_uid": new_checklist.get_uid()},
+                    ),
+                ]
             )
         else:
-            publish_model = SocketPublishModel(
-                topic=SocketTopic.BoardCard,
-                topic_id=topic_id,
-                event=f"board:card:checkitem:order:changed:{checkitem.checklist_id.to_short_code()}",
-                data_keys=["uid", "order"],
-                custom_data={"move_type": "in_column"},
+            publish_models.append(
+                SocketPublishModel(
+                    topic=SocketTopic.BoardCard,
+                    topic_id=topic_id,
+                    event=f"board:card:checkitem:order:changed:{checkitem.checklist_id.to_short_code()}",
+                    data_keys=["uid", "order"],
+                    custom_data={"move_type": "in_column"},
+                )
             )
 
-        await CheckitemPublisher.put_dispather(model, publish_model)
+        await CheckitemPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def status_changed(

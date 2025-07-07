@@ -23,7 +23,7 @@ class UserGroup extends BaseModel<Interface> {
     public get name() {
         return this.getValue("name");
     }
-    public set name(value: string) {
+    public set name(value) {
         this.update({ name: value });
     }
 

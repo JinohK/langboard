@@ -48,8 +48,8 @@ const escapeNonHtmlAngles = (str: string): string => {
     return result;
 };
 
-const splitMathBlocks = (text: string): { isMath: boolean; content: string }[] => {
-    const blocks: { isMath: boolean; content: string }[] = [];
+const splitMathBlocks = (text: string): { isMath: bool; content: string }[] => {
+    const blocks: { isMath: bool; content: string }[] = [];
     const mathBlockRegex = /(```math[\s\S]*?```|\$\$[\s\S]*?\$\$)/g;
     let lastIndex = 0;
     let match;
@@ -80,7 +80,7 @@ const splitMathBlocks = (text: string): { isMath: boolean; content: string }[] =
     return blocks;
 };
 
-export const deserialize = (isInline: boolean) => (editor: SlateEditor, text: string, options?: DeserializeMdOptions) => {
+export const deserialize = (isInline: bool) => (editor: SlateEditor, text: string, options?: DeserializeMdOptions) => {
     const HTML_TAGS = new Set([
         "a",
         "abbr",

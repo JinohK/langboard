@@ -22,16 +22,16 @@ import { cva } from "class-variance-authority";
 import { useComposedRef, useEditorRef } from "platejs/react";
 import { cn } from "@/core/utils/ComponentUtils";
 
-type FilterFn = (item: { value: string; group?: string; keywords?: string[]; label?: string }, search: string) => boolean;
+type FilterFn = (item: { value: string; group?: string; keywords?: string[]; label?: string }, search: string) => bool;
 
 interface InlineComboboxContextValue {
     filter: FilterFn | false;
     inputProps: UseComboboxInputResult["props"];
     inputRef: React.RefObject<HTMLInputElement | null>;
     removeInput: UseComboboxInputResult["removeInput"];
-    showTrigger: boolean;
+    showTrigger: bool;
     trigger: string;
-    setHasEmpty: (hasEmpty: boolean) => void;
+    setHasEmpty: (hasEmpty: bool) => void;
 }
 
 const InlineComboboxContext = React.createContext<InlineComboboxContextValue>(null as unknown as InlineComboboxContextValue);
@@ -47,8 +47,8 @@ interface InlineComboboxProps {
     element: TElement;
     trigger: string;
     filter?: FilterFn | false;
-    hideWhenNoValue?: boolean;
-    showTrigger?: boolean;
+    hideWhenNoValue?: bool;
+    showTrigger?: bool;
     value?: string;
     setValue?: (value: string) => void;
 }
@@ -241,7 +241,7 @@ const InlineComboboxItem = ({
     onClick,
     ...props
 }: {
-    focusEditor?: boolean;
+    focusEditor?: bool;
     group?: string;
     keywords?: string[];
     label?: string;

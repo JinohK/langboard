@@ -6,7 +6,7 @@ import { ESocketTopic } from "@langboard/core/enums";
 import { isModel } from "@/core/models/ModelRegistry";
 
 interface IBaseRowOrderChangedResponse {
-    move_type: "to_column" | "in_column";
+    move_type: "to_column" | "in_column" | "from_column";
     column_uid?: string;
     uid: string;
     order: number;
@@ -17,12 +17,17 @@ interface IInColumnRowOrderChangedResponse extends IBaseRowOrderChangedResponse 
     column_uid?: never;
 }
 
+interface IRemovedColumnRowOrderChangedResponse extends IBaseRowOrderChangedResponse {
+    move_type: "from_column";
+    column_uid: string;
+}
+
 interface IMovedColumnRowOrderChangedResponse extends IBaseRowOrderChangedResponse {
     move_type: "to_column";
     column_uid: string;
 }
 
-export type TRowOrderChangedResponse = IInColumnRowOrderChangedResponse | IMovedColumnRowOrderChangedResponse;
+export type TRowOrderChangedResponse = IInColumnRowOrderChangedResponse | IRemovedColumnRowOrderChangedResponse | IMovedColumnRowOrderChangedResponse;
 
 export interface IUseRowOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<TRowOrderChangedResponse> {
     type: "ProjectCard" | "ProjectCheckitem";
@@ -60,6 +65,10 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
             params,
             callback,
             responseConverter: (data) => {
+                if (data.move_type === "from_column") {
+                    return data;
+                }
+
                 const model = targetModel.getModel(data.uid);
                 if (model) {
                     model.order = data.order;

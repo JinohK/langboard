@@ -178,10 +178,10 @@ const DragHandle = React.memo(function DragHandle({
     setIsMultiple,
     setMultiplePreviewTop,
 }: {
-    isDragging: boolean;
-    isMultiple: boolean;
+    isDragging: bool;
+    isMultiple: bool;
     multiplePreviewRef: React.RefObject<HTMLDivElement | null>;
-    setIsMultiple: (isMultiple: boolean) => void;
+    setIsMultiple: (isMultiple: bool) => void;
     setMultiplePreviewTop: (top: number) => void;
 }) {
     const [t] = useTranslation();

@@ -31,23 +31,26 @@ async def run_webhook(event: str, data: dict[str, Any]):
                 json={"event": event, "data": data},
             )
             res.raise_for_status()
+
+            res = True
         except Exception:
             if res:
                 Broker.logger.error("Failed to request webhook: \nURL: %s\nResponse: %s", res.text)
             else:
                 Broker.logger.error("Failed to request webhook: \nURL: %s", url)
 
-        setting.last_used_at = SafeDateTime.now()
-        setting.total_used_count += 1
-        with DbSession.use(readonly=False) as db:
-            db.update(setting)
-        await AppSettingPublisher.setting_updated(
-            setting.get_uid(),
-            {
-                "last_used_at": setting.last_used_at,
-                "total_used_count": setting.total_used_count,
-            },
-        )
+        if res:
+            setting.last_used_at = SafeDateTime.now()
+            setting.total_used_count += 1
+            with DbSession.use(readonly=False) as db:
+                db.update(setting)
+            await AppSettingPublisher.setting_updated(
+                setting.get_uid(),
+                {
+                    "last_used_at": setting.last_used_at,
+                    "total_used_count": setting.total_used_count,
+                },
+            )
 
 
 def _get_webhook_settings() -> list[AppSetting]:

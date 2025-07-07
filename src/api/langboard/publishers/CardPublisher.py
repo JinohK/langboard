@@ -92,6 +92,12 @@ class CardPublisher(BaseSocketPublisher):
                     SocketPublishModel(
                         topic=SocketTopic.Board,
                         topic_id=topic_id,
+                        event=f"board:card:order:changed:{old_column_uid}",
+                        custom_data={"move_type": "from_column", "column_uid": old_column_uid},
+                    ),
+                    SocketPublishModel(
+                        topic=SocketTopic.Board,
+                        topic_id=topic_id,
                         event=f"board:card:order:changed:{new_column_uid}",
                         data_keys=["uid", "order", "archived_at"],
                         custom_data={"move_type": "to_column", "column_uid": new_column_uid},

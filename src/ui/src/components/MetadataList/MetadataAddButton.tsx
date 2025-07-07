@@ -62,8 +62,8 @@ function MetadataAddButton({ form, errorsMap }: IMetadataAddButtonProps): JSX.El
                 </Button>
             </Popover.Trigger>
             <Popover.Content className="w-auto min-w-0 max-w-xs sm:max-w-sm md:max-w-md lg:max-w-lg">
-                <Input placeholder={t("metadata.Key")} className="w-full" disabled={isValidating} ref={keyInputRef} />
-                <Input placeholder={t("metadata.Value")} className="mt-2 w-full" disabled={isValidating} ref={valueInputRef} />
+                <Input placeholder={t("metadata.Key")} wrapperProps={{ className: "w-full" }} disabled={isValidating} ref={keyInputRef} />
+                <Input placeholder={t("metadata.Value")} wrapperProps={{ className: "mt-2 w-full" }} disabled={isValidating} ref={valueInputRef} />
                 <Flex items="center" justify="end" gap="1" mt="2">
                     <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={() => setIsOpened(false)}>
                         {t("common.Cancel")}

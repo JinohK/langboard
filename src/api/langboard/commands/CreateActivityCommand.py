@@ -46,4 +46,4 @@ class CreateActivityCommand(BaseCommand):
         create_py("model", f"{name}Activity", model_code)
 
         task_code = format_template("activity_task", formats)
-        create_py("task", name, task_code)
+        create_py("task", f"activities/{name}", task_code)

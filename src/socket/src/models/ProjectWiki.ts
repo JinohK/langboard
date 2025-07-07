@@ -20,7 +20,7 @@ class ProjectWiki extends BaseModel {
     @Column({ type: "boolean" })
     public is_public: bool = false;
 
-    public static async isAssigned(userId: TBigIntString, wikiUID: string): Promise<boolean> {
+    public static async isAssigned(userId: TBigIntString, wikiUID: string): Promise<bool> {
         const wikiId = SnowflakeID.fromShortCode(wikiUID).toString();
         const result = await ProjectWiki.createQueryBuilder()
             .leftJoinAndSelect(ProjectWikiAssignedUser, "pwa", "pwa.project_wiki_id = ProjectWiki.id")

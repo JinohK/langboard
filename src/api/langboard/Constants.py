@@ -14,6 +14,7 @@ SCHEMA_DIR.mkdir(exist_ok=True)
 # URL
 HOST = Env.get_from_env("API_HOST", "localhost")
 PORT = int(Env.get_from_env("API_PORT", "5381"))
+DOMAIN = Env.get_from_env("DOMAIN")
 
 # Logging
 LOGGING_DIR = Path(Env.get_from_env("LOGGING_DIR", DATA_DIR / "logs" / "api"))

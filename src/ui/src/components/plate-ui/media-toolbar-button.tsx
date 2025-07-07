@@ -133,7 +133,7 @@ function MediaUrlDialogContent({
     currentConfig: (typeof MEDIA_CONFIG)[string];
     nodeType: string;
     isOpened: bool;
-    setOpen: (value: boolean) => void;
+    setOpen: (value: bool) => void;
 }) {
     const [t] = useTranslation();
     const editor = useEditorRef();

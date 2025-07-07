@@ -66,63 +66,63 @@ class InternalBotModel extends BaseModel<Interface> {
     public get bot_type() {
         return this.getValue("bot_type");
     }
-    public set bot_type(value: EInternalBotType) {
+    public set bot_type(value) {
         this.update({ bot_type: value });
     }
 
     public get display_name() {
         return this.getValue("display_name");
     }
-    public set display_name(value: string) {
+    public set display_name(value) {
         this.update({ display_name: value });
     }
 
     public get platform() {
         return this.getValue("platform");
     }
-    public set platform(value: EInternalBotPlatform) {
+    public set platform(value) {
         this.update({ platform: value });
     }
 
     public get platform_running_type() {
         return this.getValue("platform_running_type");
     }
-    public set platform_running_type(value: EInternalBotPlatformRunningType) {
+    public set platform_running_type(value) {
         this.update({ platform_running_type: value });
     }
 
     public get url() {
         return this.getValue("url");
     }
-    public set url(value: string) {
+    public set url(value) {
         this.update({ url: value });
     }
 
     public get api_key() {
         return this.getValue("api_key");
     }
-    public set api_key(value: string) {
+    public set api_key(value) {
         this.update({ api_key: value });
     }
 
     public get value() {
         return this.getValue("value");
     }
-    public set value(value: string) {
+    public set value(value) {
         this.update({ value: value });
     }
 
     public get is_default() {
         return this.getValue("is_default");
     }
-    public set is_default(value: boolean) {
+    public set is_default(value) {
         this.update({ is_default: value });
     }
 
     public get avatar() {
         return this.getValue("avatar");
     }
-    public set avatar(value: string | undefined) {
+    public set avatar(value) {
         this.update({ avatar: value });
     }
 }

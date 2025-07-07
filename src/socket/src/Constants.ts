@@ -37,6 +37,7 @@ export const PROJECT_SHORT_NAME = getEnv({ key: "PROJECT_SHORT_NAME", defaultVal
 export const BASE_DIR = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT_DIR = path.join(BASE_DIR, "..", "..", "..");
 export const DATA_DIR = IS_EXECUTABLE ? path.join(BASE_DIR, "data") : path.join(ROOT_DIR, "local");
+export const LOGGING_DIR = getEnv<string>({ key: "LOGGING_DIR", defaultValue: path.join(DATA_DIR, "logs", "socket") });
 
 export const PORT = parseInt(getEnv<string>({ key: "SOCKET_PORT", defaultValue: "5690" }));
 export const UI_PORT = parseInt(getEnv<string>({ key: "UI_PORT", defaultValue: "5173" }));

@@ -9,6 +9,7 @@ from jwt import ExpiredSignatureError
 from models import User, UserEmail, UserGroup, UserNotification, UserProfile
 from models.UserNotification import NotificationType
 from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
+from ...Constants import DOMAIN
 from ...security import Auth
 from ...services import Service
 from .scopes import AuthEmailForm, AuthEmailResponse, SignInForm
@@ -70,6 +71,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
         Env.REFRESH_TOKEN_NAME,
         refresh_token,
         max_age=Env.JWT_RT_EXPIRATION * 60 * 60 * 24,
+        domain=DOMAIN if DOMAIN else None,
         httponly=True,
         secure=True,
     )

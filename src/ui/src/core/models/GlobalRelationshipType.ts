@@ -25,21 +25,21 @@ class GlobalRelationshipType extends BaseModel<Interface> {
     public get parent_name() {
         return this.getValue("parent_name");
     }
-    public set parent_name(value: string) {
+    public set parent_name(value) {
         this.update({ parent_name: value });
     }
 
     public get child_name() {
         return this.getValue("child_name");
     }
-    public set child_name(value: string) {
+    public set child_name(value) {
         this.update({ child_name: value });
     }
 
     public get description() {
         return this.getValue("description");
     }
-    public set description(value: string) {
+    public set description(value) {
         this.update({ description: value });
     }
 }

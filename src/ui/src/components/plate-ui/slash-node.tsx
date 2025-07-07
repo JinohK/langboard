@@ -43,7 +43,7 @@ type Group = {
         value: string;
         onSelect: (editor: PlateEditor, value: string) => void;
         className?: string;
-        focusEditor?: boolean;
+        focusEditor?: bool;
         keywords?: string[];
         label?: string;
     }[];

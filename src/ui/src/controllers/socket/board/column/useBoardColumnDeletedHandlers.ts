@@ -6,6 +6,7 @@ import { ESocketTopic } from "@langboard/core/enums";
 export interface IBoardColumnDeletedRawResponse {
     uid: string;
     archive_column_uid: string;
+    archive_column_name: string;
     archived_at: string;
     count_all_cards_in_column: number;
 }
@@ -28,10 +29,6 @@ const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDel
                 if (column) {
                     const restColumns = ProjectColumn.Model.getModels((model) => model.project_uid === project.uid);
                     for (let i = 0; i < restColumns.length; ++i) {
-                        if (restColumns[i].uid === data.archive_column_uid) {
-                            continue;
-                        }
-
                         const restColumn = restColumns[i];
                         if (restColumn.order > column.order) {
                             restColumn.order -= 1;
@@ -49,6 +46,7 @@ const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDel
                     }
 
                     card.column_uid = data.archive_column_uid;
+                    card.column_name = data.archive_column_name;
                     card.archived_at = data.archived_at;
                     card.order = archivedCardsCount;
                     archivedCardsCount += 1;

@@ -53,5 +53,5 @@ function TodoMarker(props: PlateElementProps) {
 }
 
 function TodoLi(props: PlateElementProps) {
-    return <li className={cn("list-none", (props.element.checked as boolean) && "text-muted-foreground line-through")}>{props.children}</li>;
+    return <li className={cn("list-none", (props.element.checked as bool) && "text-muted-foreground line-through")}>{props.children}</li>;
 }

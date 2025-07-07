@@ -1,6 +1,6 @@
-import * as jwt from "jsonwebtoken";
+type bool = boolean;
 
-export declare global {
+declare global {
     type bool = boolean;
 
     declare interface ObjectConstructor {
@@ -8,3 +8,5 @@ export declare global {
         keys<T>(object: T): (keyof T)[];
     }
 }
+
+export { bool };

@@ -64,7 +64,7 @@ const Bot = memo(({ bot }: IBotProps) => {
         navigate(ROUTES.SETTINGS.BOT_DETAILS(bot.uid), { smooth: true });
     };
 
-    const changeOpenState = (opened: boolean) => {
+    const changeOpenState = (opened: bool) => {
         if (isValidating) {
             return;
         }

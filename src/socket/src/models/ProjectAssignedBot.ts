@@ -13,7 +13,7 @@ class ProjectAssignedBot extends BaseModel {
     @Column({ type: "boolean" })
     public is_disabled: bool = false;
 
-    public static async isAssigned(botUID: string, projectUID: string): Promise<boolean> {
+    public static async isAssigned(botUID: string, projectUID: string): Promise<bool> {
         const botId = SnowflakeID.fromShortCode(botUID).toString();
         const projectId = SnowflakeID.fromShortCode(projectUID).toString();
         const result = await ProjectAssignedBot.createQueryBuilder("pa")

@@ -38,7 +38,7 @@ function List(props: SlateRenderElementProps) {
 }
 
 function TodoMarkerStatic(props: SlateRenderElementProps) {
-    const checked = props.element.checked as boolean;
+    const checked = props.element.checked as bool;
 
     return (
         <div contentEditable={false}>
@@ -57,5 +57,5 @@ function TodoMarkerStatic(props: SlateRenderElementProps) {
 }
 
 function TodoLiStatic(props: SlateRenderElementProps) {
-    return <li className={cn("list-none", (props.element.checked as boolean) && "text-muted-foreground line-through")}>{props.children}</li>;
+    return <li className={cn("list-none", (props.element.checked as bool) && "text-muted-foreground line-through")}>{props.children}</li>;
 }

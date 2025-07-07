@@ -3,7 +3,7 @@ import { Utils } from "@langboard/core/utils";
 
 (Utils.String as any).BASE62_ALPHABET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-Utils.String.isValidURL = (str: unknown): boolean => {
+Utils.String.isValidURL = (str: unknown): bool => {
     if (typeof str !== "string") {
         return false;
     }

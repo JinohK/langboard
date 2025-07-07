@@ -137,20 +137,22 @@ function MetadataRow({ form, keyName, value, errorsMap, canEdit }: IMetadataRowP
         <Flex items="center" gap="2">
             <Flex items="center" gap="2" className={canEdit() ? "w-[calc(100%_-_theme(spacing.14))]" : "w-full"}>
                 <Input
+                    wrapperProps={{ className: "w-2/5" }}
                     placeholder={t("metadata.Key")}
                     defaultValue={keyName}
                     disabled={!canEdit() || isValidating}
                     onInput={handleInput}
-                    className="h-8 w-2/5 py-1"
+                    className="h-8 py-1"
                     ref={keyInputRef}
                 />
                 <Box position="relative" className="w-3/5">
                     <Input
+                        wrapperProps={{ className: "w-full" }}
                         placeholder={t("metadata.Value")}
                         defaultValue={value}
                         disabled={!canEdit() || isValidating}
                         onInput={handleValueInput}
-                        className={"h-8 w-full py-1 pr-7"}
+                        className={"h-8 py-1 pr-7"}
                         ref={valueInputRef}
                     />
                     <MetadataRowJsonViewer

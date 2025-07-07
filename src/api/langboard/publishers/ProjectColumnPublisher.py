@@ -95,6 +95,7 @@ class ProjectColumnPublisher(BaseSocketPublisher):
         model = {
             "uid": column.get_uid(),
             "archive_column_uid": archive_column.get_uid(),
+            "archive_column_name": archive_column.name,
             "archived_at": archived_at,
             "count_all_cards_in_column": count_all_cards_in_column,
         }

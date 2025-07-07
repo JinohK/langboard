@@ -48,7 +48,20 @@ const createOptions = (dirname) => [
             format: "es",
         },
         plugins: [resolve(), typescript(), dts()],
+        cache: false,
     },
 ];
 
-export default [...createOptions("utils"), ...createOptions("enums")];
+export default [
+    ...createOptions("utils"),
+    ...createOptions("enums"),
+    {
+        input: getDirname("src", "global.d.ts"),
+        output: {
+            file: getDirname("dist", "global.d.ts"),
+            format: "es",
+        },
+        plugins: [dts()],
+        cache: false,
+    },
+];

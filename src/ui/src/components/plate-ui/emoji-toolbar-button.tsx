@@ -60,8 +60,8 @@ export function EmojiPopover({
 }: {
     children: React.ReactNode;
     control: React.ReactNode;
-    isOpen: boolean;
-    setIsOpen: (open: boolean) => void;
+    isOpen: bool;
+    setIsOpen: (open: bool) => void;
 }) {
     return (
         <Popover.Root open={isOpen} onOpenChange={setIsOpen}>

@@ -29,28 +29,28 @@ class ChatTemplateModel extends BaseModel<Interface> {
     public get filterable_table() {
         return this.getValue("filterable_table");
     }
-    public set filterable_table(value: Interface["filterable_table"]) {
+    public set filterable_table(value) {
         this.update({ filterable_table: value });
     }
 
     public get filterable_uid() {
         return this.getValue("filterable_uid");
     }
-    public set filterable_uid(value: string) {
+    public set filterable_uid(value) {
         this.update({ filterable_uid: value });
     }
 
     public get name() {
         return this.getValue("name");
     }
-    public set name(value: string) {
+    public set name(value) {
         this.update({ name: value });
     }
 
     public get template() {
         return this.getValue("template");
     }
-    public set template(value: string) {
+    public set template(value) {
         this.update({ template: value });
     }
 }

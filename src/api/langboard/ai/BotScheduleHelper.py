@@ -3,6 +3,7 @@ from subprocess import run as subprocess_run
 from typing import Any, Callable, Literal, overload
 from zoneinfo import ZoneInfo
 from core.db import BaseSqlModel, DbSession, SqlBuilder
+from core.Env import Env
 from core.schema import Pagination
 from core.types import SafeDateTime
 from core.utils.decorators import staticclass
@@ -141,6 +142,8 @@ class BotScheduleHelper:
 
     @staticmethod
     def reload_cron():
+        if Env.ENVIRONMENT == "local":
+            return
         try:
             for process in process_iter(["pid", "name"]):
                 if process.name() != "cron":
@@ -422,9 +425,13 @@ class BotScheduleHelper:
             CRON_TAB_FILE.parent.mkdir(parents=True, exist_ok=True)
             CRON_TAB_FILE.touch()
         cron = CronTab(user=False, tabfile=str(CRON_TAB_FILE))
-        if cron.env is None:
+        if Env.ENVIRONMENT != "local":
+            if cron.env is None:
+                cron.env = OrderedVariableList()
+            cron.env.update(environ)
+
+        if Env.ENVIRONMENT == "local":
             cron.env = OrderedVariableList()
-        cron.env.update(environ)
 
         return cron
 
@@ -451,6 +458,8 @@ class BotScheduleHelper:
 
     @staticmethod
     def __save_cron(cron: CronTab):
+        if Env.ENVIRONMENT == "local":
+            return
         cron.write()
         BotScheduleHelper.reload_cron()
 

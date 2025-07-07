@@ -28,7 +28,7 @@ const createDndColumnRowDataHelper = <
         return Boolean(value[column]);
     };
 
-    const isDraggingAColumn = ({ source }: { source: { data: Record<string | symbol, unknown> } }): boolean => {
+    const isDraggingAColumn = ({ source }: { source: { data: Record<string | symbol, unknown> } }): bool => {
         return isColumnData(source.data);
     };
 
@@ -40,7 +40,7 @@ const createDndColumnRowDataHelper = <
         return Boolean(value[row]);
     };
 
-    const isDraggingARow = ({ source }: { source: { data: Record<string | symbol, unknown> } }): boolean => {
+    const isDraggingARow = ({ source }: { source: { data: Record<string | symbol, unknown> } }): bool => {
         return isRowData(source.data);
     };
 
