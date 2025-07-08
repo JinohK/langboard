@@ -241,7 +241,7 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
         [projectUID, isBoardChatAvailableHandlers]
     );
 
-    useSwitchSocketHandlers({
+    const { subscribedTopics } = useSwitchSocketHandlers({
         socket,
         handlers: [
             isBoardChatAvailableHandlers,
@@ -262,8 +262,12 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
     });
 
     useEffect(() => {
+        if (isFetching || !subscribedTopics.includes(ESocketTopic.Board)) {
+            return;
+        }
+
         isBoardChatAvailableHandlers.send({});
-    }, [isFetching]);
+    }, [isFetching, subscribedTopics]);
 
     const headerNavs: IHeaderNavItem[] = [
         {

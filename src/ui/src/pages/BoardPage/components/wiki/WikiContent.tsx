@@ -19,7 +19,6 @@ import { useTranslation } from "react-i18next";
 
 export interface IWikiContentProps {
     wiki: ProjectWiki.TModel;
-    changeTab: (uid: string) => void;
 }
 
 export function SkeletonWikiContent() {
@@ -36,9 +35,9 @@ export function SkeletonWikiContent() {
     );
 }
 
-const WikiContent = memo(({ wiki, changeTab }: IWikiContentProps) => {
+const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     const navigate = usePageNavigateRef();
-    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor } = useBoardWiki();
+    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor, changeTab } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const isPublic = wiki.useField("is_public");

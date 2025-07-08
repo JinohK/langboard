@@ -5,12 +5,8 @@ import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IWikiCreateButtonProps {
-    changeTab: (uid: string) => void;
-}
-
-const WikiCreateButton = memo(({ changeTab }: IWikiCreateButtonProps) => {
-    const { projectUID, wikiTabListId } = useBoardWiki();
+const WikiCreateButton = memo(() => {
+    const { projectUID, wikiTabListId, changeTab } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: createWikiMutateAsync } = useCreateWiki({ interceptToast: true });
 

@@ -31,7 +31,11 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
                 topicId: topicId as never,
                 key,
                 notifier: (subscribedTopicId, isSubscribed) => {
-                    if (subscribedTopicId !== topicId) {
+                    if (
+                        subscribedTopicId !== topicId ||
+                        (isSubscribed && subscribedTopics.includes(topic)) ||
+                        (!isSubscribed && !subscribedTopics.includes(topic))
+                    ) {
                         return;
                     }
 
@@ -52,7 +56,7 @@ const useSwitchSocketHandlers = ({ socket, handlers, dependencies }: IUseSwitchS
                 socket.unsubscribeTopicNotifier({ topic, topicId: topicId as never, key });
             }
         };
-    }, []);
+    }, [subscribedTopics, setSubscribedTopics]);
 
     useEffect(() => {
         const offs: (() => void)[] = [];

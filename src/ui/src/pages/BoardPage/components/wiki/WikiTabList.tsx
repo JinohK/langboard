@@ -9,10 +9,6 @@ import WikiTab, { SkeletonWikiTab } from "@/pages/BoardPage/components/wiki/Wiki
 import { BOARD_WIKI_DND_SYMBOL_SET } from "@/pages/BoardPage/components/wiki/WikiConstants";
 import { memo, useEffect, useMemo, useReducer } from "react";
 
-export interface IWikiTabListProps {
-    changeTab: (uid: string) => void;
-}
-
 export function SkeletonWikiTabList() {
     return (
         <Flex justify="center" items="center" gap="1" inline h="10" p="1">
@@ -23,8 +19,8 @@ export function SkeletonWikiTabList() {
     );
 }
 
-const WikiTabList = memo(({ changeTab }: IWikiTabListProps) => {
-    const { projectUID, wikis: flatWikis, socket, modeType } = useBoardWiki();
+const WikiTabList = memo(() => {
+    const { projectUID, wikis: flatWikis, socket, modeType, changeTab } = useBoardWiki();
     const wikisMap = useMemo<Record<string, ProjectWiki.TModel>>(() => {
         const map: Record<string, ProjectWiki.TModel> = {};
         flatWikis.forEach((wiki) => {

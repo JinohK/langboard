@@ -7,8 +7,9 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router";
 
 export type TBoardWikiMode = "reorder" | "delete" | "view";
 
@@ -25,6 +26,7 @@ export interface IBoardWikiContext {
     modeType: TBoardWikiMode;
     setModeType: React.Dispatch<React.SetStateAction<TBoardWikiMode>>;
     wikiTabListId: string;
+    changeTab: (uid: string) => void;
 }
 
 interface IBoardWikiProps {
@@ -48,6 +50,7 @@ const initialContext = {
     modeType: "view" as TBoardWikiMode,
     setModeType: () => {},
     wikiTabListId: "",
+    changeTab: () => {},
 };
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
@@ -62,6 +65,7 @@ export const BoardWikiProvider = ({
     const socket = useSocket();
     const navigate = usePageNavigateRef();
     const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
+    const { wikiUID } = useParams();
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
     const [projectBots, setProjectBots] = useState(flatProjectBots);
     const [t] = useTranslation();
@@ -142,6 +146,27 @@ export const BoardWikiProvider = ({
         return true;
     };
 
+    const changeTab = useCallback(
+        (uid: string) => {
+            if (uid === wikiUID) {
+                return;
+            }
+
+            if (canAccessWiki(true, uid)) {
+                if (!uid) {
+                    navigate(ROUTES.BOARD.WIKI(projectUID));
+                } else {
+                    navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, uid));
+                }
+                setCurrentEditor("");
+            } else {
+                navigate(ROUTES.BOARD.WIKI(projectUID));
+                setCurrentEditor("");
+            }
+        },
+        [projectUID, wikiUID, navigate, canAccessWiki, setCurrentEditor]
+    );
+
     return (
         <BoardWikiContext.Provider
             value={{
@@ -157,6 +182,7 @@ export const BoardWikiProvider = ({
                 modeType,
                 setModeType,
                 wikiTabListId,
+                changeTab,
             }}
         >
             {children}

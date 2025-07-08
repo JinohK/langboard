@@ -4,7 +4,6 @@ import { singleDndHelpers } from "@/core/helpers/dnd";
 import { SINGLE_ROW_IDLE } from "@/core/helpers/dnd/createDndSingleRowEvents";
 import { TSingleRowState } from "@/core/helpers/dnd/types";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizontal";
 import { ProjectWiki } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -60,7 +59,7 @@ function WikiTab({ changeTab, wiki }: IWikiTabProps) {
                 container.appendChild(preview);
             },
         });
-    }, [wiki, order, forbidden]);
+    }, [wiki, order, forbidden, modeType]);
 
     return (
         <Box position="relative" ref={outerRef}>
@@ -78,19 +77,10 @@ interface IWikiTabDisplayProps {
 
 const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayProps) => {
     const [t] = useTranslation();
-    const { projectUID, modeType, wikiTabListId } = useBoardWiki();
+    const { projectUID, modeType } = useBoardWiki();
     const forbidden = wiki.useField("forbidden");
     const title = wiki.useField("title");
-    const { onPointerDown } = useGrabbingScrollHorizontal(wikiTabListId);
     const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki({ interceptToast: true });
-
-    const scrollHorizontal = (event: React.PointerEvent<HTMLElement>) => {
-        if (modeType !== "view") {
-            return;
-        }
-
-        onPointerDown(event);
-    };
 
     const handleTriggerClick = useCallback(() => {
         if (forbidden) {
@@ -131,14 +121,12 @@ const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayP
                 value={wiki.uid}
                 id={`board-wiki-${wiki.uid}-tab`}
                 disabled={forbidden}
-                onPointerDown={scrollHorizontal}
                 className={cn("cursor-pointer ring-primary", modeType === "delete" && "pr-1")}
                 onClick={handleTriggerClick}
+                ref={draggableRef}
             >
                 <Tooltip.Trigger asChild>
-                    <span className="max-w-40 truncate" onPointerDown={scrollHorizontal} ref={draggableRef}>
-                        {forbidden ? t("wiki.Private") : title}
-                    </span>
+                    <span className="max-w-40 truncate">{forbidden ? t("wiki.Private") : title}</span>
                 </Tooltip.Trigger>
                 {modeType === "delete" && (
                     <Button

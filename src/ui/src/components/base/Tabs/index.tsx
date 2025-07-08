@@ -41,6 +41,7 @@ export interface ITabsContext {
     setActiveTabBounds: React.Dispatch<React.SetStateAction<{ left: number; width: number }>>;
     setTabRef: (id: string, element: HTMLButtonElement | null) => void;
     handleTabClick: (value: string) => void;
+    updateUI: React.DispatchWithoutAction;
 }
 
 interface IProviderProps {
@@ -57,6 +58,7 @@ const initialContext = {
     setActiveTabBounds: () => {},
     setTabRef: () => {},
     handleTabClick: () => {},
+    updateUI: () => {},
 };
 
 const TabsContext = React.createContext<ITabsContext>(initialContext);
@@ -69,6 +71,7 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
     });
     const tabListRef = React.useRef<HTMLDivElement | null>(null);
     const tabRefs = React.useRef<Record<string, HTMLButtonElement | null>>({});
+    const [uiUpdated, updateUI] = React.useReducer((x) => x + 1, 0);
 
     const setTabRef = (value: string, element: HTMLButtonElement | null) => {
         tabRefs.current[value] = element;
@@ -95,7 +98,7 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
                 width: tabRect.width,
             });
         }
-    }, [activeValue]);
+    }, [activeValue, uiUpdated]);
 
     const handleTabClick = (value: string) => {
         setActiveValue(value);
@@ -112,6 +115,7 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
                 setActiveTabBounds,
                 setTabRef,
                 handleTabClick,
+                updateUI,
             }}
         >
             {children}
@@ -120,9 +124,17 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
 };
 Provider.displayName = "TabsProvider";
 
+const useTabsContext = () => {
+    const context = React.useContext(TabsContext);
+    if (!context) {
+        throw new Error("useTabsContext must be used within a TabsProvider");
+    }
+    return context;
+};
+
 const List = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElement> & VariantProps<typeof TabsVariants>>(
     ({ className, variant, size, children, ...props }, ref) => {
-        const { activeTabBounds, tabListRef } = React.useContext(TabsContext);
+        const { activeTabBounds, tabListRef } = useTabsContext();
 
         return (
             <div ref={composeRefs(tabListRef, ref)} className={cn(TabsVariants({ variant, size }), className)} {...props}>
@@ -183,7 +195,7 @@ export interface ITabTrigger extends React.HTMLAttributes<HTMLButtonElement>, Va
 }
 
 const Trigger = React.forwardRef<HTMLButtonElement, ITabTrigger>(({ value, className, variant, size, children, ...props }, ref) => {
-    const { activeValue, setTabRef, handleTabClick } = React.useContext(TabsContext);
+    const { activeValue, setTabRef, handleTabClick } = useTabsContext();
 
     return (
         <button
@@ -217,7 +229,7 @@ export interface TabsContentProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 const Content = React.forwardRef<HTMLDivElement, TabsContentProps>(({ className, value, children, ...props }, ref) => {
-    const { activeValue } = React.useContext(TabsContext);
+    const { activeValue } = useTabsContext();
     const isActive = value === activeValue;
 
     if (!isActive) {
@@ -245,4 +257,4 @@ const Content = React.forwardRef<HTMLDivElement, TabsContentProps>(({ className,
 });
 Content.displayName = "TabsContent";
 
-export { Provider, List, Trigger, Content, TabsVariants };
+export { Provider, useTabsContext, List, Trigger, Content, TabsVariants };
