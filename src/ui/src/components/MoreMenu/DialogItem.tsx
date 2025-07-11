@@ -21,12 +21,12 @@ function MoreMenuDialogItem({ onSave, onOpenChange, ...props }: IMoreMenuDialogI
 
     return (
         <MoreMenuItemProvider isOpened={isOpened} setIsOpened={setIsOpened} onSave={onSave} onOpenChange={onOpenChange}>
-            <MoreMenuDialogItemInner {...props} />
+            <MoreMenuDialogItemDisplay {...props} />
         </MoreMenuItemProvider>
     );
 }
 
-function MoreMenuDialogItemInner({
+function MoreMenuDialogItemDisplay({
     modal,
     menuName,
     contentProps,

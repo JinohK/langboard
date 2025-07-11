@@ -20,7 +20,7 @@ export function SkeletonWikiTabList() {
 }
 
 const WikiTabList = memo(() => {
-    const { projectUID, wikis: flatWikis, socket, modeType, changeTab } = useBoardWiki();
+    const { projectUID, wikis: flatWikis, socket, modeType } = useBoardWiki();
     const wikisMap = useMemo<Record<string, ProjectWiki.TModel>>(() => {
         const map: Record<string, ProjectWiki.TModel> = {};
         flatWikis.forEach((wiki) => {
@@ -72,7 +72,7 @@ const WikiTabList = memo(() => {
         });
     }, [flatWikis, wikisMap, modeType]);
 
-    return wikis.map((wiki) => <WikiTab key={`board-wiki-${wiki.uid}-tab`} changeTab={changeTab} wiki={wiki} />);
+    return wikis.map((wiki) => <WikiTab key={`board-wiki-${wiki.uid}-tab`} wiki={wiki} />);
 });
 
 export default WikiTabList;

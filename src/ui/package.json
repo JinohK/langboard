@@ -47,6 +47,7 @@
     "@platejs/selection": "^49.0.15",
     "@platejs/slash-command": "^49.0.0",
     "@platejs/slate": "^49.0.2",
+    "@platejs/tabbable": "^49.0.0",
     "@platejs/table": "^49.0.1",
     "@platejs/tag": "^49.0.0",
     "@platejs/toc": "^49.0.0",

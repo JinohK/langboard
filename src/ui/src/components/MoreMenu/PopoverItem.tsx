@@ -21,12 +21,12 @@ function MoreMenuPopoverItem({ onSave, onOpenChange, ...props }: IMoreMenuPopove
 
     return (
         <MoreMenuItemProvider isOpened={isOpened} setIsOpened={setIsOpened} onSave={onSave} onOpenChange={onOpenChange}>
-            <MoreMenuPopoverItemInner {...props} />
+            <MoreMenuPopoverItemDisplay {...props} />
         </MoreMenuItemProvider>
     );
 }
 
-function MoreMenuPopoverItemInner({
+function MoreMenuPopoverItemDisplay({
     modal,
     menuName,
     contentProps,

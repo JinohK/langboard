@@ -63,9 +63,9 @@ function GlobalRelationshipDescription() {
                 <Flex cursor="pointer" justify="center" items="center" gap="1" position="relative" onClick={() => changeMode("edit")}>
                     <Box
                         as="span"
-                        className={cn("max-w-[calc(100%_-_theme(spacing.6))] truncate", !description.length && "text-muted-foreground/70")}
+                        className={cn("max-w-[calc(100%_-_theme(spacing.6))] truncate", !description?.length && "text-muted-foreground/70")}
                     >
-                        {description.length ? description : t("settings.No description")}
+                        {description?.length ? description : t("settings.No description")}
                     </Box>
                     <Box position="relative">
                         <Box position="absolute" left="2" className="top-1/2 -translate-y-1/2">

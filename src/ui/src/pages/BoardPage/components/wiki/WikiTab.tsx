@@ -15,7 +15,6 @@ import { useTranslation } from "react-i18next";
 import invariant from "tiny-invariant";
 
 export interface IWikiTabProps {
-    changeTab: (uid: string) => void;
     wiki: ProjectWiki.TModel;
 }
 
@@ -23,7 +22,7 @@ export function SkeletonWikiTab() {
     return <Skeleton h="8" w={{ initial: "14", sm: "20", md: "28" }} />;
 }
 
-function WikiTab({ changeTab, wiki }: IWikiTabProps) {
+function WikiTab({ wiki }: IWikiTabProps) {
     const { modeType } = useBoardWiki();
     const [state, setState] = useState<TSingleRowState>(SINGLE_ROW_IDLE);
     const order = wiki.useField("order");
@@ -64,20 +63,19 @@ function WikiTab({ changeTab, wiki }: IWikiTabProps) {
     return (
         <Box position="relative" ref={outerRef}>
             {state.type === "is-over" && <DropIndicator edge={state.closestEdge} gap="4px" />}
-            <WikiTabDisplay changeTab={changeTab} wiki={wiki} draggableRef={draggableRef} />
+            <WikiTabDisplay wiki={wiki} draggableRef={draggableRef} />
         </Box>
     );
 }
 
 interface IWikiTabDisplayProps {
-    changeTab: (uid: string) => void;
     wiki: ProjectWiki.TModel;
     draggableRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
-const WikiTabDisplay = memo(({ changeTab, wiki, draggableRef }: IWikiTabDisplayProps) => {
+const WikiTabDisplay = memo(({ wiki, draggableRef }: IWikiTabDisplayProps) => {
     const [t] = useTranslation();
-    const { projectUID, modeType } = useBoardWiki();
+    const { projectUID, modeType, changeTab } = useBoardWiki();
     const forbidden = wiki.useField("forbidden");
     const title = wiki.useField("title");
     const { mutateAsync: deleteWikiMutateAsync } = useDeleteWiki({ interceptToast: true });

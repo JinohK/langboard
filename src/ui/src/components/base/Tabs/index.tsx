@@ -97,6 +97,11 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
                 left: tabRect.left - containerRect.left,
                 width: tabRect.width,
             });
+        } else {
+            setActiveTabBounds({
+                left: 0,
+                width: 0,
+            });
         }
     }, [activeValue, uiUpdated]);
 

@@ -8,7 +8,7 @@ export interface IValidatorContext {
 }
 
 class _Subscription {
-    #subscriptions: Map<string, Map<string, [WeakSet<ISocketClient>, Set<ISocketClient>]>>;
+    #subscriptions: Map<string, Map<string, Set<ISocketClient>>>;
     #validators: Map<string, (context: IValidatorContext) => Promise<bool>>;
 
     constructor() {
@@ -34,16 +34,11 @@ class _Subscription {
         if (!subscriberSet) {
             return;
         }
-        const [subscribers, subscribersIteratable] = subscriberSet;
+        const subscribers = subscriberSet;
 
-        const arraySubscribers = Array.from(subscribersIteratable);
+        const arraySubscribers = Array.from(subscribers);
         for (let i = 0; i < arraySubscribers.length; ++i) {
             const subscriber = arraySubscribers[i];
-            if (!subscribers.has(subscriber)) {
-                subscribers.delete(subscriber);
-                subscribersIteratable.delete(subscriber);
-                continue;
-            }
 
             subscriber.send({
                 event,
@@ -54,7 +49,7 @@ class _Subscription {
         }
     }
 
-    public async subscribe(ws: ISocketClient, topic: ESocketTopic | string, topicId: string | string[]) {
+    public async subscribe(ws: ISocketClient, topic: ESocketTopic | string, topicIds: string | string[]) {
         topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         if (!this.#subscriptions.has(topic)) {
@@ -63,30 +58,29 @@ class _Subscription {
 
         const subscriptions = this.#subscriptions.get(topic)!;
 
-        topicId = Utils.Type.isArray(topicId) ? topicId : [topicId];
+        topicIds = Utils.Type.isArray(topicIds) ? topicIds : [topicIds];
         const subscribedIDs: string[] = [];
-        for (let i = 0; i < topicId.length; ++i) {
-            const id = topicId[i];
-            if (!Utils.Type.isString(id) || !id.length) {
+        for (let i = 0; i < topicIds.length; ++i) {
+            const topicId = topicIds[i];
+            if (!Utils.Type.isString(topicId) || !topicId.length) {
                 continue;
             }
 
             if (this.#validators.has(topic)) {
                 const validator = this.#validators.get(topic)!;
-                if (!(await validator({ client: ws, topicId: id }))) {
+                if (!(await validator({ client: ws, topicId }))) {
                     continue;
                 }
             }
 
-            if (!subscriptions.has(id)) {
-                subscriptions.set(id, [new WeakSet(), new Set()]);
+            if (!subscriptions.has(topicId)) {
+                subscriptions.set(topicId, new Set());
             }
 
-            const [subscribers, subscribersIteratable] = subscriptions.get(id)!;
+            const subscribers = subscriptions.get(topicId)!;
 
             subscribers.add(ws);
-            subscribersIteratable.add(ws);
-            subscribedIDs.push(id);
+            subscribedIDs.push(topicId);
         }
 
         ws.send({
@@ -111,10 +105,9 @@ class _Subscription {
             if (!subscriberSet) {
                 continue;
             }
-            const [subscribers, subscribersIteratable] = subscriberSet;
+            const subscribers = subscriberSet;
 
             subscribers.delete(ws);
-            subscribersIteratable.delete(ws);
         }
 
         if (!subscriptions.size) {
@@ -130,22 +123,20 @@ class _Subscription {
 
     public async unsubscribeAll(ws: ISocketClient) {
         const topics = Array.from(this.#subscriptions.keys());
-        for (let i = 0; i < this.#subscriptions.size; ++i) {
+        for (let i = 0; i < topics.length; ++i) {
             const topic = topics[i];
             const subscriptions = this.#subscriptions.get(topic);
             if (!subscriptions) {
                 continue;
             }
 
-            subscriptions.forEach(([subscribers, subscribersIteratable]) => {
+            subscriptions.forEach((subscribers) => {
                 subscribers.delete(ws);
-                subscribersIteratable.delete(ws);
             });
-        }
 
-        for (let i = 0; i < topics.length; ++i) {
-            const topic = topics[i];
-            this.#subscriptions.delete(topic);
+            if (!subscriptions.size) {
+                this.#subscriptions.delete(topic);
+            }
         }
     }
 }

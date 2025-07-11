@@ -13,7 +13,6 @@ class SocketClient implements ISocketClient {
     #ws: WebSocket;
     #request: IncomingMessage;
     #user: User;
-    #subscriptions: Map<string, string[]>;
     #hocusDocNames: Set<string>;
     #eventListeners: Partial<Record<keyof WebSocket.WebSocketEventMap, ((...args: any[]) => void)[]>>;
 
@@ -25,7 +24,6 @@ class SocketClient implements ISocketClient {
         this.#ws = ws;
         this.#request = request;
         this.#user = user;
-        this.#subscriptions = new Map();
         this.#hocusDocNames = new Set();
         this.#eventListeners = {
             close: [() => this.onClose()],
@@ -39,10 +37,6 @@ class SocketClient implements ISocketClient {
                 this.#ws.addEventListener(event, listener);
             });
         });
-    }
-
-    public get getSubscriptions(): Map<string, string[]> {
-        return this.#subscriptions;
     }
 
     public async subscribe(topic: ESocketTopic | string, topicId: string | string[]) {
@@ -161,8 +155,6 @@ class SocketClient implements ISocketClient {
         this.#ws = undefined!;
         this.#request = undefined!;
         this.#user = undefined!;
-        this.#subscriptions.clear();
-        this.#subscriptions = undefined!;
     }
 }
 
