@@ -73,7 +73,7 @@ async def sign_in(form: SignInForm, service: Service = Service.scope()) -> JsonR
         max_age=Env.JWT_RT_EXPIRATION * 60 * 60 * 24,
         domain=DOMAIN if DOMAIN else None,
         httponly=True,
-        secure=True,
+        secure=Env.PUBLIC_UI_URL.startswith("https://"),
     )
 
     return response
