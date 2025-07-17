@@ -2,7 +2,6 @@ import { IBaseModel } from "@/core/models/Base";
 import {
     IBaseActivity,
     IChangesInActivityHistory,
-    IUpdatedAssignedBotsInActivityHistory,
     IUpdatedAssignedUsersInActivityHistory,
     IUserInActivityHistory,
 } from "@/core/models/activities/base.type";
@@ -30,17 +29,8 @@ export interface IProjectCreatedActivity extends IBaseProjectActivity<IProjectAc
 export interface IProjectUpdatedActivity extends IBaseProjectActivity<IProjectActivityHistory & Required<IChangesInActivityHistory>> {
     activity_type: EProjectActivityType.ProjectUpdated;
 }
-export interface IProjectAssignedBotsUpdatedActivity extends IBaseProjectActivity<IProjectActivityHistory & IUpdatedAssignedBotsInActivityHistory> {
-    activity_type: EProjectActivityType.ProjectAssignedBotsUpdated;
-}
 export interface IProjectAssignedUsersUpdatedActivity extends IBaseProjectActivity<IProjectActivityHistory & IUpdatedAssignedUsersInActivityHistory> {
     activity_type: EProjectActivityType.ProjectAssignedUsersUpdated;
-}
-export interface IProjectBotActivatedActivity extends IBaseProjectActivity<IProjectActivityHistory & Required<IChangesInActivityHistory>> {
-    activity_type: EProjectActivityType.ProjectBotActivated;
-}
-export interface IProjectBotDeactivatedActivity extends IBaseProjectActivity<IProjectActivityHistory & Required<IChangesInActivityHistory>> {
-    activity_type: EProjectActivityType.ProjectBotDeactivated;
 }
 export interface IProjectInvitedUserAcceptedActivity extends IBaseProjectActivity<IProjectActivityHistory & { user: IUserInActivityHistory }> {
     activity_type: EProjectActivityType.ProjectInvitedUserAccepted;
@@ -52,9 +42,6 @@ export interface IProjectDeletedActivity extends IBaseProjectActivity<IProjectAc
 export type TProjectActivityInterface =
     | IProjectCreatedActivity
     | IProjectUpdatedActivity
-    | IProjectAssignedBotsUpdatedActivity
     | IProjectAssignedUsersUpdatedActivity
-    | IProjectBotActivatedActivity
-    | IProjectBotDeactivatedActivity
     | IProjectInvitedUserAcceptedActivity
     | IProjectDeletedActivity;

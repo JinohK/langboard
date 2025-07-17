@@ -13,7 +13,6 @@ import BotAvatar from "@/pages/SettingsPage/components/bots/BotAvatar";
 import BotIpWhitelist from "@/pages/SettingsPage/components/bots/BotIpWhitelist";
 import BotName from "@/pages/SettingsPage/components/bots/BotName";
 import BotPrompt from "@/pages/SettingsPage/components/bots/BotPrompt";
-import BotTriggerConditionList from "@/pages/SettingsPage/components/bots/BotTriggerConditionList";
 import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
 import { memo, useEffect } from "react";
 import { useTranslation } from "react-i18next";
@@ -70,11 +69,6 @@ const BotDetails = memo(({ bot }: IBotDetailsProps) => {
                         <BotAppApiToken />
                         <BotIpWhitelist />
                         <BotPrompt />
-                    </Flex>
-                </Flex>
-                <Flex justify="center" mt="3">
-                    <Flex justify="center" w="full" className="max-w-screen-md">
-                        <BotTriggerConditionList />
                     </Flex>
                 </Flex>
             </Flex>

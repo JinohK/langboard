@@ -1,22 +1,13 @@
-import { Button, ButtonProps, Dialog, DropdownMenu, Flex, SubmitButton } from "@/components/base";
+import { Button, Dialog, DropdownMenu, Flex, SubmitButton } from "@/components/base";
 import { MoreMenuItemProvider, useMoreMenuItem } from "@/components/MoreMenu/ItemProvider";
 import { useMoreMenu } from "@/components/MoreMenu/Provider";
+import { TMoreMenuItemProps } from "@/components/MoreMenu/types";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-export interface IMoreMenuDialogItemProps {
-    modal?: bool;
-    menuName: React.ReactNode;
-    contentProps?: React.ComponentProps<typeof Dialog.Content>;
-    saveButtonProps?: Omit<ButtonProps, "type">;
-    cancelButtonProps?: ButtonProps;
-    saveText?: string;
-    onSave: (endCallback: (shouldClose: bool) => void) => void;
-    onOpenChange?: (opened: bool) => void;
-    children?: React.ReactNode;
-}
+export type TMoreMenuDialogItemProps = TMoreMenuItemProps<React.ComponentProps<typeof Dialog.Content>>;
 
-function MoreMenuDialogItem({ onSave, onOpenChange, ...props }: IMoreMenuDialogItemProps): JSX.Element {
+function MoreMenuDialogItem({ onSave, onOpenChange, ...props }: TMoreMenuDialogItemProps): JSX.Element {
     const [isOpened, setIsOpened] = useState(false);
 
     return (
@@ -30,11 +21,13 @@ function MoreMenuDialogItemDisplay({
     modal,
     menuName,
     contentProps,
+    useButtons = true,
     saveButtonProps,
     cancelButtonProps,
     saveText,
+    cancelText,
     children,
-}: Omit<IMoreMenuDialogItemProps, "onSave" | "onOpenChange">): JSX.Element {
+}: Omit<TMoreMenuDialogItemProps, "onSave" | "onOpenChange">): JSX.Element {
     const [t] = useTranslation();
     const { isOpened, setIsOpened, save } = useMoreMenuItem();
     const { isValidating } = useMoreMenu();
@@ -58,14 +51,16 @@ function MoreMenuDialogItemDisplay({
                 <Dialog.Title hidden />
                 <Dialog.Description hidden />
                 {children}
-                <Flex items="center" justify="end" gap="1" mt="2">
-                    <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={handleClose} {...cancelButtonProps}>
-                        {t("common.Cancel")}
-                    </Button>
-                    <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating} {...saveButtonProps}>
-                        {saveText ?? t("common.Save")}
-                    </SubmitButton>
-                </Flex>
+                {useButtons && (
+                    <Flex items="center" justify="end" gap="1" mt="2">
+                        <Button type="button" variant="secondary" size="sm" disabled={isValidating} onClick={handleClose} {...cancelButtonProps}>
+                            {cancelText ?? t("common.Cancel")}
+                        </Button>
+                        <SubmitButton type="button" size="sm" onClick={save} isValidating={isValidating} {...saveButtonProps}>
+                            {saveText ?? t("common.Save")}
+                        </SubmitButton>
+                    </Flex>
+                )}
             </Dialog.Content>
         </Dialog.Root>
     );

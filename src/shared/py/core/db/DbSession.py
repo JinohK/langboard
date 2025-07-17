@@ -2,7 +2,7 @@ from contextlib import contextmanager
 from time import sleep
 from typing import Any, Dict, Generic, Iterable, Mapping, Optional, Sequence, TypeVar, Union, cast, overload
 import psycopg.errors
-from sqlalchemy import Delete, Insert, IteratorResult, Update
+from sqlalchemy import CompoundSelect, CursorResult, Delete, Insert, IteratorResult, Update
 from sqlalchemy import Sequence as SqlSequence
 from sqlalchemy.engine.result import ScalarResult, TupleResult
 from sqlalchemy.exc import OperationalError
@@ -217,6 +217,17 @@ class DbSession:
     @overload
     def exec(
         self,
+        statement: CompoundSelect[_TSelectParam],
+        *,
+        params: Optional[Union[Mapping[str, Any], SqlSequence[Mapping[str, Any]]]] = None,
+        execution_options: Mapping[str, Any] = EMPTY_DICT,
+        bind_arguments: Optional[Dict[str, Any]] = None,
+        _parent_execute_state: Optional[Any] = None,
+        _add_event: Optional[Any] = None,
+    ) -> Result[_TSelectParam]: ...
+    @overload
+    def exec(
+        self,
         statement: Insert | Insert[_TSelectParam],
         *,
         params: Optional[Union[Mapping[str, Any], SqlSequence[Mapping[str, Any]]]] = None,
@@ -287,7 +298,11 @@ class DbSession:
         ):
             statement = update(statement.table).values(deleted_at=SafeDateTime.now()).where(statement.whereclause)  # type: ignore
 
-        should_return_count = not isinstance(statement, Select) and not isinstance(statement, SelectOfScalar)
+        should_return_count = (
+            not isinstance(statement, Select)
+            and not isinstance(statement, SelectOfScalar)
+            and not isinstance(statement, CompoundSelect)
+        )
 
         if self.__readonly and should_return_count:
             raise Exception("Cannot execute non-select statements in a readonly database")
@@ -306,7 +321,7 @@ class DbSession:
         if should_return_count:
             return result.rowcount
 
-        if isinstance(result, (ScalarResult, TupleResult, IteratorResult)):
+        if isinstance(result, (ScalarResult, TupleResult, IteratorResult, CursorResult)):
             raw_records = result.all()
             result = Result(raw_records)
             return result

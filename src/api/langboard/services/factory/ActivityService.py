@@ -5,7 +5,7 @@ from core.schema import Pagination
 from core.service import BaseService
 from core.types import SafeDateTime
 from models import Bot, Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, User, UserActivity
-from models.BaseActivityModel import BaseActivityModel
+from models.bases import BaseActivityModel
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from ...core.service import ServiceHelper
 from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam

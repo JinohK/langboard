@@ -13,7 +13,7 @@ from ...core.storage import Storage
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
+from .forms import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
 
 
 @AppRouter.schema()
@@ -30,13 +30,11 @@ from .scopes import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, 
                         ProjectWiki,
                         {
                             "schema": {
-                                "assigned_bots": [Bot],
                                 "assigned_members": [User],
                             }
                         },
                     )
                 ],
-                "project_bots": [Bot],
                 "project_members": [User],
             }
         )
@@ -56,8 +54,7 @@ async def get_project_wikis(
         return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
     wikis = await service.project_wiki.get_board_list(user_or_bot, project_uid)
     project_members = await service.project.get_assigned_users(project, as_api=True)
-    project_bots = await service.project.get_assigned_bots(project, as_api=True)
-    return JsonResponse(content={"wikis": wikis, "project_members": project_members, "project_bots": project_bots})
+    return JsonResponse(content={"wikis": wikis, "project_members": project_members})
 
 
 @AppRouter.schema()
@@ -73,7 +70,6 @@ async def get_project_wikis(
                     ProjectWiki,
                     {
                         "schema": {
-                            "assigned_bots": [Bot],
                             "assigned_members": [User],
                         }
                     },
@@ -82,7 +78,7 @@ async def get_project_wikis(
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2010)
+        .err(404, ApiErrorCode.NF2008)
         .get()
     ),
 )
@@ -96,12 +92,12 @@ async def get_project_wiki_details(
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (ProjectWiki, wiki_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
     _, project_wiki = params
 
     api_wiki = await service.project_wiki.convert_to_api_response(user_or_bot, project_wiki)
     if not api_wiki:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"wiki": api_wiki})
 
@@ -119,7 +115,6 @@ async def get_project_wiki_details(
                     ProjectWiki,
                     {
                         "schema": {
-                            "assigned_bots": [Bot],
                             "assigned_members": [User],
                         }
                     },
@@ -161,8 +156,8 @@ async def create_project_wiki(
         )
         .auth()
         .forbidden()
-        .err(403, ApiErrorCode.PE2006)
-        .err(404, ApiErrorCode.NF2010)
+        .err(403, ApiErrorCode.PE2005)
+        .err(404, ApiErrorCode.NF2008)
         .get()
     ),
 )
@@ -177,10 +172,10 @@ async def change_project_wiki_details(
 ) -> JsonResponse:
     project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
     if not project_wiki:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
-    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
-        return JsonResponse(content=ApiErrorCode.PE2006, status_code=status.HTTP_403_FORBIDDEN)
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     form_dict = {}
     for key in ChangeWikiDetailsForm.model_fields:
@@ -191,7 +186,7 @@ async def change_project_wiki_details(
 
     result = await service.project_wiki.update(user_or_bot, project_uid, wiki_uid, form_dict)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     if result is True:
         response = {}
@@ -212,7 +207,7 @@ async def change_project_wiki_details(
     "/board/{project_uid}/wiki/{wiki_uid}/public",
     tags=["Board.Wiki"],
     description="Change project wiki public status.",
-    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2008).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
@@ -225,14 +220,14 @@ async def change_project_wiki_public(
 ) -> JsonResponse:
     project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
     if not project_wiki:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
-    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
-        return JsonResponse(content=ApiErrorCode.PE2006, status_code=status.HTTP_403_FORBIDDEN)
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.project_wiki.change_public(user_or_bot, project_uid, project_wiki, form.is_public)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -242,7 +237,7 @@ async def change_project_wiki_public(
     "/board/{project_uid}/wiki/{wiki_uid}/assignees",
     tags=["Board.Wiki"],
     description="Update project wiki assignees.",
-    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2008).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
@@ -255,17 +250,17 @@ async def update_project_wiki_assignees(
 ) -> JsonResponse:
     project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
     if not project_wiki:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     if not await service.project_wiki.is_assigned(user, project_wiki):
-        return JsonResponse(content=ApiErrorCode.PE2006, status_code=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     if not form.assignees:
         raise MissingException("body", "assignees")
 
     result = await service.project_wiki.update_assignees(user, project_uid, project_wiki, form.assignees)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -275,7 +270,7 @@ async def update_project_wiki_assignees(
     "/board/{project_uid}/wiki/{wiki_uid}/order",
     tags=["Board.Wiki"],
     description="Change project wiki order.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2010).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2008).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
@@ -284,7 +279,7 @@ async def change_project_wiki_order(
 ) -> JsonResponse:
     result = await service.project_wiki.change_order(project_uid, wiki_uid, form.order)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -303,7 +298,7 @@ async def change_project_wiki_order(
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2010)
+        .err(404, ApiErrorCode.NF2008)
         .err(500, ApiErrorCode.OP1002)
         .get()
     ),
@@ -326,7 +321,7 @@ async def upload_wiki_attachment(
 
     result = await service.project_wiki.upload_attachment(user, project_uid, wiki_uid, file_model)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(
         content={**result.api_response(), "user": user.api_response()},
@@ -339,7 +334,7 @@ async def upload_wiki_attachment(
     "/board/{project_uid}/wiki/{wiki_uid}",
     tags=["Board.Wiki"],
     description="Delete project wiki.",
-    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2006).err(404, ApiErrorCode.NF2010).get(),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2005).err(404, ApiErrorCode.NF2008).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
@@ -348,13 +343,13 @@ async def delete_project_wiki(
 ) -> JsonResponse:
     project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
     if not project_wiki:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
-    if not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
-        return JsonResponse(content=ApiErrorCode.PE2006, status_code=status.HTTP_403_FORBIDDEN)
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, project_wiki):
+        return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.project_wiki.delete(user_or_bot, project_uid, project_wiki)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2010, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()

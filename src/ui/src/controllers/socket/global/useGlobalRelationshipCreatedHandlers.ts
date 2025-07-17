@@ -4,7 +4,7 @@ import { GlobalRelationshipType } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IGlobalRelationshipCreatedRawResponse {
-    global_relationships: GlobalRelationshipType.Interface;
+    global_relationship: GlobalRelationshipType.Interface;
 }
 
 const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) => {
@@ -15,7 +15,7 @@ const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandle
             name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.CREATED,
             callback,
             responseConverter: (data) => {
-                GlobalRelationshipType.Model.fromOne(data.global_relationships, true);
+                GlobalRelationshipType.Model.fromOne(data.global_relationship, true);
                 return {};
             },
         },

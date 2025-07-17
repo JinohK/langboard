@@ -1,27 +1,9 @@
 {
-  "project": {
-    "Category": "Project",
-    "conditions": {
-      "project_updated": "Updated",
-      "project_deleted": "Deleted"
-    }
-  },
-
   "project_column": {
     "Category": "Project column",
     "conditions": {
-      "project_column_created": "Created",
       "project_column_name_changed": "Name changed",
       "project_column_deleted": "Deleted"
-    }
-  },
-
-  "project_label": {
-    "Category": "Project label",
-    "conditions": {
-      "project_label_created": "Created",
-      "project_label_updated": "Updated",
-      "project_label_deleted": "Deleted"
     }
   },
 
@@ -80,16 +62,6 @@
       "card_checkitem_unchecked": "Unchecked",
       "card_checkitem_cardified": "Cardified",
       "card_checkitem_deleted": "Deleted"
-    }
-  },
-
-  "project_wiki": {
-    "Category": "Project wiki",
-    "conditions": {
-      "wiki_created": "Created",
-      "wiki_updated": "Updated",
-      "wiki_publicity_changed": "Publicity changed",
-      "wiki_deleted": "Deleted"
     }
   }
 }

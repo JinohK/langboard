@@ -7,6 +7,7 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
+import BoardColumnMoreMenuBotScope from "@/pages/BoardPage/components/board/BoardColumnMoreMenuBotScope";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -45,6 +46,7 @@ const BoardColumnMoreMenu = memo(({ column, isEditingState }: IBoardColumnMoreMe
                 showTriggerText
                 onlyPopover
             />
+            {canEdit && <BoardColumnMoreMenuBotScope column={column} />}
             {canEdit && !column.is_archive && <BoardColumnMoreMenuDelete column={column} />}
         </MoreMenu.Root>
     );
@@ -101,6 +103,6 @@ const BoardColumnMoreMenuDelete = memo(({ column }: Omit<IBoardColumnMoreMenuPro
         </MoreMenu.PopoverItem>
     );
 });
-BoardColumnMoreMenu.displayName = "Board.ColumnMoreDelete";
+BoardColumnMoreMenuDelete.displayName = "Board.ColumnMoreDelete";
 
 export default BoardColumnMoreMenu;

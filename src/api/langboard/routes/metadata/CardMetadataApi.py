@@ -17,14 +17,14 @@ from .MetadataHelper import create_metadata_api_schema
     "/metadata/project/{project_uid}/card/{card_uid}",
     tags=["Metadata"],
     description="Get card metadata.",
-    responses=create_metadata_api_schema("list").err(404, ApiErrorCode.NF2004).get(),
+    responses=create_metadata_api_schema("list").err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_metadata(project_uid: str, card_uid: str, service: Service = Service.scope()) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
     _, card = params
 
     metadata = await service.metadata.get_list(CardMetadata, card, as_api=True, as_dict=True)
@@ -36,7 +36,7 @@ async def get_card_metadata(project_uid: str, card_uid: str, service: Service = 
     "/metadata/project/{project_uid}/card/{card_uid}/key",
     tags=["Metadata"],
     description="Get card metadata by key.",
-    responses=create_metadata_api_schema("key").err(404, ApiErrorCode.NF2004).get(),
+    responses=create_metadata_api_schema("key").err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
@@ -45,7 +45,7 @@ async def get_card_metadata_by_key(
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
     _, card = params
 
     metadata = await service.metadata.get_by_key(CardMetadata, card, get_query.key, as_api=False)
@@ -59,7 +59,7 @@ async def get_card_metadata_by_key(
     "/metadata/project/{project_uid}/card/{card_uid}",
     tags=["Metadata"],
     description="Save card metadata.",
-    responses=create_metadata_api_schema().err(404, ApiErrorCode.NF2018).get(),
+    responses=create_metadata_api_schema().err(404, ApiErrorCode.NF2016).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -68,12 +68,12 @@ async def save_card_metadata(
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2016, status_code=status.HTTP_404_NOT_FOUND)
     _, card = params
 
     metadata = await service.metadata.save(CardMetadata, card, form.key, form.value, form.old_key)
     if metadata is None:
-        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2016, status_code=status.HTTP_404_NOT_FOUND)
 
     await MetadataPublisher.updated_metadata(SocketTopic.BoardCard, card.get_uid(), form.key, form.value, form.old_key)
     return JsonResponse()
@@ -84,7 +84,7 @@ async def save_card_metadata(
     "/metadata/project/{project_uid}/card/{card_uid}",
     tags=["Metadata"],
     description="Delete card metadata.",
-    responses=create_metadata_api_schema().err(404, ApiErrorCode.NF2004).get(),
+    responses=create_metadata_api_schema().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -93,7 +93,7 @@ async def delete_card_metadata(
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
     _, card = params
 
     await service.metadata.delete(CardMetadata, card, form.keys)

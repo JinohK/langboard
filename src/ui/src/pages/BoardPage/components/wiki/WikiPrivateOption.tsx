@@ -3,13 +3,13 @@ import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
 import useChangeWikiPublic from "@/controllers/api/wiki/useChangeWikiPublic";
 import useUpdateWikiAssignees from "@/controllers/api/wiki/useUpdateWikiAssignees";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { BotModel, ProjectWiki, User } from "@/core/models";
+import { ProjectWiki, User } from "@/core/models";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ROUTES } from "@/core/routing/constants";
-import MultiSelectAssignee, { TSaveHandler } from "@/components/MultiSelectAssignee";
+import MultiSelectAssignee, { IFormProps, TSaveHandler } from "@/components/MultiSelectAssignee";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { EHttpStatus } from "@langboard/core/enums";
@@ -34,26 +34,21 @@ export function SkeletonWikiPrivateOption() {
 const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) => {
     const [t] = useTranslation();
     const navigate = usePageNavigateRef();
-    const { projectUID, projectBots, projectMembers, currentUser } = useBoardWiki();
+    const { projectUID, projectMembers, currentUser } = useBoardWiki();
     const isPublic = wiki.useField("is_public");
     const forbidden = wiki.useField("forbidden");
     const isChangedTabRef = useRef(false);
-    const assignedBots = wiki.useForeignField("assigned_bots");
     const assignedMembers = wiki.useForeignField("assigned_members");
     const groups = currentUser.useForeignField("user_groups");
-    const allItems = useMemo(() => [...projectBots, ...projectMembers].filter((item) => item.uid !== currentUser.uid), [projectBots, projectMembers]);
-    const showableAssignees = useMemo(() => [...assignedBots, ...assignedMembers], [assignedBots, assignedMembers]);
-    const originalAssignees = useMemo(
-        () => [...assignedBots, ...assignedMembers].filter((item) => item.uid !== currentUser.uid),
-        [assignedBots, assignedMembers]
-    );
+    const allItems = useMemo(() => projectMembers.filter((item) => item.uid !== currentUser.uid), [projectMembers]);
+    const originalAssignees = useMemo(() => assignedMembers.filter((item) => item.uid !== currentUser.uid), [assignedMembers]);
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: changeWikiPublicMutateAsync } = useChangeWikiPublic({ interceptToast: true });
     const { mutateAsync: updateWikiAssigneesMutateAsync } = useUpdateWikiAssignees({ interceptToast: true });
 
     useEffect(() => {
         if (forbidden && !isChangedTabRef.current) {
-            Toast.Add.error(t("errors.requests.PE2006"));
+            Toast.Add.error(t("errors.requests.PE2005"));
             changeTab("");
             isChangedTabRef.current = true;
         } else {
@@ -168,29 +163,16 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                     placeholder={t("wiki.Select members and bots...")}
                     allSelectables={allItems}
                     originalAssignees={originalAssignees}
-                    showableAssignees={showableAssignees}
+                    showableAssignees={assignedMembers}
                     tagContentProps={{
                         projectUID,
                     }}
                     addIconSize="6"
                     save={saveAssignees as TSaveHandler}
-                    createSearchText={(item) => {
-                        if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
-                            item = item as BotModel.TModel;
-                            return `${item.uid} ${item.name} ${item.bot_uname}`;
-                        } else {
-                            item = item as User.TModel;
-                            return `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`;
-                        }
-                    }}
+                    createSearchKeywords={((item: User.TModel) => [item.email, item.firstname, item.lastname]) as IFormProps["createSearchKeywords"]}
                     createLabel={(item) => {
-                        if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
-                            item = item as BotModel.TModel;
-                            return `${item.name} (${item.bot_uname})`;
-                        } else {
-                            item = item as User.TModel;
-                            return `${item.firstname} ${item.lastname}`.trim();
-                        }
+                        item = item as User.TModel;
+                        return `${item.firstname} ${item.lastname}`.trim();
                     }}
                     withUserGroups
                     groups={groups}

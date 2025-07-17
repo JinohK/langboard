@@ -1,10 +1,12 @@
-from core.db import DbSession, SqlBuilder
-from core.types import SafeDateTime, SnowflakeID
-from models import Bot, BotSchedule, Card, Project, ProjectColumn
-from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
+from core.db import BaseSqlModel, DbSession, SqlBuilder
+from core.types import SafeDateTime
+from models import Bot, Card, Project, ProjectColumn
+from models.bases import BaseBotScheduleModel
+from models.BotSchedule import BotSchedule, BotScheduleRunningType, BotScheduleStatus
 from ...ai import BotDefaultTrigger, BotScheduleHelper
 from ...core.broker import Broker
-from ...core.utils.ModelUtils import get_model_by_table_name
+from ...core.utils.BotUtils import BotUtils
+from ...core.utils.ModelUtils import get_models_by_base_class
 from ...publishers import ProjectBotPublisher
 from .utils import BotTaskDataHelper, BotTaskHelper
 from .utils.BotTaskHelper import logger
@@ -13,15 +15,15 @@ from .utils.BotTaskHelper import logger
 @BotTaskDataHelper.schema(
     BotDefaultTrigger.BotCronScheduled,
     {
-        "project_uid": "string",
-        "project_column_uid": "string",
+        "project_uid?": "string",
+        "project_column_uid?": "string",
         "card_uid?": "string",
         "scope": "string",
     },
 )
 @Broker.wrap_async_task_decorator
-async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule):
-    await _run_scheduler(bot, bot_schedule)
+async def bot_cron_scheduled(bot: Bot, bot_schedule: BotSchedule, schedule_model: BaseBotScheduleModel):
+    await _run_scheduler(bot, bot_schedule, schedule_model)
 
 
 async def run_scheduled_bots_cron(interval_str: str):
@@ -33,38 +35,44 @@ async def run_scheduled_bots_cron(interval_str: str):
         logger.error(f"Invalid interval string: {interval_str}")
         return
 
-    records = []
+    model_classes = get_models_by_base_class(BaseBotScheduleModel)
+    records: list[tuple[BaseBotScheduleModel, BotSchedule, Bot]] = []
     with DbSession.use(readonly=True) as db:
-        result = db.exec(
-            SqlBuilder.select.tables(BotSchedule, Bot)
-            .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
-            .where(
-                (BotSchedule.column("interval_str") == interval_str)
-                & (BotSchedule.column("status") == BotScheduleStatus.Started)
+        for model_class in model_classes:
+            result = db.exec(
+                SqlBuilder.select.tables(model_class, BotSchedule, Bot)
+                .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
+                .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
+                .where(
+                    (model_class.column("interval_str") == interval_str)
+                    & (model_class.column("status") == BotScheduleStatus.Started)
+                )
             )
-        )
-        records = result.all()
+            records.extend(result.all())
 
-    for bot_schedule, bot in records:
-        await _run_scheduler(bot, bot_schedule)
+    for schedule_model, bot_schedule, bot in records:
+        await _run_scheduler(bot, bot_schedule, schedule_model)
 
 
 async def _check_bot_schedule_runnable(interval_str: str):
     current_time = SafeDateTime.now()
-    records = []
+    model_classes = get_models_by_base_class(BaseBotScheduleModel)
+    records: list[tuple[BaseBotScheduleModel, BotSchedule, Bot]] = []
     with DbSession.use(readonly=True) as db:
-        result = db.exec(
-            SqlBuilder.select.tables(BotSchedule, Bot)
-            .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
-            .where(
-                (BotSchedule.column("status") == BotScheduleStatus.Pending)
-                & (BotSchedule.column("start_at") <= current_time)
-                & (BotSchedule.column("interval_str") == interval_str)
+        for model_class in model_classes:
+            result = db.exec(
+                SqlBuilder.select.tables(model_class, BotSchedule, Bot)
+                .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
+                .join(Bot, model_class.column("bot_id") == Bot.column("id"))
+                .where(
+                    (model_class.column("status") == BotScheduleStatus.Pending)
+                    & (model_class.column("start_at") <= current_time)
+                    & (model_class.column("interval_str") == interval_str)
+                )
             )
-        )
-        records = result.all()
+            records.extend(result.all())
 
-    for bot_schedule, bot in records:
+    for schedule_model, bot_schedule, bot in records:
         if bot_schedule.running_type == BotScheduleRunningType.Duration:
             if (
                 not bot_schedule.start_at
@@ -74,29 +82,38 @@ async def _check_bot_schedule_runnable(interval_str: str):
             ):
                 continue
 
-        await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Started)
+        await BotScheduleHelper.change_status(
+            schedule_model.__class__, schedule_model, BotScheduleStatus.Started, bot_schedule=bot_schedule
+        )
 
-        model = _get_target_model(bot_schedule.target_table, bot_schedule.target_id)
-        if model:
-            project = None
-            if isinstance(model, ProjectColumn) or isinstance(model, Card):
-                with DbSession.use(readonly=True) as db:
-                    result = db.exec(SqlBuilder.select.table(Project).where(Project.column("id") == model.project_id))
-                    project = result.first()
+        model = BotUtils.get_target_model_by_bot_model("schedule", schedule_model)
+        if not model:
+            continue
 
-            if project:
-                await ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
+        project = None
+        if isinstance(model, ProjectColumn) or isinstance(model, Card):
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(SqlBuilder.select.table(Project).where(Project.column("id") == model.project_id))
+                project = result.first()
 
-        await _run_scheduler(bot, bot_schedule)
+        if project:
+            await ProjectBotPublisher.rescheduled(
+                project, model.__tablename__, schedule_model, {"status": bot_schedule.status.value}
+            )
+
+        await _run_scheduler(bot, bot_schedule, schedule_model, model)
 
 
-async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
+async def _run_scheduler(
+    bot: Bot, bot_schedule: BotSchedule, schedule_model: BaseBotScheduleModel, model: BaseSqlModel | None = None
+):
     if bot_schedule.status != BotScheduleStatus.Started:
         return
 
-    model = _get_target_model(bot_schedule.target_table, bot_schedule.target_id)
     if not model:
-        return
+        model = BotUtils.get_target_model_by_bot_model("schedule", schedule_model)
+        if not model:
+            return
 
     project = None
     data = {}
@@ -129,29 +146,16 @@ async def _run_scheduler(bot: Bot, bot_schedule: BotSchedule):
         else:
             return
 
-    await BotTaskHelper.run(bot, BotDefaultTrigger.BotCronScheduled, data, project)
+    await BotTaskHelper.run(bot, BotDefaultTrigger.BotCronScheduled, data, project, model)
 
     old_status = bot_schedule.status
     if bot_schedule.running_type == BotScheduleRunningType.Onetime:
-        await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
+        await BotScheduleHelper.change_status(schedule_model.__class__, schedule_model, BotScheduleStatus.Stopped)
     elif bot_schedule.running_type == BotScheduleRunningType.Duration:
         if bot_schedule.end_at and bot_schedule.end_at < SafeDateTime.now():
-            await BotScheduleHelper.change_status(bot_schedule, BotScheduleStatus.Stopped)
+            await BotScheduleHelper.change_status(schedule_model.__class__, schedule_model, BotScheduleStatus.Stopped)
 
     if project and bot_schedule.status != old_status:
-        await ProjectBotPublisher.rescheduled(project, bot_schedule, {"status": bot_schedule.status.value})
-
-
-def _get_target_model(target_table: str, target_id: SnowflakeID | int):
-    table = get_model_by_table_name(target_table)
-    if not table:
-        return None
-
-    model = None
-    with DbSession.use(readonly=True) as db:
-        result = db.exec(SqlBuilder.select.table(table).where(table.column("id") == target_id).limit(1))
-        model = result.first()
-    if not model:
-        return None
-
-    return model
+        await ProjectBotPublisher.rescheduled(
+            project, model.__tablename__, schedule_model, {"status": bot_schedule.status.value}
+        )

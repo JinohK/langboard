@@ -1,10 +1,9 @@
 import { Toast } from "@/components/base";
 import useBoardWikiCreatedHandlers from "@/controllers/socket/wiki/useBoardWikiCreatedHandlers";
-import useBoardWikiProjectBotsUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectBotsUpdatedHandlers";
 import useBoardWikiProjectUsersUpdatedHandlers from "@/controllers/socket/wiki/useBoardWikiProjectUsersUpdatedHandlers";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
-import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
+import { AuthUser, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +17,6 @@ export interface IBoardWikiContext {
     socket: ISocketContext;
     wikis: ProjectWiki.TModel[];
     projectMembers: User.TModel[];
-    projectBots: BotModel.TModel[];
     currentUser: AuthUser.TModel;
     editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
     setCurrentEditor: (uid: string) => void;
@@ -32,7 +30,6 @@ export interface IBoardWikiContext {
 interface IBoardWikiProps {
     projectUID: string;
     projectMembers: User.TModel[];
-    projectBots: BotModel.TModel[];
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
@@ -42,7 +39,6 @@ const initialContext = {
     socket: {} as ISocketContext,
     wikis: [],
     projectMembers: [],
-    projectBots: [],
     currentUser: {} as AuthUser.TModel,
     editorsRef: { current: {} },
     setCurrentEditor: () => {},
@@ -55,19 +51,12 @@ const initialContext = {
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
 
-export const BoardWikiProvider = ({
-    projectUID,
-    projectMembers: flatProjectMembers,
-    projectBots: flatProjectBots,
-    currentUser,
-    children,
-}: IBoardWikiProps): React.ReactNode => {
+export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembers, currentUser, children }: IBoardWikiProps): React.ReactNode => {
     const socket = useSocket();
     const navigate = usePageNavigateRef();
     const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
     const { wikiUID } = useParams();
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
-    const [projectBots, setProjectBots] = useState(flatProjectBots);
     const [t] = useTranslation();
     const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
     const currentEditorRef = useRef("");
@@ -76,16 +65,6 @@ export const BoardWikiProvider = ({
     const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({
         projectUID,
     });
-    const projectBotsUpdatedHandlers = useMemo(
-        () =>
-            useBoardWikiProjectBotsUpdatedHandlers({
-                projectUID,
-                callback: (data) => {
-                    setProjectBots(() => data.assigned_bots);
-                },
-            }),
-        [setProjectBots]
-    );
     const projectUsersUpdatedHandlers = useMemo(
         () =>
             useBoardWikiProjectUsersUpdatedHandlers({
@@ -99,8 +78,8 @@ export const BoardWikiProvider = ({
 
     useSwitchSocketHandlers({
         socket,
-        handlers: [boardWikiCreatedHandlers, projectBotsUpdatedHandlers, projectUsersUpdatedHandlers],
-        dependencies: [projectBotsUpdatedHandlers, projectUsersUpdatedHandlers],
+        handlers: [boardWikiCreatedHandlers, projectUsersUpdatedHandlers],
+        dependencies: [projectUsersUpdatedHandlers],
     });
 
     useEffect(() => {
@@ -136,7 +115,7 @@ export const BoardWikiProvider = ({
         const wiki = ProjectWiki.Model.getModel(uid);
         if (!wiki || wiki.project_uid !== projectUID || wiki.forbidden) {
             if (shouldNavigate) {
-                Toast.Add.error(t("errors.requests.PE2006"));
+                Toast.Add.error(t("errors.requests.PE2005"));
                 setCurrentEditor("");
                 navigate(ROUTES.BOARD.WIKI(projectUID));
             }
@@ -174,7 +153,6 @@ export const BoardWikiProvider = ({
                 socket,
                 wikis,
                 projectMembers,
-                projectBots,
                 currentUser,
                 editorsRef,
                 setCurrentEditor,

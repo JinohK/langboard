@@ -30,24 +30,6 @@ async def project_updated(user_or_bot: User | Bot, old_dict: dict[str, Any], pro
 
 
 @Broker.wrap_async_task_decorator
-async def project_assigned_bots_updated(user: User, project: Project, old_bot_ids: list[int], new_bot_ids: list[int]):
-    helper = ActivityTaskHelper(ProjectActivity)
-    removed_bots, added_bots = helper.get_updated_bots(old_bot_ids, new_bot_ids)
-    if not removed_bots and not added_bots:
-        return
-
-    activity_history = {
-        **helper.create_project_default_history(project),
-        "removed_bots": removed_bots,
-        "added_bots": added_bots,
-    }
-    activity = helper.record(
-        user, activity_history, **_get_activity_params(ProjectActivityType.ProjectAssignedBotsUpdated, project)
-    )
-    record_project_activity(user, activity)
-
-
-@Broker.wrap_async_task_decorator
 async def project_assigned_users_updated(
     user: User, project: Project, old_user_ids: list[int], new_user_ids: list[int]
 ):
@@ -64,24 +46,6 @@ async def project_assigned_users_updated(
     activity = helper.record(
         user, activity_history, **_get_activity_params(ProjectActivityType.ProjectAssignedUsersUpdated, project)
     )
-    record_project_activity(user, activity)
-
-
-@Broker.wrap_async_task_decorator
-async def project_bot_activation_toggled(user: User, project: Project, bot: Bot, is_disabled: bool):
-    helper = ActivityTaskHelper(ProjectActivity)
-    activity_history = {
-        **helper.create_project_default_history(project),
-        "bot": ActivityHistoryHelper.create_user_or_bot_history(bot),
-        "changes": {
-            "before": {"is_disabled": not is_disabled},
-            "after": {"is_disabled": is_disabled},
-        },
-    }
-    activity_type = (
-        ProjectActivityType.ProjectBotDeactivated if is_disabled else ProjectActivityType.ProjectBotActivated
-    )
-    activity = helper.record(user, activity_history, **_get_activity_params(activity_type, project))
     record_project_activity(user, activity)
 
 

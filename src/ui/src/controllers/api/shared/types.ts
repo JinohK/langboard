@@ -2,11 +2,11 @@ import { TCreatedAtModelName } from "@/core/models/ModelRegistry";
 
 type TActivityType = "user" | "project" | "card" | "project_wiki" | "project_assignee";
 
-export interface IBaseGetRefreshableListForm<TModelName extends TCreatedAtModelName> {
+export interface IBaseGetListForm<TModelName extends TCreatedAtModelName> {
     listType: TModelName;
 }
 
-interface IBaseGetActivitiesForm<TActivity extends TActivityType> extends IBaseGetRefreshableListForm<"ActivityModel"> {
+interface IBaseGetActivitiesForm<TActivity extends TActivityType> extends IBaseGetListForm<"ActivityModel"> {
     listType: "ActivityModel";
     type: TActivity;
 }
@@ -41,12 +41,6 @@ export type TGetActivitiesForm =
     | IGetProjectWikiActivitiesForm
     | IGetProjectAssigneeActivitiesForm;
 
-export interface IGetUsersInSettingsForm extends IBaseGetRefreshableListForm<"User"> {
-    listType: "User";
-}
-
-export type TGetRefreshableListForm<TModelName extends TCreatedAtModelName> = TModelName extends "ActivityModel"
+export type TGetListForm<TModelName extends TCreatedAtModelName> = TModelName extends "ActivityModel"
     ? IBaseGetActivitiesForm<TActivityType>
-    : TModelName extends "User"
-      ? IBaseGetRefreshableListForm<"User">
-      : IBaseGetRefreshableListForm<TModelName>;
+    : IBaseGetListForm<TModelName>;

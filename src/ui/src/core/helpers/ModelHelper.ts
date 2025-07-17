@@ -14,7 +14,10 @@ import {
     ProjectWiki,
     User,
     MetadataModel,
-    BotSchedule,
+    ProjectColumnBotScope,
+    ProjectCardBotScope,
+    ProjectColumnBotSchedule,
+    ProjectCardBotSchedule,
 } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -51,10 +54,16 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
 
         return true;
     });
-    BotSchedule.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
-    ProjectColumn.Model.deleteModels((model) => model.project_uid === projectUID);
+    ProjectColumn.Model.getModels((model) => {
+        if (model.project_uid !== projectUID) {
+            return false;
+        }
+
+        deleteProjectColumnModel(model.uid);
+        return true;
+    });
     ProjectLabel.Model.deleteModels((model) => model.project_uid === projectUID);
-    ProjectCard.Model.deleteModels((model) => {
+    ProjectCard.Model.getModels((model) => {
         if (model.project_uid !== projectUID) {
             return false;
         }
@@ -64,7 +73,7 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
         }
 
         deleteCardModel(model.uid, false);
-        return true;
+        return false;
     });
     const userGroupUIDs = currentUser.user_groups.map((group) => group.users.map((user) => user.uid)).flat();
     const memberUIDs = project.all_members
@@ -102,11 +111,56 @@ export const deleteCardModel = (cardUID: string, shouldUnsubscribe: bool) => {
         }
     });
 
-    BotSchedule.Model.deleteModels((model) => model.target_table === "card" && model.target_uid === cardUID);
+    ProjectCardBotScope.Model.deleteModels((scope) => scope.card_uid === cardUID);
+    ProjectCardBotSchedule.Model.deleteModels((schedule) => schedule.card_uid === cardUID);
 
     if (shouldUnsubscribe) {
         socket.unsubscribe(ESocketTopic.BoardCard, [cardUID]);
     }
 
     return;
+};
+
+export const deleteProjectColumnModel = (columnUID: string, archiveData?: { uid: string; name: string; archivedAt: Date; sourceCount?: number }) => {
+    const column = ProjectColumn.Model.getModel(columnUID);
+    if (!column) {
+        return;
+    }
+
+    ProjectColumnBotScope.Model.deleteModels((scope) => scope.project_column_uid === columnUID);
+    ProjectColumnBotSchedule.Model.deleteModels((schedule) => schedule.project_column_uid === columnUID);
+    ProjectColumn.Model.deleteModel(columnUID);
+
+    if (!archiveData) {
+        return;
+    }
+
+    const archiveColumn = ProjectColumn.Model.getModel((model) => model.project_uid === column.project_uid && model.is_archive);
+    if (archiveColumn) {
+        archiveColumn.count += archiveData.sourceCount ?? column.count;
+    }
+
+    const restColumns = ProjectColumn.Model.getModels((model) => model.project_uid === column.project_uid && model.order > column.order);
+    for (let i = 0; i < restColumns.length; ++i) {
+        const restColumn = restColumns[i];
+        if (restColumn.order > column.order) {
+            restColumn.order -= 1;
+        }
+    }
+
+    const cards = ProjectCard.Model.getModels((model) => model.column_uid === column.uid || model.column_uid === archiveData.uid);
+    let archivedCardsCount = 0;
+    for (let i = 0; i < cards.length; ++i) {
+        const card = cards[i];
+        if (card.column_uid === archiveData.uid) {
+            card.order += archiveData.sourceCount ?? column.count;
+            continue;
+        }
+
+        card.column_uid = archiveData.uid;
+        card.column_name = archiveData.name;
+        card.archived_at = archiveData.archivedAt;
+        card.order = archivedCardsCount;
+        archivedCardsCount += 1;
+    }
 };

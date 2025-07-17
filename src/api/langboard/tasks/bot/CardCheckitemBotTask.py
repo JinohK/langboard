@@ -1,6 +1,6 @@
 from typing import Any
 from models import Bot, Card, Checkitem, Project, User
-from models.BotTrigger import BotTriggerCondition
+from models.bases import BotTriggerCondition
 from ...core.broker import Broker
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -15,7 +15,9 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemCreated, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemCreated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemCreated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemCreated,
@@ -27,7 +29,9 @@ async def card_checkitem_created(user_or_bot: User | Bot, project: Project, card
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemTitleChanged, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_title_changed(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemTitleChanged)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemTitleChanged, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTitleChanged,
@@ -39,7 +43,9 @@ async def card_checkitem_title_changed(user_or_bot: User | Bot, project: Project
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemTimerStarted, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_started(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemTimerStarted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemTimerStarted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerStarted,
@@ -51,7 +57,9 @@ async def card_checkitem_timer_started(user_or_bot: User | Bot, project: Project
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemTimerPaused, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_paused(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemTimerPaused)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemTimerPaused, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerPaused,
@@ -63,7 +71,9 @@ async def card_checkitem_timer_paused(user_or_bot: User | Bot, project: Project,
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemTimerStopped, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_timer_stopped(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemTimerStopped)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemTimerStopped, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemTimerStopped,
@@ -75,7 +85,9 @@ async def card_checkitem_timer_stopped(user_or_bot: User | Bot, project: Project
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemChecked, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_checked(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemChecked)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemChecked, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemChecked,
@@ -87,7 +99,9 @@ async def card_checkitem_checked(user_or_bot: User | Bot, project: Project, card
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemUnchecked, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_unchecked(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemUnchecked)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemUnchecked, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemUnchecked,
@@ -103,7 +117,9 @@ async def card_checkitem_unchecked(user_or_bot: User | Bot, project: Project, ca
 async def card_checkitem_cardified(
     user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem, new_card: Card
 ):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemCardified)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemCardified, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemCardified,
@@ -121,7 +137,9 @@ async def card_checkitem_cardified(
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCheckitemDeleted, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_checkitem_deleted(user_or_bot: User | Bot, project: Project, card: Card, checkitem: Checkitem):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCheckitemDeleted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCheckitemDeleted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCheckitemDeleted,

@@ -85,9 +85,7 @@ function BoardCardChecklistNotify() {
             tagContentProps={{
                 projectUID,
             }}
-            createSearchText={
-                ((item: User.TModel) => `${item.uid} ${item.firstname} ${item.lastname} ${item.email}`) as IFormProps["createSearchText"]
-            }
+            createSearchKeywords={((item: User.TModel) => [item.email, item.firstname, item.lastname]) as IFormProps["createSearchKeywords"]}
             createLabel={((item: User.TModel) => `${item.firstname} ${item.lastname}`.trim()) as IFormProps["createLabel"]}
             addIcon="bell-plus"
             addIconSize="5"

@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TGetRefreshableListForm } from "@/controllers/api/shared/types";
-import { getRefreshableData } from "@/controllers/api/shared/utils";
+import { TGetListForm } from "@/controllers/api/shared/types";
+import { getListRequestData } from "@/controllers/api/shared/utils";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BaseModel } from "@/core/models/Base";
@@ -8,7 +8,7 @@ import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistr
 import { useCallback, useRef, useState } from "react";
 
 export interface IUseGetRefreshableListProps<TModelName extends TCreatedAtModelName> {
-    form: TGetRefreshableListForm<TModelName>;
+    form: TGetListForm<TModelName>;
     limit: number;
     isLastPage: bool;
     setIsLastPage: React.Dispatch<React.SetStateAction<bool>>;
@@ -33,7 +33,7 @@ const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
     const isFetchingRef = useRef(false);
     const limitRef = useRef(limit);
 
-    const [model, url] = getRefreshableData(form);
+    const [model, url] = getListRequestData(form);
 
     const getRefreshableList = useCallback(
         async (params: IGetRefreshableListParams) => {

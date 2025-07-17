@@ -1,6 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { deleteProjectColumnModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { Project, ProjectCard, ProjectColumn } from "@/core/models";
+import { ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardColumnDeletedRawResponse {
@@ -12,51 +13,25 @@ export interface IBoardColumnDeletedRawResponse {
 }
 
 export interface IUseBoardColumnDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    project: Project.TModel;
+    column: ProjectColumn.TModel;
 }
 
-const useBoardColumnDeletedHandlers = ({ callback, project }: IUseBoardColumnDeletedHandlersProps) => {
+const useBoardColumnDeletedHandlers = ({ callback, column }: IUseBoardColumnDeletedHandlersProps) => {
     return useSocketHandler<{}, IBoardColumnDeletedRawResponse>({
         topic: ESocketTopic.Board,
-        topicId: project.uid,
-        eventKey: `board-column-deleted-${project.uid}`,
+        topicId: column.project_uid,
+        eventKey: `board-column-deleted-${column.project_uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.COLUMN.DELETED,
-            params: { uid: project.uid },
+            params: { uid: column.uid },
             callback,
             responseConverter: (data) => {
-                const column = ProjectColumn.Model.getModel(data.uid);
-                if (column) {
-                    const restColumns = ProjectColumn.Model.getModels((model) => model.project_uid === project.uid);
-                    for (let i = 0; i < restColumns.length; ++i) {
-                        const restColumn = restColumns[i];
-                        if (restColumn.order > column.order) {
-                            restColumn.order -= 1;
-                        }
-                    }
-                }
-
-                const cards = ProjectCard.Model.getModels((model) => model.column_uid === data.uid || model.column_uid === data.archive_column_uid);
-                let archivedCardsCount = 0;
-                for (let i = 0; i < cards.length; ++i) {
-                    const card = cards[i];
-                    if (card.column_uid === data.archive_column_uid) {
-                        card.order += data.count_all_cards_in_column;
-                        continue;
-                    }
-
-                    card.column_uid = data.archive_column_uid;
-                    card.column_name = data.archive_column_name;
-                    card.archived_at = data.archived_at;
-                    card.order = archivedCardsCount;
-                    archivedCardsCount += 1;
-                }
-
-                if (project.columns) {
-                    project.columns = project.columns.filter((column) => column.uid !== data.uid);
-                }
-
-                ProjectColumn.Model.deleteModel(data.uid);
+                deleteProjectColumnModel(data.uid, {
+                    uid: data.archive_column_uid,
+                    name: data.archive_column_name,
+                    archivedAt: new Date(data.archived_at),
+                    sourceCount: data.count_all_cards_in_column,
+                });
 
                 return {};
             },

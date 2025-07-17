@@ -11,7 +11,7 @@ export interface Interface extends IBaseModel {
 }
 
 class ProjectCardRelationship extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectCardRelationship" as const;
     }
 

@@ -8,20 +8,21 @@ from core.utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_rang
 from fastapi import Depends, Request, status
 from jwt import ExpiredSignatureError, InvalidTokenError
 from models import Bot, User
+from models.Bot import ALLOWED_ALL_IPS
 from starlette.datastructures import Headers
 from starlette.requests import cookie_parser
 
 
 @staticclass
 class Auth:
-    @staticmethod
     @overload
+    @staticmethod
     def scope(where: Literal["api"]) -> User | Bot: ...
-    @staticmethod
     @overload
+    @staticmethod
     def scope(where: Literal["api_user"]) -> User: ...
-    @staticmethod
     @overload
+    @staticmethod
     def scope(where: Literal["api_bot"]) -> Bot: ...
     @staticmethod
     def scope(where: Literal["api", "api_user", "api_bot"]) -> User | Bot:
@@ -225,6 +226,12 @@ class Auth:
             return bot
 
         ip = cast(str, ip)
+        if isinstance(bot.ip_whitelist, str):
+            bot.ip_whitelist = bot.ip_whitelist.split(",")
+
+        if ALLOWED_ALL_IPS in bot.ip_whitelist:
+            return bot
+
         for ip_range in bot.ip_whitelist:
             if ip_range.endswith(".0/24"):
                 if is_ipv4_in_range(ip, ip_range):

@@ -1,8 +1,8 @@
 import { Popover } from "@/components/base";
 import NotificationSetting from "@/components/NotificationSetting";
 import UserAvatar from "@/components/UserAvatar";
-import UserAvatarDefaultUserCreateAssignCardAction from "@/components/UserAvatarDefaultList/actions/UserCreateAssignCardAction";
-import UserAvatarDefaultUnassignAction from "@/components/UserAvatarDefaultList/actions/UnassignAction";
+import UserAvatarUserCreateAssignedCardAction from "@/components/UserAvatarDefaultList/actions/UserCreateAssignedCardAction";
+import UserAvatarUserUnassignAction from "@/components/UserAvatarDefaultList/actions/UserUnassignAction";
 import UserAvatarDefaultViewActivitiesAction from "@/components/UserAvatarDefaultList/actions/ViewActivitiesAction";
 import useSearchFilters from "@/core/hooks/useSearchFilters";
 import { Project, User } from "@/core/models";
@@ -33,7 +33,7 @@ function UserAvatarDefaultUserList({ user }: IUserAvatarDefaultUserListProps): J
         <>
             {project && isAssignee && (hasRoleAction(Project.ERoleAction.CardWrite) || currentUser?.is_admin) && (
                 <>
-                    <UserAvatarDefaultUserCreateAssignCardAction user={user} project={project} />
+                    <UserAvatarUserCreateAssignedCardAction user={user} project={project} />
                     <UserAvatar.ListSeparator />
                 </>
             )}
@@ -90,7 +90,7 @@ function UserAvatarDefaultUserList({ user }: IUserAvatarDefaultUserListProps): J
             )}
             {project && currentUser?.uid !== user.uid && isAssignee && (hasRoleAction(Project.ERoleAction.Update) || currentUser?.is_admin) && (
                 <>
-                    <UserAvatarDefaultUnassignAction project={project} setIsAssignee={setIsAssignee} />
+                    <UserAvatarUserUnassignAction project={project} setIsAssignee={setIsAssignee} />
                     <UserAvatar.ListSeparator />
                 </>
             )}

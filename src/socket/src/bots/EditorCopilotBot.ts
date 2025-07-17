@@ -5,7 +5,7 @@ import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 
 class EditorCopilotBot extends BaseBot {
-    static get BOT_TYPE(): EInternalBotType {
+    public static get BOT_TYPE(): EInternalBotType {
         return EInternalBotType.EditorCopilot;
     }
 

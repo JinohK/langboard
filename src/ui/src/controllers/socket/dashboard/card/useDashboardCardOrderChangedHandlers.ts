@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { Project, ProjectCard } from "@/core/models";
+import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboardCardOrderChangedRawResponse {
@@ -12,30 +12,28 @@ export interface IDashboardCardOrderChangedRawResponse {
 }
 
 export interface IUseDashboardCardOrderChangedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
+    project: Project.TModel;
 }
 
-const useDashboardCardOrderChangedHandlers = ({ callback, projectUID }: IUseDashboardCardOrderChangedHandlersProps) => {
+const useDashboardCardOrderChangedHandlers = ({ callback, project }: IUseDashboardCardOrderChangedHandlersProps) => {
     return useSocketHandler<{}, IDashboardCardOrderChangedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: projectUID,
-        eventKey: `dashboard-card-order-changed-${projectUID}`,
+        topicId: project.uid,
+        eventKey: `dashboard-card-order-changed-${project.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.ORDER_CHANGED,
-            params: { uid: projectUID },
+            params: { uid: project.uid },
             callback,
             responseConverter: (data) => {
-                const project = Project.Model.getModel(projectUID);
-                if (project) {
-                    const columns = project.columns;
-                    for (let i = 0; i < columns.length; ++i) {
-                        if (columns[i].uid === data.from_column_uid) {
-                            --columns[i].count;
-                        } else if (columns[i].uid === data.to_column_uid) {
-                            ++columns[i].count;
-                        }
+                const columns = ProjectColumn.Model.getModels(
+                    (model) => model.project_uid === project.uid && (model.uid === data.from_column_uid || model.uid === data.to_column_uid)
+                );
+                for (let i = 0; i < columns.length; ++i) {
+                    if (columns[i].uid === data.from_column_uid) {
+                        --columns[i].count;
+                    } else if (columns[i].uid === data.to_column_uid) {
+                        ++columns[i].count;
                     }
-                    project.columns = columns;
                 }
 
                 const card = ProjectCard.Model.getModel(data.uid);

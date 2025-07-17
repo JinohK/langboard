@@ -1,5 +1,7 @@
 from .ActivityService import ActivityService
 from .AppSettingService import AppSettingService
+from .BotLogService import BotLogService
+from .BotScopeService import BotScopeService
 from .BotService import BotService
 from .CardAttachmentService import CardAttachmentService
 from .CardCommentService import CardCommentService
@@ -27,6 +29,8 @@ from .UserService import UserService
 __all__ = [
     "ActivityService",
     "AppSettingService",
+    "BotLogService",
+    "BotScopeService",
     "BotService",
     "CardAttachmentService",
     "CardCommentService",

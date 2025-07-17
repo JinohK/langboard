@@ -18,7 +18,6 @@ class LangboardCalledVariablesComponent(LangflowComponent):
     event: str
     app_api_token: str
     project_uid: str | None = None
-    bot_labels_for_project: list[dict[str, Any]] = []
     current_runner_type: Literal["bot", "user"]
     current_runner_data: dict[str, Any] | None = None
     rest_data: dict[str, Any] | None = None

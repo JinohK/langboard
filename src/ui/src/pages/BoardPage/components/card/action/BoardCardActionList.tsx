@@ -11,6 +11,7 @@ import BoardCardActionAddChecklist from "@/pages/BoardPage/components/card/actio
 import BoardCardActionArchive from "@/pages/BoardPage/components/card/action/BoardCardActionArchive";
 import BoardCardActionDelete from "@/pages/BoardPage/components/card/action/BoardCardActionDelete";
 import BoardCardActionMetadata from "@/pages/BoardPage/components/card/action/BoardCardActionMetadata";
+import BoardCardActionBotScope from "@/pages/BoardPage/components/card/action/botScope/BoardCardActionBotScope";
 
 const sharedButtonClassName = "mb-2 w-full justify-start gap-2 rounded-none px-2 py-1 sm:h-7";
 
@@ -34,6 +35,7 @@ const BoardCardActionList = memo(() => {
     return (
         <>
             <BoardCardActionSetLabel buttonClassName={sharedButtonClassName} />
+            <BoardCardActionBotScope buttonClassName={sharedButtonClassName} />
             <BoardCardActionRelationship buttonClassName={sharedButtonClassName} />
             <BoardCardActionAttachFile buttonClassName={sharedButtonClassName} />
             <BoardCardActionAddChecklist buttonClassName={sharedButtonClassName} />

@@ -3,7 +3,6 @@ import Bot from "@/models/Bot";
 import Card from "@/models/Card";
 import ChatHistory from "@/models/ChatHistory";
 import InternalBot from "@/models/InternalBot";
-import ProjectAssignedBot from "@/models/ProjectAssignedBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 import ProjectRole from "@/models/ProjectRole";
@@ -20,7 +19,6 @@ export const ALL_ENTITIES = [
     ChatHistory,
     InternalBot,
     ProjectAssignedUser,
-    ProjectAssignedBot,
     ProjectAssignedInternalBot,
     ProjectRole,
     ProjectWiki,

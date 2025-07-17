@@ -29,7 +29,7 @@ export interface Interface extends IBaseModel {
 }
 
 class ProjectCheckitem extends BaseModel<Interface> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             cardified_card: ProjectCard.Model.MODEL_NAME,
             user: User.Model.MODEL_NAME,
@@ -38,7 +38,7 @@ class ProjectCheckitem extends BaseModel<Interface> {
     override get FOREIGN_MODELS() {
         return ProjectCheckitem.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectCheckitem" as const;
     }
 

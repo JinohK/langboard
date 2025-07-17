@@ -33,17 +33,17 @@ class User<TInherit extends Interface = Interface> extends BaseModel<TInherit & 
     static readonly #subscribedUserUIDs: string[] = [];
     static #subscribeTimeout: NodeJS.Timeout | undefined = undefined;
 
-    static get USER_TYPE() {
+    public static get USER_TYPE() {
         return "user" as const;
     }
-    static get UNKNOWN_TYPE() {
+    public static get UNKNOWN_TYPE() {
         return "unknown" as const;
     }
-    static get GROUP_EMAIL_TYPE() {
+    public static get GROUP_EMAIL_TYPE() {
         return "group_email" as const;
     }
 
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "User" as const;
     }
 

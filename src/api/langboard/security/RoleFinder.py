@@ -1,11 +1,11 @@
 from typing import Any
 from core.types import SnowflakeID
-from models import Project, ProjectAssignedBot, ProjectRole
+from models import Project, ProjectRole
 from sqlmodel.sql.expression import SelectOfScalar
 
 
 def project(
-    query: SelectOfScalar[ProjectRole], path_params: dict[str, Any], user_or_bot_id: int, is_bot: bool
+    query: SelectOfScalar[ProjectRole], path_params: dict[str, Any], user_id: int
 ) -> SelectOfScalar[ProjectRole]:
     project_uid: str | set | list | None = path_params.get("project_uid", None)
 
@@ -19,9 +19,4 @@ def project(
     else:
         query = query.where(Project.column("id") == SnowflakeID.from_short_code(project_uid) if project_uid else None)  # type: ignore
 
-    if is_bot:
-        query = query.join(ProjectAssignedBot, Project.column("id") == ProjectAssignedBot.column("project_id")).where(
-            (ProjectAssignedBot.column("bot_id") == user_or_bot_id)
-            & (ProjectAssignedBot.column("is_disabled") == False)  # noqa
-        )
     return query

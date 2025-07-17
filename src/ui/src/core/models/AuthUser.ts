@@ -30,7 +30,7 @@ export interface Interface extends User.Interface {
 }
 
 class AuthUser extends User.Model<Interface> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             user_groups: UserGroup.Model.MODEL_NAME,
         };
@@ -39,7 +39,7 @@ class AuthUser extends User.Model<Interface> {
         return AuthUser.FOREIGN_MODELS;
     }
 
-    static get currentUser() {
+    public static get currentUser() {
         return AuthUser.getModel(() => true)!;
     }
 

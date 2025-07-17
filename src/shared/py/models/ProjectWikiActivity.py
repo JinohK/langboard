@@ -3,7 +3,7 @@ from typing import Any
 from core.db import EnumLikeType, SnowflakeIDField
 from core.types import SnowflakeID
 from sqlmodel import Field
-from .BaseActivityModel import BaseActivityModel
+from .bases import BaseActivityModel
 from .Project import Project
 from .ProjectWiki import ProjectWiki
 

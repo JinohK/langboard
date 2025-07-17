@@ -3,7 +3,7 @@ from core.routing import AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from fastapi import Depends
 from models import ProjectActivity, ProjectRole, ProjectWikiActivity, User, UserActivity
-from models.BaseActivityModel import BaseActivityModel
+from models.bases import BaseActivityModel
 from models.ProjectRole import ProjectRoleAction
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder

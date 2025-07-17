@@ -45,7 +45,6 @@ class ProjectWiki(SoftDeleteModel, table=True):
             "order": self.order,
             "is_public": False,
             "forbidden": True,
-            "assigned_bots": [],
             "assigned_members": [],
         }
 

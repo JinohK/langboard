@@ -1,4 +1,4 @@
-import { TGetRefreshableListForm } from "@/controllers/api/shared/types";
+import { TGetListForm } from "@/controllers/api/shared/types";
 import useGetRefreshableList, { IUseGetRefreshableListProps } from "@/controllers/api/shared/useGetRefreshableList";
 import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
@@ -21,7 +21,7 @@ export interface IRefreshableListContext<TModelName extends TCreatedAtModelName>
 
 interface IRefreshableListProps<TModelName extends TCreatedAtModelName> {
     models: TCreatedAtModel<TModelName>[];
-    form: TGetRefreshableListForm<TModelName>;
+    form: TGetListForm<TModelName>;
     limit: number;
     prepareData?: IUseGetRefreshableListProps<TModelName>["prepareData"];
     children: React.ReactNode;

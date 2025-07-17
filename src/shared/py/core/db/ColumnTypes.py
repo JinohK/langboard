@@ -1,4 +1,6 @@
 from enum import Enum
+from json import dumps as json_dumps
+from json import loads as json_loads
 from typing import Any, Callable, TypeVar, cast
 from pydantic import BaseModel, SecretStr
 from pydantic_core import PydanticUndefined as Undefined
@@ -6,6 +8,7 @@ from sqlalchemy import JSON, DateTime
 from sqlalchemy.types import TEXT, VARCHAR, BigInteger, TypeDecorator
 from sqlmodel import Field, SQLModel
 from ..types import SafeDateTime, SnowflakeID
+from ..utils.Converter import json_default
 
 
 TModelColumn = TypeVar("TModelColumn", bound=BaseModel)
@@ -82,6 +85,37 @@ def ModelColumnType(model_type: type[TModelColumn]):
                 return value
 
     return _ModelColumnType
+
+
+def ModelColumnListType(model_type: type[TModelColumn]):
+    class _ModelColumnListType(TypeDecorator[model_type]):
+        impl = JSON
+        cache_ok = True
+        _model_type_class = model_type
+
+        def process_bind_param(self, value: list[TModelColumn] | None, dialect) -> str | None:
+            if value is None:
+                return None
+            return json_dumps([item.model_dump() for item in value], default=json_default)
+
+        def process_result_value(
+            self, value: str | list[TModelColumn] | list[dict] | None, dialect
+        ) -> list[TModelColumn] | None:
+            if value is None:
+                return None
+
+            if isinstance(value, list):
+                return [model_type(**item) if isinstance(item, dict) else item for item in value]
+            elif isinstance(value, str):
+                loaded_value = json_loads(value)
+                if isinstance(loaded_value, list):
+                    return [model_type(**item) if isinstance(item, dict) else item for item in loaded_value]
+                else:
+                    return [model_type(**loaded_value)] if isinstance(loaded_value, dict) else [loaded_value]
+            else:
+                return value
+
+    return _ModelColumnListType
 
 
 class SecretStrType(TypeDecorator):

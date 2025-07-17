@@ -1,5 +1,6 @@
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
 import { MoreMenuProvider } from "@/components/MoreMenu/Provider";
+import useHandleInteractOutside from "@/core/hooks/useHandleInteractOutside";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -14,6 +15,7 @@ function MoreMenuRoot({ modal, triggerProps, contentProps, children }: IMoreMenu
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
+    const { onInteractOutside, onPointerDownOutside } = useHandleInteractOutside({ pointerDownOutside: () => setIsOpened(false) }, [setIsOpened]);
     const { variant = "ghost", size = "icon-sm" } = triggerProps || {};
 
     const changeOpenedState = (opened: bool) => {
@@ -31,7 +33,7 @@ function MoreMenuRoot({ modal, triggerProps, contentProps, children }: IMoreMenu
                         <IconComponent icon="ellipsis-vertical" size="4" />
                     </Button>
                 </DropdownMenu.Trigger>
-                <DropdownMenu.Content align="end" {...contentProps}>
+                <DropdownMenu.Content align="end" onInteractOutside={onInteractOutside} onPointerDownOutside={onPointerDownOutside} {...contentProps}>
                     <DropdownMenu.Group>{children}</DropdownMenu.Group>
                 </DropdownMenu.Content>
             </DropdownMenu.Root>

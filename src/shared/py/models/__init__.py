@@ -1,11 +1,14 @@
 from .AppSetting import AppSetting
 from .Bot import Bot
+from .BotLog import BotLog
 from .BotSchedule import BotSchedule
-from .BotTrigger import BotTrigger
 from .Card import Card
 from .CardAssignedProjectLabel import CardAssignedProjectLabel
 from .CardAssignedUser import CardAssignedUser
 from .CardAttachment import CardAttachment
+from .CardBotLog import CardBotLog
+from .CardBotSchedule import CardBotSchedule
+from .CardBotScope import CardBotScope
 from .CardComment import CardComment
 from .CardCommentReaction import CardCommentReaction
 from .CardMetadata import CardMetadata
@@ -19,16 +22,17 @@ from .GlobalCardRelationshipType import GlobalCardRelationshipType
 from .InternalBot import InternalBot
 from .Project import Project
 from .ProjectActivity import ProjectActivity
-from .ProjectAssignedBot import ProjectAssignedBot
 from .ProjectAssignedInternalBot import ProjectAssignedInternalBot
 from .ProjectAssignedUser import ProjectAssignedUser
 from .ProjectColumn import ProjectColumn
+from .ProjectColumnBotLog import ProjectColumnBotLog
+from .ProjectColumnBotSchedule import ProjectColumnBotSchedule
+from .ProjectColumnBotScope import ProjectColumnBotScope
 from .ProjectInvitation import ProjectInvitation
 from .ProjectLabel import ProjectLabel
 from .ProjectRole import ProjectRole
 from .ProjectWiki import ProjectWiki
 from .ProjectWikiActivity import ProjectWikiActivity
-from .ProjectWikiAssignedBot import ProjectWikiAssignedBot
 from .ProjectWikiAssignedUser import ProjectWikiAssignedUser
 from .ProjectWikiAttachment import ProjectWikiAttachment
 from .ProjectWikiMetadata import ProjectWikiMetadata
@@ -45,12 +49,15 @@ from .UserProfile import UserProfile
 __all__ = [
     "AppSetting",
     "Bot",
+    "BotLog",
     "BotSchedule",
-    "BotTrigger",
     "Card",
     "CardAssignedProjectLabel",
     "CardAssignedUser",
     "CardAttachment",
+    "CardBotLog",
+    "CardBotSchedule",
+    "CardBotScope",
     "CardComment",
     "CardCommentReaction",
     "CardMetadata",
@@ -64,16 +71,17 @@ __all__ = [
     "InternalBot",
     "Project",
     "ProjectActivity",
-    "ProjectAssignedBot",
     "ProjectAssignedInternalBot",
     "ProjectAssignedUser",
     "ProjectColumn",
+    "ProjectColumnBotLog",
+    "ProjectColumnBotSchedule",
+    "ProjectColumnBotScope",
     "ProjectInvitation",
     "ProjectLabel",
     "ProjectRole",
     "ProjectWiki",
     "ProjectWikiActivity",
-    "ProjectWikiAssignedBot",
     "ProjectWikiAssignedUser",
     "ProjectWikiAttachment",
     "ProjectWikiMetadata",

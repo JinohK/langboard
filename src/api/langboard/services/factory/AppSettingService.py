@@ -142,7 +142,7 @@ class AppSettingService(BaseService):
         with DbSession.use(readonly=False) as db:
             db.insert(global_relationship)
 
-        model = {"global_relationships": global_relationship.api_response()}
+        model = {"global_relationship": global_relationship.api_response()}
         await AppSettingPublisher.global_relationship_created(model)
 
         return global_relationship

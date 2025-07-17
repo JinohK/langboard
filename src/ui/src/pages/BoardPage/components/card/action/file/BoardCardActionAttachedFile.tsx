@@ -30,8 +30,10 @@ const BoardCardActionAttachedFile = memo(({ attachedFile, deleteFile }: IBoardCa
                     setProgress(progress);
                 },
             });
+            return attachedFile.uid;
         } catch {
             setIsError(true);
+            return undefined;
         }
     };
 

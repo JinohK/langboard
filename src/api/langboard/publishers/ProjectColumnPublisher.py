@@ -92,8 +92,9 @@ class ProjectColumnPublisher(BaseSocketPublisher):
         archived_at: SafeDateTime,
         count_all_cards_in_column: int,
     ):
+        column_uid = column.get_uid()
         model = {
-            "uid": column.get_uid(),
+            "uid": column_uid,
             "archive_column_uid": archive_column.get_uid(),
             "archive_column_name": archive_column.name,
             "archived_at": archived_at,
@@ -105,7 +106,7 @@ class ProjectColumnPublisher(BaseSocketPublisher):
             SocketPublishModel(
                 topic=SocketTopic.Board,
                 topic_id=topic_id,
-                event=f"board:column:deleted:{topic_id}",
+                event=f"board:column:deleted:{column_uid}",
                 data_keys=list(model.keys()),
             ),
             SocketPublishModel(

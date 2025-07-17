@@ -52,21 +52,15 @@ async def project_wiki_assignees_updated(
     user: User,
     project: Project,
     wiki: ProjectWiki,
-    old_bot_ids: list[int],
-    new_bot_ids: list[int],
     old_user_ids: list[int],
     new_user_ids: list[int],
 ):
     helper = ActivityTaskHelper(ProjectWikiActivity)
-    removed_bots, added_bots = helper.get_updated_bots(old_bot_ids, new_bot_ids)
     removed_users, added_users = helper.get_updated_users(old_user_ids, new_user_ids)
-    if not removed_bots and not added_bots and not removed_users and not added_users:
+    if not removed_users and not added_users:
         return
 
     activity_history: dict[str, Any] = {**_get_default_history(helper, project, wiki)}
-    if removed_bots or added_bots:
-        activity_history["removed_bots"] = removed_bots
-        activity_history["added_bots"] = added_bots
     if removed_users or added_users:
         activity_history["removed_users"] = removed_users
         activity_history["added_users"] = added_users

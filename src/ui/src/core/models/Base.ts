@@ -62,11 +62,11 @@ export abstract class BaseModel<TModel extends IBaseModel> {
     static readonly #socketSubscriptions: Partial<TModelSocketSubscriptionMap> = {};
     #store: TStateStore<TModel>;
 
-    static get FOREIGN_MODELS(): Record<string, keyof IModelMap> {
+    public static get FOREIGN_MODELS(): Record<string, keyof IModelMap> {
         return {};
     }
 
-    static get MODEL_NAME(): keyof IModelMap {
+    public static get MODEL_NAME(): keyof IModelMap {
         return this.constructor.name as any;
     }
 

@@ -3,7 +3,7 @@ import ProjectAssignedUser from "@/models/ProjectAssignedUser";
 import ProjectRole, { EProjectRoleAction } from "@/models/ProjectRole";
 import { ESocketTopic } from "@langboard/core/enums";
 
-Subscription.registerValidator(ESocketTopic.User, async (context) => {
+Subscription.registerValidator(ESocketTopic.BoardSettings, async (context) => {
     if (context.client.user.is_admin) {
         return true;
     }

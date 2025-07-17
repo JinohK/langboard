@@ -1,11 +1,13 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
 import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
+import useBoardUIWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardUIWikiDeletedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
-import { ProjectWiki } from "@/core/models";
+import { BotModel, ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
@@ -37,14 +39,15 @@ export function SkeletonWikiContent() {
 
 const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     const navigate = usePageNavigateRef();
-    const { projectUID, projectMembers, projectBots, currentUser, editorsRef, setCurrentEditor, changeTab } = useBoardWiki();
+    const { projectUID, socket, projectMembers, currentUser, editorsRef, setCurrentEditor, changeTab } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField("assigned_members");
+    const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(
-        () => [...(isPublic ? projectMembers : assignedMembers), ...projectBots],
-        [isPublic, assignedMembers, projectMembers, projectBots]
+        () => [...(isPublic ? projectMembers : assignedMembers), ...bots],
+        [isPublic, assignedMembers, projectMembers, bots]
     );
     const content = wiki.useField("content");
     const editorRef = useRef<TEditor>(null);
@@ -102,6 +105,23 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
         valueRef.current = value;
     };
     const { startEditing, stopEditing } = useToggleEditingByClickOutside("[data-wiki-content]", changeMode, isEditing);
+    const boardUIWikiDeletedHandlers = useMemo(
+        () =>
+            useBoardUIWikiDeletedHandlers({
+                projectUID,
+                wiki,
+                callback: () => {
+                    navigate(ROUTES.BOARD.WIKI(projectUID));
+                },
+            }),
+        []
+    );
+
+    useSwitchSocketHandlers({
+        socket,
+        handlers: boardUIWikiDeletedHandlers,
+        dependencies: [boardUIWikiDeletedHandlers],
+    });
 
     editorsRef.current[wiki.uid] = (editing: bool) => {
         setIsEditing(editing);

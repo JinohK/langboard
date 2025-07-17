@@ -1,6 +1,6 @@
 from typing import Any
 from models import Bot, Card, CardComment, Project, User
-from models.BotTrigger import BotTriggerCondition
+from models.bases import BotTriggerCondition
 from ...core.broker import Broker
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -15,7 +15,9 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCommentAdded, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_comment_added(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentAdded)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCommentAdded, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentAdded, _create_data(user_or_bot, project, card, comment), project
     )
@@ -24,7 +26,9 @@ async def card_comment_added(user_or_bot: User | Bot, project: Project, card: Ca
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCommentUpdated, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_comment_updated(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentUpdated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCommentUpdated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentUpdated, _create_data(user_or_bot, project, card, comment), project
     )
@@ -33,7 +37,9 @@ async def card_comment_updated(user_or_bot: User | Bot, project: Project, card: 
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCommentDeleted, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_comment_deleted(user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentDeleted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCommentDeleted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCommentDeleted, _create_data(user_or_bot, project, card, comment), project
     )
@@ -44,7 +50,9 @@ async def card_comment_deleted(user_or_bot: User | Bot, project: Project, card: 
 async def card_comment_reacted(
     user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str
 ):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentReacted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCommentReacted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCommentReacted,
@@ -58,7 +66,9 @@ async def card_comment_reacted(
 async def card_comment_unreacted(
     user_or_bot: User | Bot, project: Project, card: Card, comment: CardComment, reaction: str
 ):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCommentUnreacted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCommentUnreacted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardCommentUnreacted,

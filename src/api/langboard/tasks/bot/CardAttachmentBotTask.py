@@ -1,6 +1,6 @@
 from typing import Any
 from models import Bot, Card, CardAttachment, Project, User
-from models.BotTrigger import BotTriggerCondition
+from models.bases import BotTriggerCondition
 from ...core.broker import Broker
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -15,7 +15,9 @@ def _create_schema(other_schema: dict[str, Any] | None = None) -> dict[str, Any]
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentUploaded, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentUploaded)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardAttachmentUploaded, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentUploaded,
@@ -29,7 +31,9 @@ async def card_attachment_uploaded(user_or_bot: User | Bot, project: Project, ca
 async def card_attachment_name_changed(
     user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment
 ):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentNameChanged)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardAttachmentNameChanged, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentNameChanged,
@@ -41,7 +45,9 @@ async def card_attachment_name_changed(
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardAttachmentDeleted, _create_schema())
 @Broker.wrap_async_task_decorator
 async def card_attachment_deleted(user_or_bot: User | Bot, project: Project, card: Card, attachment: CardAttachment):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardAttachmentDeleted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardAttachmentDeleted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardAttachmentDeleted,

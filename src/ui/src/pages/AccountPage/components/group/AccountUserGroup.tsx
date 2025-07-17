@@ -79,9 +79,7 @@ const AccountUserGroup = memo(({ group }: IAccountUserGroupProps): JSX.Element =
                 <MultiSelectAssignee.Form
                     allSelectables={users}
                     originalAssignees={users}
-                    createSearchText={
-                        ((item: User.TModel) => `${item.uid} ${item.email} ${item.firstname} ${item.lastname}`) as IFormProps["createSearchText"]
-                    }
+                    createSearchKeywords={((item: User.TModel) => [item.email, item.firstname, item.lastname]) as IFormProps["createSearchKeywords"]}
                     createLabel={
                         ((item: User.TModel) =>
                             item.isValidUser() ? `${item.firstname} ${item.lastname}`.trim() : item.email) as IFormProps["createLabel"]

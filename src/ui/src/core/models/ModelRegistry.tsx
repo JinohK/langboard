@@ -2,8 +2,8 @@
 import type { Model as ActivityModel } from "@/core/models/ActivityModel";
 import type { Model as AppSettingModel } from "@/core/models/AppSettingModel";
 import type { Model as AuthUserModel } from "@/core/models/AuthUser";
+import type { Model as BotLogModel } from "@/core/models/BotLogModel";
 import type { Model as BotModel } from "@/core/models/BotModel";
-import type { Model as BotSchedule } from "@/core/models/BotSchedule";
 import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
 import type { Model as ChatTemplateModel } from "@/core/models/ChatTemplateModel";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
@@ -22,14 +22,20 @@ import type { Model as ProjectWikiModel } from "@/core/models/ProjectWiki";
 import type { Model as UserModel } from "@/core/models/User";
 import type { Model as UserGroupModel } from "@/core/models/UserGroup";
 import type { Model as UserNotificationModel } from "@/core/models/UserNotification";
+import type { Interface as BaseBotScopeInterface } from "@/core/models/botScopes/BaseBotScopeModel";
+import type { Model as ProjectColumnBotScopeModel } from "@/core/models/botScopes/ProjectColumnBotScope";
+import type { Model as ProjectCardBotScopeModel } from "@/core/models/botScopes/ProjectCardBotScope";
+import type { Interface as BaseBotScheduleInterface } from "@/core/models/botSchedules/BaseBotScheduleModel";
+import type { Model as ProjectColumnBotScheduleModel } from "@/core/models/botSchedules/ProjectColumnBotSchedule";
+import type { Model as ProjectCardBotScheduleModel } from "@/core/models/botSchedules/ProjectCardBotSchedule";
 import { createContext, useContext } from "react";
 
 export interface IModelMap {
     ActivityModel: IModelRegistry<typeof ActivityModel>;
     AppSettingModel: IModelRegistry<typeof AppSettingModel>;
     AuthUser: IModelRegistry<typeof AuthUserModel>;
+    BotLogModel: IModelRegistry<typeof BotLogModel>;
     BotModel: IModelRegistry<typeof BotModel>;
-    BotSchedule: IModelRegistry<typeof BotSchedule>;
     ChatMessageModel: IModelRegistry<typeof ChatMessageModel>;
     ChatTemplateModel: IModelRegistry<typeof ChatTemplateModel>;
     GlobalRelationshipType: IModelRegistry<typeof GlobalRelationshipTypeModel>;
@@ -48,6 +54,11 @@ export interface IModelMap {
     User: IModelRegistry<typeof UserModel>;
     UserGroup: IModelRegistry<typeof UserGroupModel>;
     UserNotification: IModelRegistry<typeof UserNotificationModel>;
+
+    ProjectColumnBotScope: IModelRegistry<typeof ProjectColumnBotScopeModel>;
+    ProjectCardBotScope: IModelRegistry<typeof ProjectCardBotScopeModel>;
+    ProjectColumnBotSchedule: IModelRegistry<typeof ProjectColumnBotScheduleModel>;
+    ProjectCardBotSchedule: IModelRegistry<typeof ProjectCardBotScheduleModel>;
 }
 
 export type TPickedModelClass<TModelName extends keyof IModelMap> = IModelMap[TModelName]["Model"];
@@ -60,6 +71,16 @@ export type TCreatedAtModelName = {
     [TKey in keyof IModelMap]: TPickedModel<TKey> extends { created_at: Date } ? TKey : never;
 }[keyof IModelMap];
 export type TCreatedAtModel<TModelName extends TCreatedAtModelName> = TPickedModel<TModelName>;
+
+export type TBotScopeModelName = {
+    [TKey in keyof IModelMap]: TPickedModel<TKey> extends BaseBotScopeInterface ? TKey : never;
+}[keyof IModelMap];
+export type TBotScopeModel<TModelName extends TBotScopeModelName> = TPickedModel<TModelName>;
+
+export type TBotScheduleModelName = {
+    [TKey in keyof IModelMap]: TPickedModel<TKey> extends BaseBotScheduleInterface ? TKey : never;
+}[keyof IModelMap];
+export type TBotScheduleModel<TModelName extends TBotScheduleModelName> = TPickedModel<TModelName>;
 
 export type TUserLikeModelName = "AuthUser" | "User" | "BotModel";
 export type TUserLikeModel = TPickedModel<TUserLikeModelName>;

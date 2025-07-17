@@ -65,7 +65,6 @@ export const API_ROUTES = {
     },
     BOARD: {
         GET: "/board/{uid}",
-        CURRENT_AUTH_ROLES: "/board/{uid}/current-roles",
         DETAILS: "/board/{uid}/details",
         GET_INVITATION: "/project/invite/details/{token}",
         IS_AVAILABLE: "/board/{uid}/available",
@@ -148,25 +147,34 @@ export const API_ROUTES = {
             UPDATE_ASSIGNEES: "/board/{uid}/wiki/{wiki_uid}/assignees",
             DELETE: "/board/{uid}/wiki/{wiki_uid}",
         },
+        BOT: {
+            SCOPE: {
+                CREATE: "/board/{uid}/bot/{bot_uid}/scope",
+                TOGGLE_TRIGGER_CONDITION: "/board/{uid}/scope/{scope_uid}/trigger-condition",
+                DELETE: "/board/{uid}/scope/{scope_uid}",
+            },
+            SCHEDULE: {
+                GET_ALL_BY_CARD: "/board/{uid}/bot/{bot_uid}/card/{card_uid}/schedules",
+                GET_ALL_BY_COLUMN: "/board/{uid}/bot/{bot_uid}/column/{column_uid}/schedules",
+                SCHEDULE: "/board/{uid}/bot/{bot_uid}/schedule",
+                RESCHEDULE: "/board/{uid}/bot/{bot_uid}/reschedule/{schedule_uid}",
+                UNSCHEDULE: "/board/{uid}/bot/{bot_uid}/unschedule/{schedule_uid}",
+            },
+            LOG: {
+                GET_ALL_BY_CARD: "/board/{uid}/bot/{bot_uid}/card/{card_uid}/logs",
+                GET_ALL_BY_COLUMN: "/board/{uid}/bot/{bot_uid}/column/{column_uid}/logs",
+            },
+        },
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
-            UPDATE_ASSIGNED_BOTS: "/board/{uid}/settings/assigned-bots",
-            UPDATE_BOT_ROLES: "/board/{uid}/settings/roles/bot/{bot_uid}",
             UPDATE_USER_ROLES: "/board/{uid}/settings/roles/user/{user_uid}",
             CHANGE_INTERNAL_BOT: "/board/{uid}/settings/internal-bot",
-            TOGGLE_BOT_ACTIVATION: "/board/{uid}/settings/bot/{bot_uid}/toggle-activation",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
                 CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
                 CHANGE_ORDER: "/board/{uid}/settings/label/{label_uid}/order",
                 DELETE: "/board/{uid}/settings/label/{label_uid}",
-            },
-            BOT_SCHEDULE: {
-                GET_ALL: "/board/{uid}/settings/bot/{bot_uid}/schedules",
-                SCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/schedule",
-                RESCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/reschedule/{schedule_uid}",
-                UNSCHEDULE: "/board/{uid}/settings/bot/{bot_uid}/unschedule/{schedule_uid}",
             },
         },
     },
@@ -193,7 +201,6 @@ export const API_ROUTES = {
             CREATE: "/settings/bot",
             UPDATE: "/settings/bot/{bot_uid}",
             GENERATE_NEW_API_TOKEN: "/settings/bot/{bot_uid}/new-api-token",
-            TOGGLE_TRIGGER_CONDITION: "/settings/bot/{bot_uid}/trigger-condition",
             DELETE: "/settings/bot/{bot_uid}",
         },
         GLOBAL_RELATIONSHIPS: {
@@ -243,8 +250,6 @@ export const SOCKET_SERVER_EVENTS = {
     },
     BOARD: {
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
-        ASSIGNED_BOTS_UPDATED: "board:assigned-bots:updated:{uid}",
-        BOT_ROLES_UPDATED: "board:roles:bot:updated:{uid}",
         USER_ROLES_UPDATED: "board:roles:user:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
         ASSIGNED_INTERNAL_BOT_CHANGED: "board:assigned-internal-bot:changed:{uid}",
@@ -319,16 +324,23 @@ export const SOCKET_SERVER_EVENTS = {
             DETAILS_CHANGED: "board:wiki:details:changed:{uid}",
             PUBLIC_CHANGED: "board:wiki:public:changed:{uid}",
             ASSIGNEES_UPDATED: "board:wiki:assignees:updated:{uid}",
-            PROJECT_USERS_UPDATED: "board:wiki:project-users:updated:{uid}",
             ORDER_CHANGED: "board:wiki:order:changed:{uid}",
             DELETED: "board:wiki:deleted:{uid}",
         },
-        SETTINGS: {
-            BOT_ACTIVATION_TOGGLED: "board:settings:activation:bot:toggled:{uid}",
-            BOT_CRON: {
-                SCHEDULED: "board:settings:bot:cron:scheduled:{uid}",
-                RESCHEDULED: "board:settings:bot:cron:rescheduled:{uid}",
-                DELETED: "board:settings:bot:cron:deleted:{uid}",
+        BOT: {
+            SCOPE: {
+                CREATED: "board:bot:scope:created",
+                TRIGGER_CONDITION_TOGGLED: "board:bot:scope:conditions:updated",
+                DELETED: "board:bot:scope:deleted",
+            },
+            SCHEDULE: {
+                SCHEDULED: "board:bot:cron:scheduled",
+                RESCHEDULED: "board:bot:cron:rescheduled",
+                UNSCHEDULED: "board:bot:cron:unscheduled",
+            },
+            LOG: {
+                CREATED: "board:bot:log:created",
+                STACK_ADDED: "board:bot:log:stack:added",
             },
         },
     },
@@ -375,15 +387,11 @@ export const SOCKET_SERVER_EVENTS = {
         BOTS: {
             CREATED: "settings:bot:created",
             UPDATED: "settings:bot:updated:{uid}",
-            TRIGGER_CONDITION_PREDEFINED: "settings:bot:trigger-condition:predefined:{uid}",
             TRIGGER_CONDITION_TOGGLED: "settings:bot:trigger-condition:toggled:{uid}",
         },
         INTERNAL_BOTS: {
             DEFAULT_CHANGED: "settings:internal-bot:default-changed:{uid}",
         },
-    },
-    PROJECT_BOT: {
-        ACTIVATION_TOGGLED: "project:bot:activation:toggled:{uid}",
     },
 } as const;
 

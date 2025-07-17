@@ -1,10 +1,9 @@
-import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
-import * as ProjectColumn from "@/core/models/ProjectColumn";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as InternalBotModel from "@/core/models/InternalBotModel";
 import { IBaseModel, BaseModel, TRoleAllGranted } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
+import { Utils } from "@langboard/core/utils";
 import useBoardLabelCreatedHandlers from "@/controllers/socket/board/label/useBoardLabelCreatedHandlers";
 import useBoardLabelDeletedHandlers from "@/controllers/socket/board/label/useBoardLabelDeletedHandlers";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
@@ -24,15 +23,18 @@ import useDashboardProjectColumnOrderChangedHandlers from "@/controllers/socket/
 import useDashboardProjectColumnDeletedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectColumnDeletedHandlers";
 import useBoardColumnCreatedHandlers from "@/controllers/socket/board/column/useBoardColumnCreatedHandlers";
 import useBoardColumnNameChangedHandlers from "@/controllers/socket/board/column/useBoardColumnNameChangedHandlers";
-import useBoardColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardColumnDeletedHandlers";
 import useDashboardProjectAssignedUsersUpdatedHandlers from "@/controllers/socket/dashboard/project/useDashboardProjectAssignedUsersUpdatedHandlers";
-import useBoardAssignedBotsUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedBotsUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
-import useBoardBotRolesUpdatedHandlers from "@/controllers/socket/board/useBoardBotRolesUpdatedHandlers";
 import useBoardUserRolesUpdatedHandlers from "@/controllers/socket/board/useBoardUserRolesUpdatedHandlers";
 import useBoardChatTemplateCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatTemplateCreatedHandlers";
-import { Utils } from "@langboard/core/utils";
-import { ESocketTopic } from "@langboard/core/enums";
+import useBoardBotScopeCreatedHandlers from "@/controllers/socket/board/botScopes/useBoardBotScopeCreatedHandlers";
+import useBoardBotScopeTriggerConditionsUpdatedHandlers from "@/controllers/socket/board/botScopes/useBoardBotScopeTriggerConditionsUpdatedHandlers";
+import useBoardBotScopeDeletedHandlers from "@/controllers/socket/board/botScopes/useBoardBotScopeDeletedHandlers";
+import useBoardBotCronScheduledHandlers from "@/controllers/socket/board/botSchedules/useBoardBotCronScheduledHandlers";
+import useBoardBotCronRescheduledHandlers from "@/controllers/socket/board/botSchedules/useBoardBotCronRescheduledHandlers";
+import useBoardBotCronUnscheduledHandlers from "@/controllers/socket/board/botSchedules/useBoardBotCronUnscheduledHandlers";
+import useBoardBotLogCreatedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogCreatedHandlers";
+import useBoardBotLogStackAddedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogStackAddeddHandlers";
 
 export enum ERoleAction {
     Read = "read",
@@ -56,8 +58,6 @@ export interface IStore extends Interface {
     all_members: User.Interface[];
     invited_member_uids: string[];
     starred: bool;
-    columns: ProjectColumn.Interface[];
-    bots: BotModel.Interface[];
     internal_bots: InternalBotModel.Interface[];
     current_auth_role_actions: TRoleActions[];
     labels: ProjectLabel.Interface[];
@@ -65,16 +65,13 @@ export interface IStore extends Interface {
     ai_description?: string;
     last_viewed_at: Date;
 
-    bot_roles: Record<string, TRoleActions[]>; // This will be used in board setting.
     member_roles: Record<string, TRoleActions[]>; // This will be used in board setting.
 }
 
 class Project extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             all_members: User.Model.MODEL_NAME,
-            columns: ProjectColumn.Model.MODEL_NAME,
-            bots: BotModel.Model.MODEL_NAME,
             internal_bots: InternalBotModel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
         };
@@ -82,7 +79,7 @@ class Project extends BaseModel<IStore> {
     override get FOREIGN_MODELS() {
         return Project.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "Project" as const;
     }
 
@@ -93,38 +90,21 @@ class Project extends BaseModel<IStore> {
             [
                 useBoardColumnCreatedHandlers,
                 useBoardColumnNameChangedHandlers,
-                useBoardColumnDeletedHandlers,
                 useBoardDetailsChangedHandlers,
-                useBoardAssignedBotsUpdatedHandlers,
                 useBoardAssignedUsersUpdatedHandlers,
-                useBoardBotRolesUpdatedHandlers,
                 useBoardUserRolesUpdatedHandlers,
                 useBoardLabelCreatedHandlers,
                 useBoardLabelDeletedHandlers,
                 useCardRelationshipsUpdatedHandlers,
                 useBoardChatTemplateCreatedHandlers,
-            ],
-            {
-                topic: ESocketTopic.Board,
-                projectUID: this.uid,
-                project: this,
-            }
-        );
-    }
-
-    public static convertModel(model: IStore): Interface {
-        if (Utils.Type.isString(model.updated_at)) {
-            model.updated_at = new Date(model.updated_at);
-        }
-        if (Utils.Type.isString(model.last_viewed_at)) {
-            model.last_viewed_at = new Date(model.last_viewed_at);
-        }
-        return model;
-    }
-
-    public subscribeDashboardSocketHandlers(userUID: string) {
-        return this.subscribeSocketEvents(
-            [
+                useBoardBotScopeCreatedHandlers,
+                useBoardBotScopeTriggerConditionsUpdatedHandlers,
+                useBoardBotScopeDeletedHandlers,
+                useBoardBotCronScheduledHandlers,
+                useBoardBotCronRescheduledHandlers,
+                useBoardBotCronUnscheduledHandlers,
+                useBoardBotLogCreatedHandlers,
+                useBoardBotLogStackAddedHandlers,
                 useDashboardProjectAssignedUsersUpdatedHandlers,
                 useDashboardProjectColumnCreatedHandlers,
                 useDashboardProjectColumnNameChangedHandlers,
@@ -141,12 +121,20 @@ class Project extends BaseModel<IStore> {
                 useProjectDeletedHandlers,
             ],
             {
-                topic: ESocketTopic.Dashboard,
                 projectUID: this.uid,
                 project: this,
-                userUID,
             }
         );
+    }
+
+    public static convertModel(model: IStore): Interface {
+        if (Utils.Type.isString(model.updated_at)) {
+            model.updated_at = new Date(model.updated_at);
+        }
+        if (Utils.Type.isString(model.last_viewed_at)) {
+            model.last_viewed_at = new Date(model.last_viewed_at);
+        }
+        return model;
     }
 
     public get owner_uid() {
@@ -205,20 +193,6 @@ class Project extends BaseModel<IStore> {
         this.update({ invited_member_uids: value });
     }
 
-    public get columns(): ProjectColumn.TModel[] {
-        return this.getForeignValue("columns");
-    }
-    public set columns(value: (ProjectColumn.TModel | ProjectColumn.Interface)[]) {
-        this.update({ columns: value });
-    }
-
-    public get bots(): BotModel.TModel[] {
-        return this.getForeignValue("bots");
-    }
-    public set bots(value: (BotModel.TModel | BotModel.Interface)[]) {
-        this.update({ bots: value });
-    }
-
     public get internal_bots(): InternalBotModel.TModel[] {
         return this.getForeignValue("internal_bots");
     }
@@ -252,13 +226,6 @@ class Project extends BaseModel<IStore> {
     }
     public set last_viewed_at(value: string | Date) {
         this.update({ last_viewed_at: new Date(value) });
-    }
-
-    public get bot_roles() {
-        return this.getValue("bot_roles");
-    }
-    public set bot_roles(value) {
-        this.update({ bot_roles: value });
     }
 
     public get member_roles() {

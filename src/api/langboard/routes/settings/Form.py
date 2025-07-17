@@ -6,9 +6,8 @@ from core.schema import Pagination
 from core.types import SafeDateTime
 from models.AppSetting import AppSettingType
 from models.Bot import BotAPIAuthType
-from models.BotTrigger import BotTriggerCondition
 from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
-from pydantic import Field, field_validator
+from pydantic import field_validator
 from ...Constants import EMAIL_REGEX
 
 
@@ -105,16 +104,6 @@ class UpdateBotForm(BaseFormModel):
     ip_whitelist: str | None = None
     prompt: str | None = None
     delete_avatar: bool = False
-
-
-@form_model
-class PredefineBotTriggerConditionForm(BaseFormModel):
-    conditions: list[BotTriggerCondition] = Field(..., description="List of bot trigger conditions")
-
-
-@form_model
-class ToggleBotTriggerConditionForm(BaseFormModel):
-    condition: BotTriggerCondition
 
 
 @form_model

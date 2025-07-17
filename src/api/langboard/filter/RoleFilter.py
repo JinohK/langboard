@@ -2,7 +2,7 @@ from enum import Enum
 from typing import Any, Callable, Generic, Protocol, TypeVar
 from core.filter import BaseFilter
 from core.utils.decorators import class_instance, thread_safe_singleton
-from models.BaseRoleModel import BaseRoleModel
+from models.bases import BaseRoleModel
 from sqlmodel.sql.expression import SelectOfScalar
 
 
@@ -12,11 +12,7 @@ _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
 
 class _RoleFinderFunc(Protocol, Generic[_TRoleModel]):
     def __call__(
-        self,
-        query: SelectOfScalar[_TRoleModel],
-        path_params: dict[str, Any],
-        user_or_bot_id: int,
-        is_bot: bool,
+        self, query: SelectOfScalar[_TRoleModel], path_params: dict[str, Any], user_id: int
     ) -> SelectOfScalar[_TRoleModel]: ...
 
 

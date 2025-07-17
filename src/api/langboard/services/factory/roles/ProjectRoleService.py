@@ -8,12 +8,12 @@ class ProjectRoleService(BaseRoleService[ProjectRole]):
         super().__init__(ProjectRole)
 
     @extract_func_param(4)(ProjectRole)  # type: ignore
-    async def get_roles(self, **kwargs):
-        return await super().get_roles(**kwargs)
+    async def get_list(self, **kwargs):
+        return await super().get_list(**kwargs)
 
     @extract_func_param(4)(ProjectRole)  # type: ignore
-    async def get_role(self, **kwargs):
-        return await super().get_role(**kwargs)
+    async def get_one(self, **kwargs):
+        return await super().get_one(**kwargs)
 
     @extract_func_param(3)(ProjectRole)  # type: ignore
     async def grant(self, **kwargs):

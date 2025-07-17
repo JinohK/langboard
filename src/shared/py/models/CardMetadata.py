@@ -1,7 +1,7 @@
 from typing import Any
 from core.db import SnowflakeIDField
 from core.types import SnowflakeID
-from .BaseMetadataModel import BaseMetadataModel
+from .bases import BaseMetadataModel
 from .Card import Card
 
 

@@ -146,13 +146,13 @@ class CardRelationshipService(BaseService):
                 )
             )
 
-        related_card_ids: set[SnowflakeID] = set()
+        converted_related_card_ids: set[SnowflakeID] = set()
         relationship_type_ids: set[SnowflakeID] = set()
         converted_relationships: list[tuple[SnowflakeID, SnowflakeID]] = []
         for related_card_uid, relationship_type_uid in relationships:
             related_card_id = SnowflakeID.from_short_code(related_card_uid)
             relationship_type_id = SnowflakeID.from_short_code(relationship_type_uid)
-            related_card_ids.add(related_card_id)
+            converted_related_card_ids.add(related_card_id)
             relationship_type_ids.add(relationship_type_id)
             converted_relationships.append((related_card_id, relationship_type_id))
 
@@ -161,7 +161,7 @@ class CardRelationshipService(BaseService):
             result = db.exec(
                 SqlBuilder.select.column(Card.column("id"))
                 .where(Card.column("project_id") == project.id)
-                .where(Card.column("id").in_(related_card_ids))
+                .where(Card.column("id").in_(converted_related_card_ids))
             )
             related_card_ids = set(cast(Sequence[SnowflakeID], result.all()))
 

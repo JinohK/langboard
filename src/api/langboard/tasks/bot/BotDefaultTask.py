@@ -1,8 +1,9 @@
 from typing import Literal
 from core.db import BaseSqlModel
-from models import Bot, Project, User
+from models import Bot, Project
 from ...ai import BotDefaultTrigger
 from ...core.broker import Broker
+from ...core.utils.BotUtils import BotUtils
 from ...core.utils.ModelUtils import get_model_by_table_name
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -11,19 +12,6 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 @Broker.wrap_async_task_decorator
 async def bot_created(bot: Bot):
     await BotTaskHelper.run(bot, BotDefaultTrigger.BotCreated, {})
-
-
-@BotTaskDataHelper.project_schema(BotDefaultTrigger.BotProjectAssigned)
-@Broker.wrap_async_task_decorator
-async def bot_project_assigned(user: User, project: Project, old_bot_ids: list[int], new_bot_ids: list[int]):
-    first_time_assigned_bots = BotTaskDataHelper.get_updated_assigned_bots(old_bot_ids, new_bot_ids)
-
-    await BotTaskHelper.run(
-        first_time_assigned_bots,
-        BotDefaultTrigger.BotProjectAssigned,
-        BotTaskDataHelper.create_project(user, project),
-        project,
-    )
 
 
 @BotTaskDataHelper.schema(
@@ -55,12 +43,17 @@ async def bot_mentioned(
 
     data = {}
     project = None
+    scope_model: BaseSqlModel | None = None
     for model in models:
         data[f"{model.__tablename__}_uid"] = model.get_uid()
         if isinstance(model, Project):
             project = model
+        if model.__tablename__ in BotUtils.AVAILABLE_TARGET_TABLES:
+            scope_model = model
 
     if not project:
         return
 
-    await BotTaskHelper.run(bot, BotDefaultTrigger.BotMentioned, {"mentioned_in": mentioned_in, **data}, project)
+    await BotTaskHelper.run(
+        bot, BotDefaultTrigger.BotMentioned, {"mentioned_in": mentioned_in, **data}, project, scope_model
+    )

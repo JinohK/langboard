@@ -1,6 +1,6 @@
 from enum import Enum
 from sqlmodel import Field
-from .BaseRoleModel import BaseRoleModel
+from .bases import BaseRoleModel
 
 
 class {class_name}RoleAction(Enum):

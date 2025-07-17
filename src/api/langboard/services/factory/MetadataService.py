@@ -1,7 +1,7 @@
 from typing import Any, Literal, TypeVar, overload
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.service import BaseService
-from models.BaseMetadataModel import BaseMetadataModel
+from models.bases import BaseMetadataModel
 from ...core.service import ServiceHelper
 
 

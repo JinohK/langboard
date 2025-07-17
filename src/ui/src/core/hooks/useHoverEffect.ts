@@ -23,7 +23,7 @@ const useHoverEffect = ({ isOpened, setIsOpened, scopeAttr, expectedScopeValue, 
                 hoverTimeoutRef.current = null;
             }
         }, delay);
-    }, [isOpened]);
+    }, [isOpened, setIsOpened]);
     const onPointerLeave = () => {
         if (!Utils.Type.isNullOrUndefined(hoverTimeoutRef.current)) {
             clearTimeout(hoverTimeoutRef.current);

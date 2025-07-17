@@ -1,3 +1,4 @@
+import useBoardColumnDeletedHandlers from "@/controllers/socket/board/column/useBoardColumnDeletedHandlers";
 import useBoardCardCreatedHandlers from "@/controllers/socket/board/useBoardCardCreatedHandlers";
 import { BaseModel, IBaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
@@ -14,16 +15,17 @@ export interface IStore extends Interface {
 }
 
 class ProjectColumn extends BaseModel<IStore> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectColumn" as const;
     }
 
     constructor(model: Record<string, unknown>) {
         super(model);
 
-        this.subscribeSocketEvents([useBoardCardCreatedHandlers], {
+        this.subscribeSocketEvents([useBoardCardCreatedHandlers, useBoardColumnDeletedHandlers], {
             projectUID: this.project_uid,
             columnUID: this.uid,
+            column: this,
         });
     }
 

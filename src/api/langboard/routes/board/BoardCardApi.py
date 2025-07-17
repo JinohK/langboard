@@ -9,6 +9,7 @@ from models import (
     Bot,
     Card,
     CardAttachment,
+    CardBotScope,
     CardComment,
     CardRelationship,
     Checkitem,
@@ -20,13 +21,13 @@ from models import (
     ProjectRole,
     User,
 )
-from models.BaseRoleModel import ALL_GRANTED
+from models.bases import ALL_GRANTED
 from models.ProjectRole import ProjectRoleAction
 from ...core.service import ServiceHelper
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import (
+from .forms import (
     AssignUsersForm,
     ChangeCardDetailsForm,
     ChangeChildOrderForm,
@@ -50,7 +51,6 @@ from .scopes import (
                     {
                         "schema": {
                             "project_members": [User],
-                            "project_bots": [Bot],
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",
                             "relationships": [CardRelationship],
@@ -82,32 +82,40 @@ from .scopes import (
                 ],
                 "attachments": [CardAttachment],
                 "global_relationships": [GlobalCardRelationshipType],
-                "project_columns": [ProjectColumn],
+                "project_columns": [(ProjectColumn, {"schema": {"count": "integer"}})],
                 "project_labels": [ProjectLabel],
+                "bot_scopes": [CardBotScope],
             }
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2004)
+        .err(404, ApiErrorCode.NF2003)
         .get()
     ),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
-async def get_card_detail(
+async def get_card_details(
     project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
     project, card = params
     api_card = await service.card.get_details(project_uid, card)
     if api_card is None:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
     global_relationships = await service.app_setting.get_global_relationships(as_api=True)
-    api_card["current_auth_role_actions"] = await service.project.get_role_actions(user_or_bot, project)
+    bot_scopes = []
+    can_set_scopes = isinstance(user_or_bot, Bot)
+    if isinstance(user_or_bot, User):
+        actions = await service.project.get_one_actions(user_or_bot, project)
+        api_card["current_auth_role_actions"] = actions
+        can_set_scopes = ALL_GRANTED in actions or ProjectRoleAction.Update.value in actions
+    if can_set_scopes:
+        bot_scopes = await service.card.get_bot_scopes(project, card, as_api=True)
 
-    project_columns = await service.project_column.get_all_by_project(project, as_api=True)
+    project_columns = await service.project_column.get_all_by_project(project.id, as_api=True)
     project_labels = await service.project_label.get_all(project, as_api=True)
 
     checklists = await service.checklist.get_list(card, as_api=True)
@@ -121,6 +129,7 @@ async def get_card_detail(
             "global_relationships": global_relationships,
             "project_columns": project_columns,
             "project_labels": project_labels,
+            "bot_scopes": bot_scopes,
         }
     )
 
@@ -177,7 +186,7 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2005)
+        .err(404, ApiErrorCode.NF2004)
         .get()
     ),
 )
@@ -193,7 +202,7 @@ async def create_card(
         user_or_bot, project_uid, form.column_uid, form.title, form.description, form.assign_users
     )
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2005, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
     _, api_card = result
 
     return JsonResponse(content={"card": api_card}, status_code=status.HTTP_201_CREATED)
@@ -215,7 +224,7 @@ async def create_card(
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2004)
+        .err(404, ApiErrorCode.NF2003)
         .get()
     ),
 )
@@ -244,7 +253,7 @@ async def change_card_details(
 
     result = await service.card.update(user_or_bot, project_uid, card_uid, form_dict)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     if result is True:
         response = {}
@@ -265,7 +274,7 @@ async def change_card_details(
     "/board/{project_uid}/card/{card_uid}/assigned-users",
     tags=["Board.Card"],
     description="Assign users to a card.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -278,7 +287,7 @@ async def update_card_assigned_users(
 ) -> JsonResponse:
     result = await service.card.update_assigned_users(user_or_bot, project_uid, card_uid, form.assigned_users)
     if result is None:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -288,7 +297,7 @@ async def update_card_assigned_users(
     "/board/{project_uid}/card/{card_uid}/order",
     tags=["Board.Card"],
     description="Change card order or move to another project column.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -301,7 +310,7 @@ async def change_card_order_or_move_column(
 ) -> JsonResponse:
     result = await service.card.change_order(user_or_bot, project_uid, card_uid, form.order, form.parent_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -311,7 +320,7 @@ async def change_card_order_or_move_column(
     "/board/{project_uid}/card/{card_uid}/labels",
     tags=["Board.Card"],
     description="Update assigned labels to a card.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -324,7 +333,7 @@ async def update_card_labels(
 ) -> JsonResponse:
     result = await service.card.update_labels(user_or_bot, project_uid, card_uid, form.labels)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -334,7 +343,7 @@ async def update_card_labels(
     "/board/{project_uid}/card/{card_uid}/relationships",
     tags=["Board.Card"],
     description="Update card relationships.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -349,7 +358,7 @@ async def update_card_relationships(
         user_or_bot, project_uid, card_uid, form.is_parent, form.relationships
     )
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -359,7 +368,7 @@ async def update_card_relationships(
     "/board/{project_uid}/card/{card_uid}/archive",
     tags=["Board.Card"],
     description="Archive a card.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
@@ -368,13 +377,13 @@ async def archive_card(
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if project is None:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
-    column = await service.project_column.get_or_create_archive_if_not_exists(project)
+    column = await service.project_column.get_or_create_archive_if_not_exists(project.id)
 
     result = await service.card.change_order(user_or_bot, project, card_uid, 0, column)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -384,7 +393,7 @@ async def archive_card(
     "/board/{project_uid}/card/{card_uid}",
     tags=["Board.Card"],
     description="Delete a card. (Only available for archived cards)",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2003).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], RoleFinder.project)
 @AuthFilter.add()
@@ -393,6 +402,6 @@ async def delete_card(
 ) -> JsonResponse:
     result = await service.card.delete(user_or_bot, project_uid, card_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2003, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()

@@ -1,7 +1,7 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { Project, ProjectCard } from "@/core/models";
+import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboarCardDeletedRawResponse {
@@ -10,29 +10,22 @@ export interface IDashboarCardDeletedRawResponse {
 }
 
 export interface IUseDashboardCardDeletedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
+    project: Project.TModel;
 }
 
-const useDashboardCardDeletedHandlers = ({ callback, projectUID }: IUseDashboardCardDeletedHandlersProps) => {
+const useDashboardCardDeletedHandlers = ({ callback, project }: IUseDashboardCardDeletedHandlersProps) => {
     return useSocketHandler<{}, IDashboarCardDeletedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: projectUID,
-        eventKey: `dashboard-card-deleted-${projectUID}`,
+        topicId: project.uid,
+        eventKey: `dashboard-card-deleted-${project.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.DELETED,
-            params: { uid: projectUID },
+            params: { uid: project.uid },
             callback,
             responseConverter: (data) => {
-                const project = Project.Model.getModel(projectUID);
-                if (project) {
-                    const columns = project.columns;
-                    for (let i = 0; i < columns.length; ++i) {
-                        if (columns[i].uid === data.column_uid) {
-                            --columns[i].count;
-                            break;
-                        }
-                    }
-                    project.columns = columns;
+                const column = ProjectColumn.Model.getModel((model) => model.uid === data.column_uid);
+                if (column) {
+                    --column.count;
                 }
 
                 const card = ProjectCard.Model.getModel(data.uid);

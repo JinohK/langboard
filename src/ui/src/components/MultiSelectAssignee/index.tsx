@@ -34,10 +34,11 @@ export type TSaveHandler =
     | ((assignees: (string | TUserLikeModel)[]) => Promise<void>);
 
 const createAssigneeSelectItemCreator =
-    (createSearchText: (item: TUserLikeModel) => string, createLabel: (item: TUserLikeModel) => string) =>
+    (createSearchKeywords: (item: TUserLikeModel) => string[], createLabel: (item: TUserLikeModel) => string) =>
     (item: TUserLikeModel): TAssigneeSelecItem => ({
-        value: createSearchText(item),
+        value: item.uid,
         label: createLabel(item),
+        keywords: createSearchKeywords(item),
         assigneeModelName: item.MODEL_NAME as TUserLikeModelName,
         assigneeUID: item.uid,
     });
@@ -147,7 +148,7 @@ export interface IFormProps {
     tagContentProps?: Record<string, unknown>;
     allSelectables: TUserLikeModel[];
     originalAssignees: TUserLikeModel[];
-    createSearchText: (item: TUserLikeModel) => string;
+    createSearchKeywords: (item: TUserLikeModel) => string[];
     createLabel: (item: TUserLikeModel) => string;
     placeholder?: string;
     useEditorProps?: {
@@ -170,13 +171,13 @@ const Form = memo(
         tagContentProps = {},
         allSelectables,
         originalAssignees,
-        createSearchText,
+        createSearchKeywords,
         createLabel,
         placeholder,
         useEditorProps,
     }: IFormProps) => {
         const [t] = useTranslation();
-        const createAssigneeSelectItem = createAssigneeSelectItemCreator(createSearchText, createLabel);
+        const createAssigneeSelectItem = createAssigneeSelectItemCreator(createSearchKeywords, createLabel);
         const [selectables, selectablesMap] = useMemo(() => {
             const list: TAssigneeSelecItem[] = [];
             const map: Record<string, TUserLikeModel> = {};

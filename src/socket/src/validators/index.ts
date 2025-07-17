@@ -5,6 +5,5 @@ import "@/validators/BoardSettings";
 import "@/validators/BoardWiki";
 import "@/validators/BoardWikiPrivate";
 import "@/validators/Dashboard";
-import "@/validators/ProjectBot";
 import "@/validators/User";
 import "@/validators/UserPrivate";

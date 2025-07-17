@@ -11,7 +11,7 @@ import fs from "fs";
 import { EHttpStatus } from "@langboard/core/enums";
 
 abstract class BaseBot {
-    static get BOT_TYPE(): EInternalBotType {
+    public static get BOT_TYPE(): EInternalBotType {
         return null!;
     }
     #abortableTasks: Map<string, AbortController>;

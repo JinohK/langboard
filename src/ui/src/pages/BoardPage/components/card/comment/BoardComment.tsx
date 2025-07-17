@@ -38,8 +38,8 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const { projectUID, card, currentUser, editorsRef } = useBoardCard();
     const [isEditing, setIsEditing] = useState(false);
     const projectMembers = card.useForeignField("project_members");
-    const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
+    const bots = BotModel.Model.useModels(() => true);
+    const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const content = comment.useField("content");
     const commentUsers = comment.useForeignField("user");
     const commentBots = comment.useForeignField("bot");

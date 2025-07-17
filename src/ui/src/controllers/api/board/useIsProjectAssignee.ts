@@ -11,7 +11,6 @@ export interface IIsProjectAssigneeForm {
 
 export interface IIsProjectAssigneeResponse {
     result: bool;
-    is_bot_disabled?: bool;
 }
 
 const useIsProjectAssignee = (options?: TMutationOptions<IIsProjectAssigneeForm, IIsProjectAssigneeResponse>) => {

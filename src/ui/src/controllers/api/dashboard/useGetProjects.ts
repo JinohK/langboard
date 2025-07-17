@@ -3,12 +3,13 @@ import { isAxiosError } from "axios";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { Project } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { deleteProjectModel } from "@/core/helpers/ModelHelper";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 
 export interface IGetProjectsResponse {
     projects: Project.TModel[];
+    columns: ProjectColumn.TModel[];
 }
 
 const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) => {
@@ -23,12 +24,13 @@ const useGetProjects = (options?: TQueryOptions<unknown, IGetProjectsResponse>) 
             });
 
             const projects = Project.Model.fromArray(res.data.projects, true);
+            const columns = ProjectColumn.Model.fromArray(res.data.columns, true);
 
             Project.Model.getModels((model) => !projects.some((project: Project.TModel) => project.uid === model.uid)).forEach((model) => {
                 deleteProjectModel(ESocketTopic.Dashboard, model.uid);
             });
 
-            return { projects };
+            return { projects, columns };
         } catch (e) {
             if (!isAxiosError(e)) {
                 throw e;

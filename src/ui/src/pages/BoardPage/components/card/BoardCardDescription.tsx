@@ -4,7 +4,7 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
-import { Project } from "@/core/models";
+import { BotModel, Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -30,8 +30,8 @@ const BoardCardDescription = memo((): JSX.Element => {
     const editorRef = useRef<TEditor>(null);
     const editorComponentRef = useRef<HTMLDivElement | null>(null);
     const projectMembers = card.useForeignField("project_members");
-    const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
+    const bots = BotModel.Model.useModels(() => true);
+    const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const description = card.useField("description");
     const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({

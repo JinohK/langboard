@@ -7,7 +7,7 @@ from models.ProjectRole import ProjectRoleAction
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import ChangeRootOrderForm, ColumnForm
+from .forms import ChangeRootOrderForm, ColumnForm
 
 
 @AppRouter.schema(form=ColumnForm)
@@ -49,7 +49,7 @@ async def create_project_column(
     "/board/{project_uid}/column/{column_uid}/name",
     tags=["Board.Column"],
     description="Change project column name.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
@@ -62,7 +62,7 @@ async def update_project_column_name(
 ) -> JsonResponse:
     result = await service.project_column.change_name(user_or_bot, project_uid, column_uid, form.name)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2005, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"name": form.name})
 
@@ -71,7 +71,7 @@ async def update_project_column_name(
     "/board/{project_uid}/column/{column_uid}/order",
     tags=["Board.Column"],
     description="Change project column order.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -84,7 +84,7 @@ async def update_project_column_order(
 ) -> JsonResponse:
     result = await service.project_column.change_order(user, project_uid, column_uid, form.order)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2005, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -94,7 +94,7 @@ async def update_project_column_order(
     "/board/{project_uid}/column/{column_uid}",
     tags=["Board.Column"],
     description="Delete a project column.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2005).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2004).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
@@ -103,6 +103,6 @@ async def delete_project_column(
 ) -> JsonResponse:
     result = await service.project_column.delete(user_or_bot, project_uid, column_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2005, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()

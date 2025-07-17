@@ -9,7 +9,7 @@ export interface Interface extends IBaseModel {
 }
 
 class MetadataModel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "MetadataModel" as const;
     }
 

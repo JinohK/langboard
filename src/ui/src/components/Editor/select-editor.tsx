@@ -21,6 +21,7 @@ export type TSelectItem = {
     value: string;
     isNew?: bool;
     label?: string;
+    keywords?: string[];
 };
 
 type SelectEditorContextValue = {
@@ -179,6 +180,7 @@ export function SelectEditorCombobox() {
     const editor = useEditorRef();
     const containerRef = useEditorContainerRef();
     const { items, open, onValueChange, canAddNew, validateNewItem, createNewItemLabel } = useSelectEditorContext();
+    const fzfFilter = React.useMemo(() => createFzfFilter(items), [items]);
     const selectableItems = useSelectableItems({
         allowNew: canAddNew,
         filter: fzfFilter,
@@ -216,6 +218,7 @@ export function SelectEditorCombobox() {
                                     onSelect={() => {
                                         editor.getTransforms(TagPlugin).insert.tag(item);
                                     }}
+                                    keywords={item.keywords}
                                 >
                                     {item.isNew ? (
                                         <div className="flex items-center gap-1">
@@ -262,15 +265,19 @@ const createEditorValue = (value?: TSelectItem[]) => [
     },
 ];
 
-const fzfFilter = (value: string, search: string): bool => {
-    if (!search) return true;
+const createFzfFilter = (items: TSelectItem[] = []) => {
+    return (value: string, search: string): bool => {
+        if (!search) return true;
 
-    const fzf = new Fzf([value], {
-        casing: "case-insensitive",
-        selector: (v: string) => v,
-    });
+        const item = items.find((item) => item.value === value);
 
-    return fzf.find(search).length > 0;
+        const fzf = new Fzf([value, ...(item?.keywords ?? [])], {
+            casing: "case-insensitive",
+            selector: (v: string) => v,
+        });
+
+        return fzf.find(search).length > 0;
+    };
 };
 
 /**

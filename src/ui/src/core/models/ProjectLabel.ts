@@ -11,7 +11,7 @@ export interface Interface extends IBaseModel {
 }
 
 class ProjectLabel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectLabel" as const;
     }
 

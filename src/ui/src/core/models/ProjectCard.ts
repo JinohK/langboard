@@ -1,4 +1,3 @@
-import * as BotModel from "@/core/models/BotModel";
 import * as ProjectCardRelationship from "@/core/models/ProjectCardRelationship";
 import * as ProjectLabel from "@/core/models/ProjectLabel";
 import * as Project from "@/core/models/Project";
@@ -18,7 +17,6 @@ import useCardAttachmentUploadedHandlers from "@/controllers/socket/card/attachm
 import useCardAttachmentDeletedHandlers from "@/controllers/socket/card/attachment/useCardAttachmentDeletedHandlers";
 import useCardDetailsChangedHandlers from "@/controllers/socket/card/useCardDetailsChangedHandlers";
 import useCardProjectUsersUpdatedHandlers from "@/controllers/socket/card/useCardProjectUsersUpdatedHandlers";
-import useCardProjectBotsUpdatedHandlers from "@/controllers/socket/card/useCardProjectBotsUpdatedHandlers";
 import useCardColumnChangedHandlers from "@/controllers/socket/card/useCardColumnChangedHandlers";
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 import useMetadataUpdatedHandlers from "@/controllers/socket/metadata/useMetadataUpdatedHandlers";
@@ -43,7 +41,6 @@ export interface IStore extends Interface {
     column_name: string;
     current_auth_role_actions: Project.TRoleActions[];
     project_members: User.Interface[];
-    project_bots: BotModel.Interface[];
     labels: ProjectLabel.Interface[];
     relationships: ProjectCardRelationship.Interface[];
 
@@ -53,10 +50,9 @@ export interface IStore extends Interface {
 }
 
 class ProjectCard extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             project_members: User.Model.MODEL_NAME,
-            project_bots: BotModel.Model.MODEL_NAME,
             labels: ProjectLabel.Model.MODEL_NAME,
             relationships: ProjectCardRelationship.Model.MODEL_NAME,
         };
@@ -64,7 +60,7 @@ class ProjectCard extends BaseModel<IStore> {
     override get FOREIGN_MODELS() {
         return ProjectCard.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectCard" as const;
     }
 
@@ -77,7 +73,6 @@ class ProjectCard extends BaseModel<IStore> {
                 useCardCommentAddedHandlers,
                 useCardCommentDeletedHandlers,
                 useCardCommentReactedHandlers,
-                useCardProjectBotsUpdatedHandlers,
                 useCardProjectUsersUpdatedHandlers,
                 useCardAssignedUsersUpdatedHandlers,
                 useCardLabelsUpdatedHandlers,
@@ -206,13 +201,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set project_members(value: (User.TModel | User.Interface)[]) {
         this.update({ project_members: value });
-    }
-
-    public get project_bots(): BotModel.TModel[] {
-        return this.getForeignValue("project_bots");
-    }
-    public set project_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
-        this.update({ project_bots: value });
     }
 
     public get labels(): ProjectLabel.TModel[] {

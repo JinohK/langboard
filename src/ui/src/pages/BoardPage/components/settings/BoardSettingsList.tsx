@@ -1,14 +1,11 @@
 import { Flex } from "@/components/base";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
 import BoardSettingsBasic from "@/pages/BoardPage/components/settings/BoardSettingsBasic";
-import BoardSettingsBots from "@/pages/BoardPage/components/settings/BoardSettingsBots";
 import BoardSettingsOther from "@/pages/BoardPage/components/settings/BoardSettingsOther";
 import BoardSettingsSection from "@/pages/BoardPage/components/settings/BoardSettingsSection";
 import BoardSettingsChatTemplateList from "@/pages/BoardPage/components/settings/chat/BoardSettingsChatTemplateList";
-import BoardSettingsCronBotList from "@/pages/BoardPage/components/settings/crons/BoardSettingsCronBotList";
 import BoardSettingsInternalBotList from "@/pages/BoardPage/components/settings/internalBots/BoardSettingsInternalBotList";
 import BoardSettingsLabelList from "@/pages/BoardPage/components/settings/label/BoardSettingsLabelList";
-import BoardSettingsBotRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsBotRoleList";
 import BoardSettingsMemberRoleList from "@/pages/BoardPage/components/settings/roles/BoardSettingsMemberRoleList";
 import { memo, useMemo } from "react";
 
@@ -18,7 +15,6 @@ export function SkeletonSettingsList() {
 
 const BoardSettingsList = memo(() => {
     const { project, currentUser } = useBoardSettings();
-    const bots = project.useForeignField("bots");
     const ownerUID = project.useField("owner_uid");
     const allMembers = project.useForeignField("all_members");
     const invitedMemberUIDs = project.useField("invited_member_uids");
@@ -36,19 +32,6 @@ const BoardSettingsList = memo(() => {
             <BoardSettingsSection title="project.settings.Internal bots">
                 <BoardSettingsInternalBotList key={`board-settings-internal-bots-${project.uid}`} />
             </BoardSettingsSection>
-            <BoardSettingsSection title="project.settings.Bots">
-                <BoardSettingsBots key={`board-settings-bots-${project.uid}`} />
-            </BoardSettingsSection>
-            {bots.length > 0 && (
-                <>
-                    <BoardSettingsSection title="project.settings.Bot roles">
-                        <BoardSettingsBotRoleList key={`board-settings-bot-roles-${project.uid}`} />
-                    </BoardSettingsSection>
-                    <BoardSettingsSection title="project.settings.Bot schedules">
-                        <BoardSettingsCronBotList key={`board-settings-bot-schedules-${project.uid}`} />
-                    </BoardSettingsSection>
-                </>
-            )}
             {numMembers > 0 && (
                 <BoardSettingsSection title="project.settings.Member roles">
                     <BoardSettingsMemberRoleList key={`board-settings-member-roles-${project.uid}`} />

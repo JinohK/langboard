@@ -5,11 +5,11 @@ from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.Converter import convert_python_data
 from models import (
-    Bot,
-    BotSchedule,
     Card,
     CardAssignedProjectLabel,
     CardAssignedUser,
+    CardBotSchedule,
+    CardBotScope,
     CardComment,
     CardRelationship,
     Checkitem,
@@ -22,10 +22,12 @@ from models import (
 )
 from models.Checkitem import CheckitemStatus
 from sqlalchemy import func
+from langboard.ai import BotScheduleHelper
 from ...core.service import ServiceHelper
 from ...publishers import CardPublisher
 from ...tasks.activities import CardActivityTask
 from ...tasks.bot import CardBotTask
+from .BotScopeService import BotScopeService
 from .CardRelationshipService import CardRelationshipService
 from .CheckitemService import CheckitemService
 from .NotificationService import NotificationService
@@ -57,7 +59,6 @@ class CardService(BaseService):
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)
-        api_card["project_bots"] = await project_service.get_assigned_bots(card.project_id, as_api=True)
 
         project_label_service = self._get_service(ProjectLabelService)
         api_card["labels"] = await project_label_service.get_all_by_card(card, as_api=True)
@@ -271,6 +272,29 @@ class CardService(BaseService):
             raw_users = result.all()
         return raw_users
 
+    @overload
+    async def get_bot_scopes(
+        self, project: TProjectParam, card: TCardParam, as_api: Literal[False]
+    ) -> list[CardBotScope]: ...
+    @overload
+    async def get_bot_scopes(
+        self, project: TProjectParam, card: TCardParam, as_api: Literal[True]
+    ) -> list[dict[str, Any]]: ...
+    async def get_bot_scopes(
+        self, project: TProjectParam, card: TCardParam, as_api: bool
+    ) -> list[CardBotScope] | list[dict[str, Any]]:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
+        if not params:
+            return []
+        project, card = params
+
+        bot_scope_service = self._get_service(BotScopeService)
+        scopes = await bot_scope_service.get_list(CardBotScope, card_id=card.id)
+        if not as_api:
+            return scopes
+
+        return [scope.api_response() for scope in scopes]
+
     async def create(
         self,
         user_or_bot: TUserOrBot,
@@ -454,7 +478,7 @@ class CardService(BaseService):
 
         if new_column:
             CardActivityTask.card_moved(user_or_bot, project, card, original_column)
-            CardBotTask.card_moved(user_or_bot, project, card, original_column)
+            CardBotTask.card_moved(user_or_bot, project, card)
 
         return True
 
@@ -525,23 +549,19 @@ class CardService(BaseService):
         project, card = params
 
         project_label_service = self._get_service(ProjectLabelService)
-        is_bot = isinstance(user_or_bot, Bot)
 
         original_labels = await project_label_service.get_all_by_card(card, as_api=False)
 
-        query = SqlBuilder.delete.table(CardAssignedProjectLabel).where(
-            CardAssignedProjectLabel.column("card_id") == card.id
-        )
-        if not is_bot:
-            bot_labels = await project_label_service.get_all_bot(project)
-            bot_label_ids = [label.id for label in bot_labels]
-            query = query.where(CardAssignedProjectLabel.column("project_label_id").not_in(bot_label_ids))
         with DbSession.use(readonly=False) as db:
-            db.exec(query)
+            db.exec(
+                SqlBuilder.delete.table(CardAssignedProjectLabel).where(
+                    CardAssignedProjectLabel.column("card_id") == card.id
+                )
+            )
 
         for label_uid in label_uids:
             label = ServiceHelper.get_by_param(ProjectLabel, label_uid)
-            if not label or label.project_id != project.id or (not is_bot and label.bot_id):
+            if not label or label.project_id != project.id:
                 return None
             with DbSession.use(readonly=False) as db:
                 db.insert(CardAssignedProjectLabel(card_id=card.id, project_label_id=label.id))
@@ -598,13 +618,9 @@ class CardService(BaseService):
                 )
             )
 
-        with DbSession.use(readonly=False) as db:
-            db.exec(
-                SqlBuilder.delete.table(BotSchedule).where(
-                    (BotSchedule.column("target_table") == Card.__tablename__)
-                    & (BotSchedule.column("target_id") == card.id)
-                )
-            )
+        bot_scope_service = self._get_service(BotScopeService)
+        await bot_scope_service.delete_by_scope(CardBotScope, card)
+        await BotScheduleHelper.unschedule_by_scope(CardBotSchedule, card)
 
         with DbSession.use(readonly=False) as db:
             db.delete(card)

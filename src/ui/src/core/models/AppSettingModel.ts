@@ -20,7 +20,7 @@ export interface Interface extends IBaseModel {
 }
 
 class AppSettingModel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "AppSettingModel" as const;
     }
 

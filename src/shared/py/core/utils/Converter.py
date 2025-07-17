@@ -1,4 +1,5 @@
 from datetime import datetime
+from enum import Enum
 from typing import Any
 from pydantic import BaseModel
 
@@ -9,6 +10,8 @@ def json_default(value: Any) -> str:
         if not value.count("+"):
             value = f"{value}+00:00"
         return value
+    if isinstance(value, Enum):
+        return value.value
     return str(value)
 
 

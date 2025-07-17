@@ -3,7 +3,7 @@ from typing import Any
 from core.db import EnumLikeType, SnowflakeIDField
 from core.types import SnowflakeID
 from sqlmodel import Field
-from .BaseActivityModel import BaseActivityModel
+from .bases import BaseActivityModel
 from .Card import Card
 from .Project import Project
 
@@ -12,10 +12,7 @@ class ProjectActivityType(Enum):
     # Project
     ProjectCreated = "project_created"
     ProjectUpdated = "project_updated"
-    ProjectAssignedBotsUpdated = "project_assigned_bots_updated"
     ProjectAssignedUsersUpdated = "project_assigned_users_updated"
-    ProjectBotActivated = "project_bot_activated"
-    ProjectBotDeactivated = "project_bot_deactivated"
     ProjectInvitedUserAccepted = "project_invited_user_accepted"
     ProjectDeleted = "project_deleted"
 

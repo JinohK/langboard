@@ -17,9 +17,6 @@ class ProjectRole extends BaseModel {
     public user_id!: TBigIntString | null;
 
     @BigIntColumn(false)
-    public bot_id!: TBigIntString | null;
-
-    @BigIntColumn(false)
     public project_id!: TBigIntString;
 
     @Column({ type: "text", transformer: { to: (value: TProjectRoleActions[]) => value.join(","), from: (value: string) => value.split(",") } })

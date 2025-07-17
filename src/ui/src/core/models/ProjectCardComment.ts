@@ -19,7 +19,7 @@ export interface IStore extends Interface {
 }
 
 class ProjectCardComment extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             user: User.Model.MODEL_NAME,
             bot: BotModel.Model.MODEL_NAME,
@@ -28,7 +28,7 @@ class ProjectCardComment extends BaseModel<IStore> {
     override get FOREIGN_MODELS() {
         return ProjectCardComment.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectCardComment" as const;
     }
 

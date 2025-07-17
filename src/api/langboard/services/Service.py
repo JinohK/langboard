@@ -121,3 +121,11 @@ class Service(ServiceFactory):
     @property
     def internal_bot(self):
         return self._create_or_get_service(factory.InternalBotService)
+
+    @property
+    def bot_scope(self):
+        return self._create_or_get_service(factory.BotScopeService)
+
+    @property
+    def bot_log(self):
+        return self._create_or_get_service(factory.BotLogService)

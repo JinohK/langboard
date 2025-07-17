@@ -90,7 +90,7 @@ class _Subscription {
         });
     }
 
-    public async unsubscribe(ws: ISocketClient, topic: ESocketTopic | string, topicId: string | string[]) {
+    public async unsubscribe(ws: ISocketClient, topic: ESocketTopic | string, topicIds: string | string[]) {
         topic = Utils.String.convertSafeEnum(ESocketTopic, topic);
 
         const subscriptions = this.#subscriptions.get(topic);
@@ -98,14 +98,13 @@ class _Subscription {
             return;
         }
 
-        topicId = Utils.Type.isArray(topicId) ? topicId : [topicId];
-        for (let i = 0; i < topicId.length; ++i) {
-            const id = topicId[i];
-            const subscriberSet = subscriptions.get(id);
-            if (!subscriberSet) {
+        topicIds = Utils.Type.isArray(topicIds) ? topicIds : [topicIds];
+        for (let i = 0; i < topicIds.length; ++i) {
+            const topicId = topicIds[i];
+            const subscribers = subscriptions.get(topicId);
+            if (!subscribers) {
                 continue;
             }
-            const subscribers = subscriberSet;
 
             subscribers.delete(ws);
         }
@@ -117,11 +116,11 @@ class _Subscription {
         ws.send({
             event: "unsubscribed",
             topic,
-            topic_id: topicId,
+            topic_id: topicIds,
         });
     }
 
-    public async unsubscribeAll(ws: ISocketClient) {
+    public unsubscribeAll(ws: ISocketClient) {
         const topics = Array.from(this.#subscriptions.keys());
         for (let i = 0; i < topics.length; ++i) {
             const topic = topics[i];
@@ -130,9 +129,17 @@ class _Subscription {
                 continue;
             }
 
-            subscriptions.forEach((subscribers) => {
+            const topicIds = Array.from(subscriptions.keys());
+            for (let j = 0; j < topicIds.length; ++j) {
+                const topicId = topicIds[j];
+                const subscribers = subscriptions.get(topicId);
+                if (!subscribers?.size) {
+                    subscriptions.delete(topicId);
+                    continue;
+                }
+
                 subscribers.delete(ws);
-            });
+            }
 
             if (!subscriptions.size) {
                 this.#subscriptions.delete(topic);

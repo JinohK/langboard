@@ -5,7 +5,6 @@ import { useAuth } from "@/core/providers/AuthProvider";
 import useIsProjectAssignee from "@/controllers/api/board/useIsProjectAssignee";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
-import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IUserAvatarDefaultListContext {
     socket: ISocketContext;
@@ -15,8 +14,6 @@ export interface IUserAvatarDefaultListContext {
     hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     isAssignee: bool;
     setIsAssignee: React.Dispatch<React.SetStateAction<bool>>;
-    setIsBotDisabled: React.Dispatch<React.SetStateAction<bool | undefined>>;
-    isBotDisabled?: bool;
 }
 
 interface IUserAvatarDefaultListProviderProps {
@@ -33,8 +30,6 @@ const initialContext = {
     hasRoleAction: () => false,
     isAssignee: false,
     setIsAssignee: () => {},
-    setIsBotDisabled: () => {},
-    isBotDisabled: undefined,
 };
 
 const UserAvatarDefaultListContext = createContext<IUserAvatarDefaultListContext>(initialContext);
@@ -59,12 +54,9 @@ export const UserAvatarDefaultListProvider = memo(({ projectUID, userOrBot, chil
     const { hasRoleAction } = useRoleActionFilter(currentUserRoleActions);
     const { mutateAsync: isProjectAssigneeMutateAsync } = useIsProjectAssignee();
     const [isAssignee, setIsAssignee] = useState(false);
-    const [isBotDisabled, setIsBotDisabled] = useState<bool | undefined>(undefined);
     const isValidUser = useMemo(() => {
         if (isModel(userOrBot, "User")) {
             return userOrBot.isValidUser();
-        } else if (isModel(userOrBot, "BotModel")) {
-            return true;
         }
         return false;
     }, [userOrBot]);
@@ -83,19 +75,9 @@ export const UserAvatarDefaultListProvider = memo(({ projectUID, userOrBot, chil
             {
                 onSuccess: (res) => {
                     setIsAssignee(() => res.result);
-                    setIsBotDisabled(() => res.is_bot_disabled!);
-                    if (isModel(userOrBot, "BotModel")) {
-                        socket.subscribe(ESocketTopic.ProjectBot, [`${userOrBot.uid}-${project.uid}`]);
-                    }
                 },
             }
         );
-
-        return () => {
-            if (isModel(userOrBot, "BotModel")) {
-                socket.unsubscribe(ESocketTopic.ProjectBot, [`${userOrBot.uid}-${project.uid}`]);
-            }
-        };
     }, [userOrBot, isValidUser, project]);
 
     if (!currentUser) {
@@ -112,8 +94,6 @@ export const UserAvatarDefaultListProvider = memo(({ projectUID, userOrBot, chil
                 hasRoleAction,
                 isAssignee,
                 setIsAssignee,
-                setIsBotDisabled,
-                isBotDisabled,
             }}
         >
             {children}

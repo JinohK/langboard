@@ -41,7 +41,6 @@ class ProjectWikiPublisher(BaseSocketPublisher):
             "wiki": {
                 **wiki.api_response(),
                 "assigned_members": [assigned_user.api_response() for assigned_user in assigned_users],
-                "assigned_bots": [],
             },
         }
 
@@ -56,9 +55,8 @@ class ProjectWikiPublisher(BaseSocketPublisher):
         await ProjectWikiPublisher.put_dispather(model, publish_model)
 
     @staticmethod
-    async def assignees_updated(project: Project, wiki: ProjectWiki, bots: list[Bot], users: list[User]):
+    async def assignees_updated(project: Project, wiki: ProjectWiki, users: list[User]):
         model = {
-            "assigned_bots": [bot.api_response() for bot in bots],
             "assigned_members": [user.api_response() for user in users],
         }
         publish_model = SocketPublishModel(

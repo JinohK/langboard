@@ -1,65 +1,75 @@
 from os import environ
 from subprocess import run as subprocess_run
-from typing import Any, Callable, Literal, overload
+from typing import Any, Callable, Literal, cast, overload
 from zoneinfo import ZoneInfo
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.Env import Env
 from core.schema import Pagination
-from core.types import SafeDateTime
+from core.types import SafeDateTime, SnowflakeID
 from core.utils.decorators import staticclass
 from crontab import CronItem, CronTab, OrderedVariableList
 from models import Bot, BotSchedule
+from models.bases import BaseBotScheduleModel
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from psutil import process_iter
+from pyparsing import TypeVar
+from sqlalchemy import tuple_
 from ..Constants import CRON_TAB_FILE
 from ..core.service import ServiceHelper
 
 
-_TBotScheduleParam = BotSchedule | int | str | None
+_TBotScheduleModel = TypeVar("_TBotScheduleModel", bound=BaseBotScheduleModel)
+_TBaseParam = int | str | None
 
 
 @staticclass
 class BotScheduleHelper:
-    @staticmethod
     @overload
-    async def get_all_by_filterable(
+    @staticmethod
+    async def get_all_by_scope(
+        schedule_model_class: type[_TBotScheduleModel],
         bot: Bot,
-        filterable_model: BaseSqlModel,
+        scope_model: BaseSqlModel,
         as_api: Literal[False],
         pagination: Pagination | None = None,
-        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
-    ) -> list[BotSchedule]: ...
-    @staticmethod
+        refer_time: SafeDateTime | None = None,
+    ) -> list[tuple[_TBotScheduleModel, BotSchedule]]: ...
     @overload
-    async def get_all_by_filterable(
+    @staticmethod
+    async def get_all_by_scope(
+        schedule_model_class: type[_TBotScheduleModel],
         bot: Bot,
-        filterable_model: BaseSqlModel,
+        scope_model: BaseSqlModel,
         as_api: Literal[True],
         pagination: Pagination | None = None,
-        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
+        refer_time: SafeDateTime | None = None,
     ) -> list[dict[str, Any]]: ...
     @staticmethod
-    async def get_all_by_filterable(
+    async def get_all_by_scope(
+        schedule_model_class: type[_TBotScheduleModel],
         bot: Bot,
-        filterable_model: BaseSqlModel,
+        scope_model: BaseSqlModel,
         as_api: bool,
         pagination: Pagination | None = None,
-        refer_time: SafeDateTime | None = None,
         status: BotScheduleStatus | None = None,
-    ) -> list[BotSchedule] | list[dict[str, Any]]:
-        query = SqlBuilder.select.table(BotSchedule).where(
-            (BotSchedule.column("bot_id") == bot.id)
-            & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
-            & (BotSchedule.column("filterable_id") == filterable_model.id)
+        refer_time: SafeDateTime | None = None,
+    ) -> list[tuple[_TBotScheduleModel, BotSchedule]] | list[dict[str, Any]]:
+        query = (
+            SqlBuilder.select.tables(schedule_model_class, BotSchedule)
+            .join(BotSchedule, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"))
+            .where(
+                (BotSchedule.column("bot_id") == bot.id)
+                & (schedule_model_class.column(f"{scope_model.__tablename__}_id") == scope_model.id)
+            )
         )
 
         if status:
-            query = query.where(BotSchedule.column("status") == status)
+            query = query.where(schedule_model_class.column("status") == status)
 
         if refer_time is not None:
-            query = query.where(BotSchedule.column("created_at") <= refer_time)
+            query = query.where(schedule_model_class.column("created_at") <= refer_time)
 
         if pagination:
             query = query.limit(pagination.limit).offset((pagination.page - 1) * pagination.limit)
@@ -72,70 +82,12 @@ class BotScheduleHelper:
         if not as_api:
             return schedules
 
-        cached_dict = ServiceHelper.get_references(
-            [(schedule.target_table, schedule.target_id) for schedule in schedules], as_type="api"
-        )
-
         api_schedules = []
-        for schedule in schedules:
-            cache_key = f"{schedule.target_table}_{schedule.target_id}"
-            target = cached_dict.get(cache_key)
-            if not target:
-                continue
-            api_schedule = schedule.api_response()
-            api_schedule["target"] = target
-            api_schedules.append(api_schedule)
-
-        return api_schedules
-
-    @staticmethod
-    @overload
-    async def get_all_by_scope(
-        bot: Bot,
-        scope_model: BaseSqlModel,
-        filterable_model: BaseSqlModel,
-        as_api: Literal[False],
-        status: BotScheduleStatus | None = None,
-    ) -> list[BotSchedule]: ...
-    @staticmethod
-    @overload
-    async def get_all_by_scope(
-        bot: Bot,
-        scope_model: BaseSqlModel,
-        filterable_model: BaseSqlModel,
-        as_api: Literal[True],
-        status: BotScheduleStatus | None = None,
-    ) -> list[dict[str, Any]]: ...
-    @staticmethod
-    async def get_all_by_scope(
-        bot: Bot,
-        scope_model: BaseSqlModel,
-        filterable_model: BaseSqlModel,
-        as_api: bool,
-        status: BotScheduleStatus | None = None,
-    ) -> list[BotSchedule] | list[dict[str, Any]]:
-        query = SqlBuilder.select.table(BotSchedule).where(
-            (BotSchedule.column("bot_id") == bot.id)
-            & (BotSchedule.column("target_table") == scope_model.__tablename__)
-            & (BotSchedule.column("target_id") == scope_model.id)
-            & (BotSchedule.column("filterable_table") == filterable_model.__tablename__)
-            & (BotSchedule.column("filterable_id") == filterable_model.id)
-        )
-
-        if status:
-            query = query.where(BotSchedule.column("status") == status)
-
-        schedules = []
-        with DbSession.use(readonly=True) as db:
-            result = db.exec(query)
-            schedules = result.all()
-
-        if not as_api:
-            return schedules
-
-        api_schedules = []
-        for schedule in schedules:
-            api_schedule = schedule.api_response()
+        for schedule_model, schedule in schedules:
+            api_schedule = {
+                **schedule.api_response(),
+                **schedule_model.api_response(),
+            }
             api_schedules.append(api_schedule)
 
         return api_schedules
@@ -187,15 +139,15 @@ class BotScheduleHelper:
 
     @staticmethod
     async def schedule(
+        schedule_model_class: type[_TBotScheduleModel],
         bot: Bot,
         interval_str: str,
         target_model: BaseSqlModel,
-        filterable_model: BaseSqlModel | None = None,
         running_type: BotScheduleRunningType | None = None,
         start_at: SafeDateTime | None = None,
         end_at: SafeDateTime | None = None,
         tz: str | float = "UTC",
-    ) -> BotSchedule | None:
+    ) -> tuple[BotSchedule, _TBotScheduleModel] | None:
         if not BotScheduleHelper.is_valid_interval_str(interval_str):
             return None
 
@@ -219,10 +171,6 @@ class BotScheduleHelper:
             bot_id=bot.id,
             running_type=running_type,
             status=status,
-            target_table=target_model.__tablename__,
-            target_id=target_model.id,
-            filterable_table=filterable_model.__tablename__ if filterable_model else None,
-            filterable_id=filterable_model.id if filterable_model else None,
             interval_str=interval_str,
             start_at=start_at,
             end_at=end_at,
@@ -231,23 +179,36 @@ class BotScheduleHelper:
         with DbSession.use(readonly=False) as db:
             db.insert(bot_schedule)
 
+        params: dict[str, Any] = {
+            "bot_schedule_id": bot_schedule.id,
+            f"{target_model.__tablename__}_id": target_model.id,
+        }
+
+        schedule_model = schedule_model_class(**params)
+
+        with DbSession.use(readonly=False) as db:
+            db.insert(schedule_model)
+
         if has_changed:
             BotScheduleHelper.__save_cron(cron)
 
-        return bot_schedule
+        return bot_schedule, schedule_model
 
     @staticmethod
     async def reschedule(
-        bot_schedule: _TBotScheduleParam,
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
         interval_str: str | None = None,
-        target_model: BaseSqlModel | None = None,
-        filterable_model: BaseSqlModel | None = None,
         running_type: BotScheduleRunningType | None = None,
         start_at: SafeDateTime | None = None,
         end_at: SafeDateTime | None = None,
         tz: str | float = "UTC",
-    ) -> tuple[BotSchedule, dict[str, Any]] | None:
-        bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
+    ) -> tuple[BotSchedule, _TBotScheduleModel, dict[str, Any]] | None:
+        schedule_model = ServiceHelper.get_by_param(schedule_model_class, schedule_model)
+        if not schedule_model:
+            return None
+
+        bot_schedule = ServiceHelper.get_by_param(BotSchedule, schedule_model.bot_schedule_id)
         if not bot_schedule:
             return None
 
@@ -274,7 +235,9 @@ class BotScheduleHelper:
                 model["start_at"] = start_at
                 model["end_at"] = end_at
 
-                cron, has_changed = await BotScheduleHelper.change_status(bot_schedule, status, no_update=True)
+                cron, has_changed = await BotScheduleHelper.change_status(
+                    schedule_model_class, schedule_model, status, no_update=True, bot_schedule=bot_schedule
+                )
             else:
                 if bot_schedule.start_at != start_at or bot_schedule.end_at != end_at:
                     result = BotScheduleHelper.get_default_status_with_dates(
@@ -291,23 +254,6 @@ class BotScheduleHelper:
                 if BotSchedule.RUNNING_TYPES_WITH_END_AT.count(running_type) > 0 and end_at:
                     bot_schedule.end_at = end_at
                     model["end_at"] = end_at
-
-        if target_model and (
-            target_model.__tablename__ != bot_schedule.target_table or target_model.id != bot_schedule.target_id
-        ):
-            bot_schedule.target_table = target_model.__tablename__
-            bot_schedule.target_id = target_model.id
-            model["target_table"] = target_model.__tablename__
-            model["target_uid"] = target_model.get_uid()
-
-        if filterable_model and (
-            filterable_model.__tablename__ != bot_schedule.filterable_table
-            or filterable_model.id != bot_schedule.filterable_id
-        ):
-            bot_schedule.filterable_table = filterable_model.__tablename__
-            bot_schedule.filterable_id = filterable_model.id
-            model["filterable_table"] = filterable_model.__tablename__
-            model["filterable_uid"] = filterable_model.get_uid()
 
         if interval_str and BotScheduleHelper.is_valid_interval_str(interval_str):
             interval_str = BotScheduleHelper.__adjust_interval_for_utc(interval_str, tz)
@@ -341,11 +287,17 @@ class BotScheduleHelper:
         if cron and (has_changed or not has_old_intervals):
             BotScheduleHelper.__save_cron(cron)
 
-        return bot_schedule, model
+        return bot_schedule, schedule_model, model
 
     @staticmethod
-    async def unschedule(bot_schedule: _TBotScheduleParam) -> BotSchedule | None:
-        bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
+    async def unschedule(
+        schedule_model_class: type[_TBotScheduleModel], schedule_model: _TBotScheduleModel | _TBaseParam
+    ) -> tuple[BotSchedule, _TBotScheduleModel] | None:
+        schedule_model = ServiceHelper.get_by_param(schedule_model_class, schedule_model)
+        if not schedule_model:
+            return None
+
+        bot_schedule = ServiceHelper.get_by_param(BotSchedule, schedule_model.bot_schedule_id)
         if not bot_schedule:
             return None
 
@@ -362,29 +314,87 @@ class BotScheduleHelper:
                 comment=f"scheduled {interval_str}" if status == BotScheduleStatus.Pending else interval_str
             )
             BotScheduleHelper.__save_cron(cron)
-        return bot_schedule
+        return bot_schedule, schedule_model
+
+    @staticmethod
+    async def unschedule_by_scope(schedule_model_class: type[_TBotScheduleModel], scope_model: BaseSqlModel) -> None:
+        old_schedules: list[tuple[SnowflakeID, str, BotScheduleStatus]] = []
+        with DbSession.use(readonly=True) as db:
+            query = (
+                SqlBuilder.select.columns(BotSchedule.id, BotSchedule.interval_str, BotSchedule.status)
+                .join(schedule_model_class, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"))
+                .where(schedule_model_class.column(f"{scope_model.__tablename__}_id") == scope_model.id)
+            )
+            result = db.exec(query)
+            old_schedules = cast(Any, result.all())
+
+        with DbSession.use(readonly=False) as db:
+            db.exec(
+                SqlBuilder.delete.table(BotSchedule).where(
+                    BotSchedule.column("id").in_([old_schedule[0] for old_schedule in old_schedules])
+                )
+            )
+
+        cron = BotScheduleHelper.__get_cron()
+        schedule_id_has_schedules = BotScheduleHelper.__has_interval_schedule(
+            [(old_schedule[1], old_schedule[2]) for old_schedule in old_schedules]
+        )
+        schedule_id_has_schedules = set(schedule_id_has_schedules)
+
+        for old_schedule_id, old_interval_str, old_status in old_schedules:
+            if old_schedule_id not in schedule_id_has_schedules:
+                cron.remove_all(
+                    comment=f"scheduled {old_interval_str}"
+                    if old_status == BotScheduleStatus.Pending
+                    else old_interval_str
+                )
+
+        BotScheduleHelper.__save_cron(cron)
 
     @overload
     @staticmethod
-    async def change_status(bot_schedule: _TBotScheduleParam, status: BotScheduleStatus) -> BotSchedule | None: ...
-    @overload
-    @staticmethod
     async def change_status(
-        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: Literal[False]
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
+        status: BotScheduleStatus,
+        no_update: None = None,
+        bot_schedule: BotSchedule | None = None,
     ) -> BotSchedule | None: ...
     @overload
     @staticmethod
     async def change_status(
-        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: Literal[True]
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
+        status: BotScheduleStatus,
+        no_update: Literal[False],
+        bot_schedule: BotSchedule | None = None,
+    ) -> BotSchedule | None: ...
+    @overload
+    @staticmethod
+    async def change_status(
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
+        status: BotScheduleStatus,
+        no_update: Literal[True],
+        bot_schedule: BotSchedule | None = None,
     ) -> tuple[CronTab, bool]: ...
     @staticmethod
     async def change_status(
-        bot_schedule: _TBotScheduleParam, status: BotScheduleStatus, no_update: bool = False
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
+        status: BotScheduleStatus,
+        no_update: bool | None = None,
+        bot_schedule: BotSchedule | None = None,
     ) -> BotSchedule | tuple[CronTab, bool] | None:
-        bot_schedule = ServiceHelper.get_by_param(BotSchedule, bot_schedule)
+        schedule_model = ServiceHelper.get_by_param(schedule_model_class, schedule_model)
         cron = BotScheduleHelper.__get_cron()
-        if not bot_schedule:
+        if not schedule_model:
             return None if not no_update else (cron, False)
+
+        if not bot_schedule:
+            bot_schedule = ServiceHelper.get_by_param(BotSchedule, schedule_model.bot_schedule_id)
+            if not bot_schedule:
+                return None if not no_update else (cron, False)
 
         old_status = bot_schedule.status
         bot_schedule.status = status
@@ -463,16 +473,36 @@ class BotScheduleHelper:
         cron.write()
         BotScheduleHelper.reload_cron()
 
+    @overload
     @staticmethod
-    def __has_interval_schedule(interval_str: str, status: BotScheduleStatus) -> bool:
-        result = False
-        with DbSession.use(readonly=True) as db:
-            result = db.exec(
+    def __has_interval_schedule(interval_str: str, status: BotScheduleStatus) -> bool: ...
+    @overload
+    @staticmethod
+    def __has_interval_schedule(interval_str: list[tuple[str, BotScheduleStatus]]) -> list[SnowflakeID]: ...
+    @staticmethod
+    def __has_interval_schedule(
+        interval_str: str | list[tuple[str, BotScheduleStatus]], status: BotScheduleStatus | None = None
+    ) -> bool | list[SnowflakeID]:
+        if status is None:
+            interval_str = cast(list[tuple[str, BotScheduleStatus]], interval_str)
+            query = SqlBuilder.select.column(BotSchedule.id).where(
+                tuple_(BotSchedule.column("interval_str"), BotSchedule.column("status")).in_(interval_str)
+            )
+        else:
+            interval_str = cast(str, interval_str)
+            query = (
                 SqlBuilder.select.table(BotSchedule)
                 .where((BotSchedule.column("interval_str") == interval_str) & (BotSchedule.column("status") == status))
                 .limit(1)
             )
-            result = bool(result.first())
+
+        result = False
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(query)
+            if status is None:
+                result = cast(list[SnowflakeID], result.all())
+            else:
+                result = bool(result.first())
         return result
 
     @staticmethod

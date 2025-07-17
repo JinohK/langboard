@@ -2,7 +2,6 @@ from typing import Any, ClassVar
 from core.db import BaseSqlModel, SnowflakeIDField
 from core.types import SnowflakeID
 from sqlmodel import Field
-from .Bot import Bot
 from .Project import Project
 
 
@@ -21,7 +20,6 @@ class ProjectLabel(BaseSqlModel, table=True):
         {"name": "Fetch", "color": "#1DE9B6", "description": "Tasks that are fetching data."},
     ]
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
-    bot_id: SnowflakeID | None = SnowflakeIDField(foreign_key=Bot, nullable=True)
     name: str = Field(nullable=False)
     color: str = Field(nullable=False)
     description: str = Field(nullable=False)
@@ -53,4 +51,4 @@ class ProjectLabel(BaseSqlModel, table=True):
         return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
-        return ["project_id", "bot_id", "name", "color", "order"]
+        return ["project_id", "name", "color", "order"]

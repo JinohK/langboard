@@ -5,5 +5,5 @@ export interface ISharedBoardCardActionProps {
 export interface IAttachedFile {
     uid: string;
     file: File;
-    upload?: () => Promise<void>;
+    upload?: () => Promise<string | undefined>;
 }

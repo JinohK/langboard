@@ -60,12 +60,7 @@ const BoardWikiPage = memo(({ projectUID, currentUser }: IBoardRelatedPageProps)
             {!data || isFetching ? (
                 <SkeletonWikiList />
             ) : (
-                <BoardWikiProvider
-                    projectUID={projectUID}
-                    projectMembers={data.project_members}
-                    projectBots={data.project_bots}
-                    currentUser={currentUser}
-                >
+                <BoardWikiProvider projectUID={projectUID} projectMembers={data.project_members} currentUser={currentUser}>
                     <WikiList />
                 </BoardWikiProvider>
             )}

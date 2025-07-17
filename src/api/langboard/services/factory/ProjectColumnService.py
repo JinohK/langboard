@@ -2,12 +2,14 @@ from typing import Any, Literal, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
-from models import Card, Project, ProjectColumn, User
+from models import Card, Project, ProjectColumn, ProjectColumnBotSchedule, ProjectColumnBotScope, User
 from sqlalchemy import func
+from langboard.ai import BotScheduleHelper
 from ...core.service import ServiceHelper
 from ...publishers import ProjectColumnPublisher
 from ...tasks.activities import ProjectColumnActivityTask
 from ...tasks.bot import ProjectColumnBotTask
+from .BotScopeService import BotScopeService
 from .Types import TColumnParam, TProjectParam, TUserOrBot
 
 
@@ -21,35 +23,29 @@ class ProjectColumnService(BaseService):
         return ServiceHelper.get_by_param(ProjectColumn, uid)
 
     @overload
-    async def get_all_by_project(self, project: TProjectParam, as_api: Literal[False]) -> list[ProjectColumn]: ...
-    @overload
     async def get_all_by_project(
-        self, project: TProjectParam, as_api: Literal[False], with_count: Literal[False]
+        self, project_ids: SnowflakeID | list[SnowflakeID], as_api: Literal[False]
     ) -> list[ProjectColumn]: ...
     @overload
     async def get_all_by_project(
-        self, project: TProjectParam, as_api: Literal[False], with_count: Literal[True]
+        self, project_ids: SnowflakeID | list[SnowflakeID], as_api: Literal[False]
     ) -> tuple[list[ProjectColumn], dict[SnowflakeID, int]]: ...
     @overload
     async def get_all_by_project(
-        self, project: TProjectParam, as_api: Literal[True], with_count: bool = False
+        self, project_ids: SnowflakeID | list[SnowflakeID], as_api: Literal[True]
     ) -> list[dict[str, Any]]: ...
     async def get_all_by_project(
-        self, project: TProjectParam, as_api: bool, with_count: bool = False
+        self, project_ids: SnowflakeID | list[SnowflakeID], as_api: bool
     ) -> list[ProjectColumn] | tuple[list[ProjectColumn], dict[SnowflakeID, int]] | list[dict[str, Any]]:
-        project = ServiceHelper.get_by_param(Project, project)
-        if not project:
-            return []
-        if with_count:
-            sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
-                Card,
-                (Card.column("project_column_id") == ProjectColumn.column("id")) & (Card.column("deleted_at") == None),  # noqa
-            )
-        else:
-            sql_query = SqlBuilder.select.table(ProjectColumn)
+        if not isinstance(project_ids, list):
+            project_ids = [project_ids]
+        sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
+            Card,
+            (Card.column("project_column_id") == ProjectColumn.column("id")) & (Card.column("deleted_at") == None),  # noqa
+        )
 
         sql_query = (
-            sql_query.where(ProjectColumn.column("project_id") == project.id)
+            sql_query.where(ProjectColumn.column("project_id").in_(project_ids))
             .order_by(ProjectColumn.column("order").asc())
             .group_by(ProjectColumn.column("id"), ProjectColumn.column("order"))
         )
@@ -60,49 +56,47 @@ class ProjectColumnService(BaseService):
             raw_columns = result.all()
         columns = []
         count_dict = {}
-        has_archive_column = False
+        has_archive_column = {}
         for raw_column in raw_columns:
-            if with_count:
-                raw_column, count = cast(tuple[ProjectColumn, int], raw_column)
-            else:
-                raw_column = cast(ProjectColumn, raw_column)
-                count = None
-
+            raw_column, count = cast(tuple[ProjectColumn, int], raw_column)
             columns.append({**raw_column.api_response(), "count": count} if as_api else raw_column)
             if not as_api:
                 count_dict[raw_column.id] = count
             if raw_column.is_archive:
-                has_archive_column = True
+                has_archive_column[raw_column.project_id] = True
 
-        if not has_archive_column:
-            archive_column = await self.get_or_create_archive_if_not_exists(project)
+        for project_id in project_ids:
+            if project_id not in has_archive_column or has_archive_column[project_id]:
+                continue
+
+            archive_column = await self.get_or_create_archive_if_not_exists(project_id)
             if as_api:
                 archive_column = archive_column.api_response()
-                archive_column["count"] = 0 if as_api and with_count else None
-            elif with_count:
+                archive_column["count"] = 0
+            else:
                 count_dict[archive_column.id] = 0
             columns.append(archive_column)
 
-        if not as_api and with_count:
+        if not as_api:
             return columns, count_dict
         return columns
 
-    async def get_or_create_archive_if_not_exists(self, project: Project) -> ProjectColumn:
+    async def get_or_create_archive_if_not_exists(self, project_id: SnowflakeID) -> ProjectColumn:
         archive_column = None
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.table(ProjectColumn).where(
-                    (ProjectColumn.column("project_id") == project.id) & ProjectColumn.column("is_archive") == True  # noqa
+                    (ProjectColumn.column("project_id") == project_id) & ProjectColumn.column("is_archive") == True  # noqa
                 )
             )
             archive_column = result.first()
         if archive_column:
             return archive_column
 
-        max_order = ServiceHelper.get_max_order(ProjectColumn, "project_id", project.id)
+        max_order = ServiceHelper.get_max_order(ProjectColumn, "project_id", project_id)
 
         column = ProjectColumn(
-            project_id=project.id,
+            project_id=project_id,
             name=ProjectColumn.DEFAULT_ARCHIVE_COLUMN_NAME,
             order=max_order,
             is_archive=True,
@@ -112,6 +106,21 @@ class ProjectColumnService(BaseService):
             db.insert(column)
 
         return column
+
+    async def get_bot_scopes_by_project(self, project: TProjectParam) -> list[ProjectColumnBotScope]:
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return []
+
+        bot_scope_service = self._get_service(BotScopeService)
+        scopes = await bot_scope_service.get_list(
+            ProjectColumnBotScope,
+            lambda q: q.join(
+                ProjectColumn, ProjectColumn.column("id") == ProjectColumnBotScope.column("project_column_id")
+            ).where(ProjectColumn.column("project_id") == project.id),
+        )
+
+        return scopes
 
     async def count_cards(self, project: TProjectParam, column: TColumnParam) -> int:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
@@ -146,7 +155,6 @@ class ProjectColumnService(BaseService):
 
         await ProjectColumnPublisher.created(project, column)
         ProjectColumnActivityTask.project_column_created(user_or_bot, project, column)
-        ProjectColumnBotTask.project_column_created(user_or_bot, project, column)
 
         return column
 
@@ -202,7 +210,7 @@ class ProjectColumnService(BaseService):
         if column.is_archive:
             return False
 
-        archive_column = await self.get_or_create_archive_if_not_exists(project)
+        archive_column = await self.get_or_create_archive_if_not_exists(project.id)
         count_cards_in_archive = len(ServiceHelper.get_all_by(Card, "project_column_id", column.id))
 
         current_time = SafeDateTime.now()
@@ -233,6 +241,10 @@ class ProjectColumnService(BaseService):
                     }
                 )
             )
+
+        bot_scope_service = self._get_service(BotScopeService)
+        await bot_scope_service.delete_by_scope(ProjectColumnBotScope, column)
+        await BotScheduleHelper.unschedule_by_scope(ProjectColumnBotSchedule, column)
 
         with DbSession.use(readonly=False) as db:
             db.delete(column)

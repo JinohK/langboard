@@ -29,21 +29,9 @@
       "default": "<Recorder/> updated the project.",
       "user_view": "You updated the project <Project/>."
     },
-    "project_assigned_bots_updated": {
-      "default": "<Recorder/> updated the assigned bots of the project.",
-      "user_view": "You updated the assigned bots of the project <Project/>."
-    },
     "project_assigned_users_updated": {
       "default": "<Recorder/> updated the assigned users of the project.",
       "user_view": "You updated the assigned users of the project <Project/>."
-    },
-    "project_bot_activated": {
-      "default": "<Recorder/> activated the bot <Bot/>.",
-      "user_view": "You activated the bot <Bot/> in the project <Project/>."
-    },
-    "project_bot_deactivated": {
-      "default": "<Recorder/> deactivated the bot <Bot/>.",
-      "user_view": "You deactivated the bot <Bot/> in the project <Project/>."
     },
     "project_invited_user_accepted": {
       "default": "<Recorder/> accepted the project invitation.",

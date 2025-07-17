@@ -1,7 +1,7 @@
 import { IBaseModel } from "@/core/models/Base";
 import { IBaseProjectActivity, IProjectActivityHistory } from "@/core/models/activities/project.activity.type";
 import { EProjectWikiActivityType } from "@/core/models/activities/enum.type";
-import { IBaseActivity, IChangesInActivityHistory, IUpdatedAssigneesInActivityHistory } from "@/core/models/activities/base.type";
+import { IBaseActivity, IChangesInActivityHistory, IUpdatedAssignedUsersInActivityHistory } from "@/core/models/activities/base.type";
 
 export interface IProjectWikiActivityHistory extends IProjectActivityHistory {
     wiki: {
@@ -30,7 +30,7 @@ export interface IProjectWikiUpdatedActivitiy extends IBaseActivity<IProjectWiki
 export interface IProjectWikiPublicityChangedActivitiy extends IBaseActivity<IProjectWikiActivityHistory & { was_public: bool; is_public: bool }> {
     activity_type: EProjectWikiActivityType.WikiPublicityChanged;
 }
-export interface IProjectWikiAssigneesUpdatedActivitiy extends IBaseActivity<IProjectWikiActivityHistory & IUpdatedAssigneesInActivityHistory> {
+export interface IProjectWikiAssigneesUpdatedActivitiy extends IBaseActivity<IProjectWikiActivityHistory & IUpdatedAssignedUsersInActivityHistory> {
     activity_type: EProjectWikiActivityType.WikiAssigneesUpdated;
 }
 export interface IProjectWikiDeletedActivitiy extends IBaseActivity<IProjectWikiActivityHistory> {

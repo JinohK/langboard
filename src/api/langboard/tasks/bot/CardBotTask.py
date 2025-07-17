@@ -1,5 +1,5 @@
-from models import Bot, Card, Project, ProjectColumn, User
-from models.BotTrigger import BotTriggerCondition
+from models import Bot, Card, Project, User
+from models.bases import BotTriggerCondition
 from ...core.broker import Broker
 from .utils import BotTaskDataHelper, BotTaskHelper
 
@@ -7,7 +7,9 @@ from .utils import BotTaskDataHelper, BotTaskHelper
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardCreated)
 @Broker.wrap_async_task_decorator
 async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardCreated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardCreated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardCreated, BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )
@@ -16,7 +18,9 @@ async def card_created(user_or_bot: User | Bot, project: Project, card: Card):
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardUpdated)
 @Broker.wrap_async_task_decorator
 async def card_updated(user_or_bot: User | Bot, project: Project, card: Card):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardUpdated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardUpdated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardUpdated, BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )
@@ -24,8 +28,10 @@ async def card_updated(user_or_bot: User | Bot, project: Project, card: Card):
 
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardMoved)
 @Broker.wrap_async_task_decorator
-async def card_moved(user_or_bot: User | Bot, project: Project, card: Card, original_column: ProjectColumn):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardMoved)
+async def card_moved(user_or_bot: User | Bot, project: Project, card: Card):
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardMoved, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardMoved, BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )
@@ -34,7 +40,9 @@ async def card_moved(user_or_bot: User | Bot, project: Project, card: Card, orig
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardLabelsUpdated)
 @Broker.wrap_async_task_decorator
 async def card_labels_updated(user_or_bot: User | Bot, project: Project, card: Card):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardLabelsUpdated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardLabelsUpdated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardLabelsUpdated,
@@ -46,7 +54,9 @@ async def card_labels_updated(user_or_bot: User | Bot, project: Project, card: C
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardRelationshipsUpdated)
 @Broker.wrap_async_task_decorator
 async def card_relationship_updated(user_or_bot: User | Bot, project: Project, card: Card):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardRelationshipsUpdated)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardRelationshipsUpdated, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots,
         BotTriggerCondition.CardRelationshipsUpdated,
@@ -58,7 +68,9 @@ async def card_relationship_updated(user_or_bot: User | Bot, project: Project, c
 @BotTaskDataHelper.card_schema(BotTriggerCondition.CardDeleted)
 @Broker.wrap_async_task_decorator
 async def card_deleted(user_or_bot: User | Bot, project: Project, card: Card):
-    bots = BotTaskHelper.get_project_assigned_bots(project, BotTriggerCondition.CardDeleted)
+    bots = BotTaskHelper.get_scoped_bots(
+        BotTriggerCondition.CardDeleted, project_column_id=card.project_column_id, card_id=card.id
+    )
     await BotTaskHelper.run(
         bots, BotTriggerCondition.CardDeleted, BotTaskDataHelper.create_card(user_or_bot, project, card), project
     )

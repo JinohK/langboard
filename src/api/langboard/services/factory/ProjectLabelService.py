@@ -6,7 +6,6 @@ from models import Bot, Card, CardAssignedProjectLabel, Project, ProjectLabel
 from ...core.service import ServiceHelper
 from ...publishers import ProjectLabelPublisher
 from ...tasks.activities import ProjectLabelActivityTask
-from ...tasks.bot import ProjectLabelBotTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
 
@@ -28,7 +27,7 @@ class ProjectLabelService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.table(ProjectLabel)
-                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None))  # noqa
+                .where(ProjectLabel.column("project_id") == project.id)
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
@@ -45,7 +44,7 @@ class ProjectLabelService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.table(ProjectLabel)
-                .where((ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") != None))  # noqa
+                .where(ProjectLabel.column("project_id") == project.id)
                 .order_by(ProjectLabel.column("order").asc())
                 .group_by(ProjectLabel.column("id"), ProjectLabel.column("order"))
             )
@@ -131,7 +130,6 @@ class ProjectLabelService(BaseService):
 
         label = ProjectLabel(
             project_id=project.id,
-            bot_id=user_or_bot.id if is_bot else None,
             name=name,
             color=color,
             description=description,
@@ -143,7 +141,6 @@ class ProjectLabelService(BaseService):
         if not is_bot:
             await ProjectLabelPublisher.created(project, label)
             ProjectLabelActivityTask.project_label_created(user_or_bot, project, label)
-            ProjectLabelBotTask.project_label_created(user_or_bot, project, label)
 
         return label, label.api_response()
 
@@ -154,9 +151,6 @@ class ProjectLabelService(BaseService):
         if not params:
             return None
         project, label = params
-
-        if label.bot_id and not isinstance(user_or_bot, Bot):
-            return None
 
         old_label_record = {}
         mutable_keys = ["name", "color", "description"]
@@ -185,7 +179,6 @@ class ProjectLabelService(BaseService):
 
         await ProjectLabelPublisher.updated(project, label, model)
         ProjectLabelActivityTask.project_label_updated(user_or_bot, project, old_label_record, label)
-        ProjectLabelBotTask.project_label_updated(user_or_bot, project, label)
 
         return model
 
@@ -195,13 +188,8 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
-        if label.bot_id:
-            return None
-
         original_order = label.order
-        update_query = SqlBuilder.update.table(ProjectLabel).where(
-            (ProjectLabel.column("project_id") == project.id) & (ProjectLabel.column("bot_id") == None)  # noqa
-        )
+        update_query = SqlBuilder.update.table(ProjectLabel).where(ProjectLabel.column("project_id") == project.id)
         update_query = ServiceHelper.set_order_in_column(update_query, ProjectLabel, original_order, order)
         with DbSession.use(readonly=False) as db:
             # Lock
@@ -225,14 +213,10 @@ class ProjectLabelService(BaseService):
             return None
         project, label = params
 
-        if label.bot_id and not isinstance(user_or_bot, Bot):
-            return None
-
         with DbSession.use(readonly=False) as db:
             db.delete(label)
 
         await ProjectLabelPublisher.deleted(project, label)
         ProjectLabelActivityTask.project_label_deleted(user_or_bot, project, label)
-        ProjectLabelBotTask.project_label_deleted(user_or_bot, project, label)
 
         return True

@@ -1,7 +1,7 @@
 import { Box, Checkbox, Flex, HoverCard, ScrollArea, Separator } from "@/components/base";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { UserAvatarBadgeList } from "@/components/UserAvatarList";
-import { ProjectChecklist, ProjectLabel } from "@/core/models";
+import { BotModel, ProjectChecklist, ProjectLabel } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { Fragment, memo, useMemo, useState } from "react";
 import { LabelBadge, LabelModelBadge } from "@/components/LabelBadge";
@@ -14,10 +14,10 @@ function BoardColumnCardPreview() {
     const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const projectMembers = project.useForeignField("all_members");
     const projectInvitedMemberUIDs = project.useField("invited_member_uids");
-    const projectBots = project.useForeignField("bots");
+    const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(
-        () => [...projectMembers.filter((model) => model.isValidUser() && !projectInvitedMemberUIDs.includes(model.uid)), ...projectBots],
-        [projectMembers, projectBots, projectInvitedMemberUIDs]
+        () => [...projectMembers.filter((model) => model.isValidUser() && !projectInvitedMemberUIDs.includes(model.uid)), ...bots],
+        [projectMembers, projectInvitedMemberUIDs, bots]
     );
     const description = card.useField("description");
     const labels = card.useForeignField("labels");

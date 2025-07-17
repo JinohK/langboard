@@ -9,7 +9,7 @@ import { Utils } from "@langboard/core/utils";
 export type TActivity = TUserActivityInterface | TProjectRelatedActivityInterface | TProjectWikiActivityInterface;
 
 export class ActivityModel extends BaseModel<TActivity> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ActivityModel" as const;
     }
 

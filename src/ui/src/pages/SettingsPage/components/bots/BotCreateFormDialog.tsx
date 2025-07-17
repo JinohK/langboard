@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
+import { Box, Button, Checkbox, Dialog, Flex, Floating, Form, Label, Select, SubmitButton, Toast } from "@/components/base";
 import { useRef, useState } from "react";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -33,6 +33,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         prompt: null as HTMLTextAreaElement | null,
     });
     const [selectedAPIAuthType, setSelectedAPIAuthType] = useState<BotModel.EAPIAuthType>(BotModel.EAPIAuthType.Langflow);
+    const [isAllAllowedIP, setIsAllAllowedIP] = useState(false);
     const { mutate } = useCreateBot();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const ipWhitelistRef = useRef<string[]>([]);
@@ -228,7 +229,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                             />
                             {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
                         </Box>
-                        <Box mt="4">
+                        <Flex mt="4" items="center" gap="2">
                             <MultiSelect
                                 selections={[]}
                                 placeholder={t("settings.Add a new IP address or range (e.g. 192.0.0.1 or 192.0.0.0/24)...")}
@@ -236,6 +237,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 onValueChange={(values) => {
                                     ipWhitelistRef.current = values;
                                 }}
+                                className="w-[calc(100%_-_theme(spacing.24))]"
                                 inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
                                 canCreateNew
                                 validateCreatedNewValue={Utils.String.isValidIpv4OrRnage}
@@ -254,9 +256,27 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                     }));
                                 }}
                                 isNewCommandItemMultiple
-                                disabled={isValidating}
+                                disabled={isValidating || isAllAllowedIP}
                             />
-                        </Box>
+                            <Label display="flex" items="center" gap="1.5" w="20" mb="2" cursor="pointer">
+                                <Checkbox
+                                    onCheckedChange={(checked) => {
+                                        if (Utils.Type.isString(checked)) {
+                                            return;
+                                        }
+
+                                        if (checked) {
+                                            ipWhitelistRef.current = [BotModel.ALLOWED_ALL_IPS];
+                                        } else {
+                                            ipWhitelistRef.current = [];
+                                        }
+
+                                        setIsAllAllowedIP(checked);
+                                    }}
+                                />
+                                {t("settings.Allow all")}
+                            </Label>
+                        </Flex>
                         <Box mt="4">
                             <Floating.LabelTextarea
                                 label={t("settings.Bot prompt")}

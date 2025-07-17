@@ -42,6 +42,11 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
         disabled: isValidating,
     });
 
+    const deleteFile = (key: string) => {
+        delete attachedFileMap.current[key];
+        forceUpdate();
+    };
+
     const upload = () => {
         if (isValidating) {
             return;
@@ -49,17 +54,36 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
 
         setIsValidating(true);
 
-        Promise.all([...attachedFiles.map((attachedFile) => attachedFile.upload?.())]).finally(() => {
+        let errorCount = 0;
+        const successFiles: string[] = [];
+        Promise.all(
+            attachedFiles
+                .map((attachedFile) => attachedFile.upload?.())
+                .map((promise) => {
+                    promise?.then((result) => {
+                        if (!result) {
+                            ++errorCount;
+                        } else {
+                            successFiles.push(result);
+                        }
+                    });
+                })
+        ).finally(() => {
+            if (errorCount > 0) {
+                Toast.Add.error(t("errors.{num} files could not be uploaded. File size may be too large.", { num: errorCount }));
+                setIsValidating(false);
+                for (let i = 0; i < successFiles.length; ++i) {
+                    delete attachedFileMap.current[successFiles[i]];
+                }
+                forceUpdate();
+                return;
+            }
+
             Toast.Add.success(t("successes.Files have been uploaded successfully."));
             setIsValidating(false);
             changeOpenedState(false);
             forceUpdate();
         });
-    };
-
-    const deleteFile = (key: string) => {
-        delete attachedFileMap.current[key];
-        forceUpdate();
     };
 
     const changeOpenedState = (opened: bool) => {

@@ -44,11 +44,11 @@ async def get_starred_projects(user: User = Auth.scope("api_user"), service: Ser
                             "schema": {
                                 "starred": "bool",
                                 "last_viewed_at": "string",
-                                "columns": [(ProjectColumn, {"schema": {"count": "integer"}})],
                             }
                         },
                     ),
                 ],
+                "columns": [(ProjectColumn, {"schema": {"count": "integer"}})],
             }
         )
         .auth()
@@ -58,9 +58,9 @@ async def get_starred_projects(user: User = Auth.scope("api_user"), service: Ser
 )
 @AuthFilter.add("user")
 async def get_projects(user: User = Auth.scope("api_user"), service: Service = Service.scope()) -> JsonResponse:
-    projects = await service.project.get_dashboard_list(user)
+    projects, columns = await service.project.get_dashboard_list(user)
 
-    return JsonResponse(content={"projects": projects})
+    return JsonResponse(content={"projects": projects, "columns": columns})
 
 
 @AppRouter.api.post(

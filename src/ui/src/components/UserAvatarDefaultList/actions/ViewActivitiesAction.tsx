@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useUserAvatar } from "@/components/UserAvatar/Provider";
 import UserAvatar from "@/components/UserAvatar";
+import useHandleInteractOutside from "@/core/hooks/useHandleInteractOutside";
 
 export interface IUserAvatarDefaultViewActivitiesActionProps {
     project: Project.TModel;
@@ -49,6 +50,7 @@ function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAv
         setMaxHeight(() => `${futureMaxHeight}px`);
         setSide(() => futureSide);
     }, [isOpened]);
+    const { onInteractOutside, onPointerDownOutside } = useHandleInteractOutside({ pointerDownOutside: () => setIsOpened(false) }, [setIsOpened]);
 
     useEffect(() => {
         checkSize();
@@ -79,6 +81,8 @@ function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAv
             <Popover.Content
                 className="z-[999999] w-screen sm:max-w-screen-xs md:max-w-screen-sm lg:max-w-screen-md"
                 side={side}
+                onInteractOutside={onInteractOutside}
+                onPointerDownOutside={onPointerDownOutside}
                 {...getAvatarHoverCardAttrs()}
             >
                 <ActivityList

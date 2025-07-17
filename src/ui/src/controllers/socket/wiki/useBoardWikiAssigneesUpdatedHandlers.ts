@@ -1,13 +1,12 @@
 import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { AuthUser, BotModel, ProjectWiki, User } from "@/core/models";
+import { AuthUser, ProjectWiki, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { Utils } from "@langboard/core/utils";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardWikiAssigneesUpdatedRawResponse {
-    assigned_bots: BotModel.Interface[];
     assigned_members: User.Interface[];
 }
 
@@ -50,7 +49,6 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
                         });
                     });
                 } else {
-                    wiki.assigned_bots = data.assigned_bots;
                     wiki.assigned_members = data.assigned_members;
                 }
 

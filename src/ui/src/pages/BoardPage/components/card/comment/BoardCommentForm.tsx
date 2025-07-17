@@ -9,6 +9,7 @@ import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment"
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
+import { BotModel } from "@/core/models";
 
 export function SkeletonBoardCommentForm() {
     return (
@@ -31,8 +32,8 @@ const BoardCommentForm = memo((): JSX.Element => {
     const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
     const [t] = useTranslation();
     const projectMembers = card.useForeignField("project_members");
-    const projectBots = card.useForeignField("project_bots");
-    const mentionables = useMemo(() => [...projectMembers, ...projectBots], [projectMembers, projectBots]);
+    const bots = BotModel.Model.useModels(() => true);
+    const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;

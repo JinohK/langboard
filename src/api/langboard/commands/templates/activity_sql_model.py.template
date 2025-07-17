@@ -3,7 +3,7 @@ from typing import Any
 from sqlmodel import Field
 from core.db import EnumLikeType, SnowflakeIDField
 from core.types import SafeDateTime, SnowflakeID
-from models.BaseActivityModel import BaseActivityModel
+from .bases import BaseActivityModel
 
 
 class {class_name}ActivityType(Enum):

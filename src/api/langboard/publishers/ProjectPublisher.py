@@ -1,8 +1,8 @@
-from typing import Any, Sequence
+from typing import Any
 from core.routing import SocketTopic
 from core.types import SnowflakeID
 from core.utils.decorators import staticclass
-from models import Bot, ChatTemplate, Project, User
+from models import ChatTemplate, Project, User
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 
 
@@ -19,23 +19,6 @@ class ProjectPublisher(BaseSocketPublisher):
         )
 
         await ProjectPublisher.put_dispather(model, publish_model)
-
-    @staticmethod
-    async def assigned_bots_updated(project: Project, bots: Sequence[Bot]):
-        model = {"assigned_bots": [bot.api_response() for bot in bots]}
-        topic_id = project.get_uid()
-        publish_models: list[SocketPublishModel] = []
-        for topic in [SocketTopic.Board, SocketTopic.BoardWiki]:
-            publish_models.append(
-                SocketPublishModel(
-                    topic=topic,
-                    topic_id=topic_id,
-                    event=f"board:assigned-bots:updated:{topic_id}",
-                    data_keys="assigned_bots",
-                )
-            )
-
-        await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
     async def assigned_users_updated(project: Project, model: dict[str, Any]):
@@ -56,19 +39,6 @@ class ProjectPublisher(BaseSocketPublisher):
         await ProjectPublisher.put_dispather(model, publish_models)
 
     @staticmethod
-    async def bot_roles_updated(project: Project, target_bot: Bot, roles: list[str]):
-        topic_id = project.get_uid()
-        model = {"bot_uid": target_bot.get_uid(), "roles": roles}
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.Board,
-            topic_id=topic_id,
-            event=f"board:roles:bot:updated:{topic_id}",
-            data_keys=["bot_uid", "roles"],
-        )
-
-        await ProjectPublisher.put_dispather(model, publish_model)
-
-    @staticmethod
     async def user_roles_updated(project: Project, target_user: User, roles: list[str]):
         topic_id = project.get_uid()
         model = {"user_uid": target_user.get_uid(), "roles": roles}
@@ -85,28 +55,6 @@ class ProjectPublisher(BaseSocketPublisher):
                 event="user:project-roles:updated",
                 data_keys="roles",
                 custom_data={"project_uid": topic_id},
-            ),
-        ]
-
-        await ProjectPublisher.put_dispather(model, publish_models)
-
-    @staticmethod
-    async def bot_activation_toggled(project: Project, target_bot: Bot, is_disabled: bool):
-        project_uid = project.get_uid()
-        bot_uid = target_bot.get_uid()
-        model = {"bot_uid": bot_uid, "is_disabled": is_disabled}
-        publish_models = [
-            SocketPublishModel(
-                topic=SocketTopic.BoardSettings,
-                topic_id=project_uid,
-                event=f"board:settings:activation:bot:toggled:{project_uid}",
-                data_keys=list(model.keys()),
-            ),
-            SocketPublishModel(
-                topic=SocketTopic.ProjectBot,
-                topic_id=f"{bot_uid}-{project_uid}",
-                event=f"project:bot:activation:toggled:{bot_uid}",
-                data_keys="is_disabled",
             ),
         ]
 

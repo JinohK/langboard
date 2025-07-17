@@ -7,10 +7,8 @@ from core.utils.Converter import convert_python_data
 from models import (
     Bot,
     Project,
-    ProjectAssignedBot,
     ProjectAssignedUser,
     ProjectWiki,
-    ProjectWikiAssignedBot,
     ProjectWikiAssignedUser,
     ProjectWikiAttachment,
     User,
@@ -18,7 +16,6 @@ from models import (
 from ...core.service import ServiceHelper
 from ...publishers import ProjectWikiPublisher
 from ...tasks.activities import ProjectWikiActivityTask
-from ...tasks.bot import ProjectWikiBotTask
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
 from .Types import TProjectParam, TUserOrBot, TWikiParam
@@ -59,55 +56,25 @@ class ProjectWikiService(BaseService):
 
     async def convert_to_api_response(self, user_or_bot: TUserOrBot, wiki: ProjectWiki) -> dict[str, Any]:
         api_wiki = wiki.api_response()
-        api_wiki["assigned_bots"] = []
         api_wiki["assigned_members"] = []
         if wiki.is_public:
             return api_wiki
 
-        assigned_bots = await self.get_assigned_bots(wiki, as_api=False)
-        assigned_bot_ids = [assigned_bot.id for assigned_bot, _ in assigned_bots]
         assigned_users = await self.get_assigned_users(wiki, as_api=False)
         assigned_user_ids = [assigned_user.id for assigned_user, _ in assigned_users]
 
         is_showable = (
             wiki.is_public
             or (isinstance(user_or_bot, User) and (user_or_bot.is_admin or user_or_bot.id in assigned_user_ids))
-            or (isinstance(user_or_bot, Bot) and user_or_bot.id in assigned_bot_ids)
+            or isinstance(user_or_bot, Bot)
         )
 
         if is_showable:
-            api_wiki["assigned_bots"] = [assigned_bot.api_response() for assigned_bot, _ in assigned_bots]
             api_wiki["assigned_members"] = [assigned_user.api_response() for assigned_user, _ in assigned_users]
         else:
             api_wiki = wiki.convert_to_private_api_response()
 
         return api_wiki
-
-    @overload
-    async def get_assigned_bots(
-        self, wiki: TWikiParam, as_api: Literal[False]
-    ) -> list[tuple[Bot, ProjectWikiAssignedBot]]: ...
-    @overload
-    async def get_assigned_bots(self, wiki: TWikiParam, as_api: Literal[True]) -> list[dict[str, Any]]: ...
-    async def get_assigned_bots(
-        self, wiki: TWikiParam, as_api: bool
-    ) -> list[tuple[Bot, ProjectWikiAssignedBot]] | list[dict[str, Any]]:
-        wiki = ServiceHelper.get_by_param(ProjectWiki, wiki)
-        if not wiki:
-            return []
-        raw_bots = []
-        with DbSession.use(readonly=True) as db:
-            result = db.exec(
-                SqlBuilder.select.tables(Bot, ProjectWikiAssignedBot)
-                .join(ProjectWikiAssignedBot, Bot.column("id") == ProjectWikiAssignedBot.column("bot_id"))
-                .where(ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id)
-            )
-            raw_bots = result.all()
-        if not as_api:
-            return raw_bots
-
-        bots = [bot.api_response() for bot, _ in raw_bots]
-        return bots
 
     @overload
     async def get_assigned_users(
@@ -135,7 +102,10 @@ class ProjectWikiService(BaseService):
         users = [user.api_response() for user, _ in raw_users]
         return users
 
-    async def is_assigned(self, user_or_bot: TUserOrBot, wiki: TWikiParam) -> bool:
+    async def is_assigned(self, user: User, wiki: TWikiParam) -> bool:
+        if user.is_admin:
+            return True
+
         wiki = ServiceHelper.get_by_param(ProjectWiki, wiki)
         if not wiki:
             return False
@@ -143,23 +113,13 @@ class ProjectWikiService(BaseService):
         if wiki.is_public:
             return True
 
-        if isinstance(user_or_bot, Bot):
-            model_table = ProjectWikiAssignedBot
-            column_name = "bot_id"
-        else:
-            if user_or_bot.is_admin:
-                return True
-
-            model_table = ProjectWikiAssignedUser
-            column_name = "user_id"
-
         record = None
         with DbSession.use(readonly=True) as db:
             result = db.exec(
-                SqlBuilder.select.table(model_table)
+                SqlBuilder.select.table(ProjectWikiAssignedUser)
                 .where(
-                    (model_table.column("project_wiki_id") == wiki.id)
-                    & (model_table.column(column_name) == user_or_bot.id)
+                    (ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
+                    & (ProjectWikiAssignedUser.column("user_id") == user.id)
                 )
                 .limit(1)
             )
@@ -185,11 +145,9 @@ class ProjectWikiService(BaseService):
             db.insert(wiki)
 
         api_wiki = wiki.api_response()
-        api_wiki["assigned_bots"] = []
         api_wiki["assigned_members"] = []
         await ProjectWikiPublisher.created(project, wiki)
         ProjectWikiActivityTask.project_wiki_created(user_or_bot, project, wiki)
-        ProjectWikiBotTask.project_wiki_created(user_or_bot, project, wiki)
 
         return wiki, api_wiki
 
@@ -233,7 +191,6 @@ class ProjectWikiService(BaseService):
             await notification_service.notify_mentioned_in_wiki(user_or_bot, project, wiki)
 
         ProjectWikiActivityTask.project_wiki_updated(user_or_bot, project, old_wiki_record, wiki)
-        ProjectWikiBotTask.project_wiki_updated(user_or_bot, project, wiki)
 
         return model
 
@@ -248,33 +205,17 @@ class ProjectWikiService(BaseService):
         if is_public:
             with DbSession.use(readonly=False) as db:
                 db.exec(
-                    SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
-                        ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
-                    )
-                )
-
-            with DbSession.use(readonly=False) as db:
-                db.exec(
                     SqlBuilder.delete.table(ProjectWikiAssignedUser).where(
                         ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id
                     )
                 )
         else:
-            if isinstance(user_or_bot, Bot):
-                project_assigned_table = ProjectAssignedBot
-                model_table = ProjectWikiAssignedBot
-                column_name = "bot_id"
-            else:
-                project_assigned_table = ProjectAssignedUser
-                model_table = ProjectWikiAssignedUser
-                column_name = "user_id"
-
             project_assigned = None
             with DbSession.use(readonly=True) as db:
                 result = db.exec(
-                    SqlBuilder.select.table(project_assigned_table).where(
-                        (project_assigned_table.column("project_id") == project.id)
-                        & (project_assigned_table.column(column_name) == user_or_bot.id)
+                    SqlBuilder.select.table(ProjectAssignedUser).where(
+                        (ProjectAssignedUser.column("project_id") == project.id)
+                        & (ProjectAssignedUser.column("user_id") == user_or_bot.id)
                     )
                 )
                 project_assigned = result.first()
@@ -285,9 +226,9 @@ class ProjectWikiService(BaseService):
                 "project_assigned_id": project_assigned.id,
                 "project_wiki_id": wiki.id,
             }
-            model_params[column_name] = user_or_bot.id
+            model_params["user_id"] = user_or_bot.id
             with DbSession.use(readonly=False) as db:
-                db.insert(model_table(**model_params))
+                db.insert(ProjectWikiAssignedUser(**model_params))
 
         was_public = wiki.is_public
         wiki.is_public = is_public
@@ -297,12 +238,11 @@ class ProjectWikiService(BaseService):
 
         await ProjectWikiPublisher.publicity_changed(user_or_bot, project, wiki)
         ProjectWikiActivityTask.project_wiki_publicity_changed(user_or_bot, project, was_public, wiki)
-        ProjectWikiBotTask.project_wiki_publicity_changed(user_or_bot, project, wiki)
 
         return wiki, project
 
     async def update_assignees(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, assign_user_or_bot_uids: list[str]
+        self, user: User, project: TProjectParam, wiki: TWikiParam, assign_user_uids: list[str]
     ) -> tuple[ProjectWiki, Project] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:
@@ -311,15 +251,7 @@ class ProjectWikiService(BaseService):
         if wiki.is_public:
             return None
 
-        original_assigned_bots = await self.get_assigned_bots(wiki, as_api=False)
         original_assigned_users = await self.get_assigned_users(wiki, as_api=False)
-
-        with DbSession.use(readonly=False) as db:
-            db.exec(
-                SqlBuilder.delete.table(ProjectWikiAssignedBot).where(
-                    ProjectWikiAssignedBot.column("project_wiki_id") == wiki.id
-                )
-            )
 
         with DbSession.use(readonly=False) as db:
             db.exec(
@@ -328,26 +260,14 @@ class ProjectWikiService(BaseService):
                 )
             )
 
-        bots: list[Bot] = []
         target_users: list[User] = []
-        if assign_user_or_bot_uids:
-            assignee_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_or_bot_uids]
+        if assign_user_uids:
+            assignee_ids = [SnowflakeID.from_short_code(uid) for uid in assign_user_uids]
             project_service = self._get_service(ProjectService)
-            raw_bots = await project_service.get_assigned_bots(project.id, as_api=False, where_bot_ids_in=assignee_ids)
             raw_users = await project_service.get_assigned_users(
                 project.id, as_api=False, where_user_ids_in=assignee_ids
             )
 
-            for target_bot, project_assigned_bot in raw_bots:
-                with DbSession.use(readonly=False) as db:
-                    db.insert(
-                        ProjectWikiAssignedBot(
-                            project_assigned_id=project_assigned_bot.id,
-                            project_wiki_id=wiki.id,
-                            bot_id=target_bot.id,
-                        )
-                    )
-                bots.append(target_bot)
             for target_user, project_assigned_user in raw_users:
                 with DbSession.use(readonly=False) as db:
                     db.insert(
@@ -359,13 +279,11 @@ class ProjectWikiService(BaseService):
                     )
                 target_users.append(target_user)
 
-        await ProjectWikiPublisher.assignees_updated(project, wiki, bots, target_users)
+        await ProjectWikiPublisher.assignees_updated(project, wiki, target_users)
         ProjectWikiActivityTask.project_wiki_assignees_updated(
             user,
             project,
             wiki,
-            [bot.id for bot, _ in original_assigned_bots],
-            [bot.id for bot in bots],
             [target_user.id for target_user, _ in original_assigned_users],
             [target_user.id for target_user in target_users],
         )
@@ -433,6 +351,5 @@ class ProjectWikiService(BaseService):
 
         await ProjectWikiPublisher.deleted(project, wiki)
         ProjectWikiActivityTask.project_wiki_deleted(user_or_bot, project, wiki)
-        ProjectWikiBotTask.project_wiki_deleted(user_or_bot, project, wiki)
 
         return True

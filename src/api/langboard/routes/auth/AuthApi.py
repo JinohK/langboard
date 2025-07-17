@@ -6,7 +6,7 @@ from core.security import AuthSecurity
 from core.utils.Encryptor import Encryptor
 from fastapi import Request, status
 from jwt import ExpiredSignatureError
-from models import User, UserEmail, UserGroup, UserNotification, UserProfile
+from models import Bot, User, UserEmail, UserGroup, UserNotification, UserProfile
 from models.UserNotification import NotificationType
 from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from ...Constants import DOMAIN
@@ -141,6 +141,7 @@ async def refresh(request: Request) -> JsonResponse:
                     },
                 ),
                 "notifications": [UserNotification],
+                "bots": [Bot],
             }
         )
         .auth()
@@ -185,7 +186,9 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
     if user.is_admin:
         response["is_admin"] = True
 
-    return JsonResponse(content={"user": response, "notifications": notifications})
+    bots = await service.bot.get_list(as_api=True)
+
+    return JsonResponse(content={"user": response, "notifications": notifications, "bots": bots})
 
 
 @AppRouter.api.post("/auth/signout", tags=["Auth"], responses=OpenApiSchema(202).suc({}).get())

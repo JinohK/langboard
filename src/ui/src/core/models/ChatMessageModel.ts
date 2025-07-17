@@ -16,7 +16,7 @@ export interface Interface extends IBaseModel {
 }
 
 class ChatMessageModel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ChatMessageModel" as const;
     }
 

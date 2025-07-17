@@ -18,7 +18,7 @@ export interface Interface extends IBaseModel {
 }
 
 class UserNotification extends BaseModel<Interface> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             notifier_user: User.Model.MODEL_NAME,
             notifier_bot: BotModel.Model.MODEL_NAME,
@@ -27,7 +27,7 @@ class UserNotification extends BaseModel<Interface> {
     override get FOREIGN_MODELS() {
         return UserNotification.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "UserNotification" as const;
     }
 

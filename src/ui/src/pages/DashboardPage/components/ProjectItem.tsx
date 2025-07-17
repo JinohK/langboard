@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Card, Flex, Skeleton } from "@/components/base";
 import { ROUTES } from "@/core/routing/constants";
 import { Utils } from "@langboard/core/utils";
-import { Project } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { useDashboard } from "@/core/providers/DashboardProvider";
 import ProjectItemColumn from "@/pages/DashboardPage/components/ProjectItemColumn";
 import ProjectItemStarButton from "@/pages/DashboardPage/components/ProjectItemStarButton";
@@ -59,7 +59,7 @@ const ProjectItem = memo(({ project, updateStarredProjects, ...props }: IProject
     const [isUpdating, setIsUpdating] = useState(false);
     const title = project.useField("title");
     const projectType = project.useField("project_type");
-    const flatColumns = project.useForeignField("columns");
+    const flatColumns = ProjectColumn.Model.useModels((model) => model.project_uid === project.uid);
     const [updated, forceUpdate] = useReducer((x) => x + 1, 0);
     const columns = useMemo(() => flatColumns.sort((a, b) => a.order - b.order), [flatColumns, updated]);
     const handlers = useMemo(

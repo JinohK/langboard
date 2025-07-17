@@ -22,15 +22,14 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
     const ownerUID = project.useField("owner_uid");
     const allMemebers = project.useForeignField("all_members");
     const invitedMemberUIDs = project.useField("invited_member_uids");
-    const bots = project.useForeignField("bots");
     const groups = currentUser.useForeignField("user_groups");
     const allSelectables = useMemo(
         () => allMemebers.filter((model) => model.uid !== ownerUID && model.uid !== currentUser.uid),
         [allMemebers, invitedMemberUIDs]
     );
     const showableAssignees = useMemo(
-        () => [...allMemebers.filter((model) => model.isValidUser() && !invitedMemberUIDs.includes(model.uid)), ...bots].slice(0, 6),
-        [allMemebers, bots, invitedMemberUIDs]
+        () => [...allMemebers.filter((model) => model.isValidUser() && !invitedMemberUIDs.includes(model.uid))].slice(0, 6),
+        [allMemebers, invitedMemberUIDs]
     );
     const selectedAssignees = useMemo(
         () => allMemebers.filter((model) => model.uid !== ownerUID && model.uid !== currentUser.uid),
@@ -88,20 +87,20 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
             allSelectables={allSelectables}
             showableAssignees={showableAssignees}
             originalAssignees={selectedAssignees}
-            createSearchText={(item: string | TUserLikeModel) => {
+            createSearchKeywords={(item: string | TUserLikeModel) => {
                 if (Utils.Type.isString(item)) {
-                    return item;
+                    return [item];
                 }
 
                 if (item.MODEL_NAME === BotModel.Model.MODEL_NAME) {
-                    return "";
+                    return [];
                 }
 
                 item = item as User.TModel;
                 if (item.isValidUser()) {
-                    return `${item.firstname} ${item.lastname}`.trim();
+                    return [item.email, item.firstname, item.lastname];
                 } else {
-                    return `${item.email} (${t("project.invited")})`;
+                    return [item.email, t("project.invited")];
                 }
             }}
             createLabel={(item: string | TUserLikeModel) => {

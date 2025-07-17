@@ -1,5 +1,4 @@
 import * as AuthUser from "@/core/models/AuthUser";
-import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
@@ -22,7 +21,6 @@ export interface Interface extends IBaseModel {
 }
 
 export interface IStore extends Interface {
-    assigned_bots: BotModel.Interface[];
     assigned_members: User.Interface[];
 
     // variable set from the client side
@@ -30,16 +28,15 @@ export interface IStore extends Interface {
 }
 
 class ProjectWiki extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
-            assigned_bots: BotModel.Model.MODEL_NAME,
             assigned_members: User.Model.MODEL_NAME,
         };
     }
     override get FOREIGN_MODELS() {
         return ProjectWiki.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectWiki" as const;
     }
     #isSubscribedOnce = false;
@@ -127,13 +124,6 @@ class ProjectWiki extends BaseModel<IStore> {
     }
     public set is_public(value) {
         this.update({ is_public: value });
-    }
-
-    public get assigned_bots(): BotModel.TModel[] {
-        return this.getForeignValue("assigned_bots");
-    }
-    public set assigned_bots(value: (BotModel.TModel | BotModel.Interface)[]) {
-        this.update({ assigned_bots: value });
     }
 
     public get assigned_members(): User.TModel[] {

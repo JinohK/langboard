@@ -122,7 +122,14 @@ function HoverableRoot({ trigger, initials, listAlign, avatarUrl, avatarFallback
             <Popover.Trigger onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} asChild>
                 <span>{trigger}</span>
             </Popover.Trigger>
-            <Popover.Content className="z-[100] w-60 border-none bg-background p-0 shadow-none xs:w-72" align={listAlign} {...hoverAttrs}>
+            <Popover.Content
+                className="z-[100] w-60 border-none bg-background p-0 shadow-none xs:w-72"
+                align={listAlign}
+                onInteractOutside={(e) => {
+                    e.preventDefault();
+                }}
+                {...hoverAttrs}
+            >
                 <Card.Root className="relative shadow-md shadow-black/30 dark:shadow-border/40">
                     <Box position="absolute" left="0" top="0" h="24" w="full" className="rounded-t-lg bg-primary/50" />
                     <Card.Header className="relative space-y-0 bg-transparent pb-0">

@@ -48,7 +48,6 @@ class RoleMiddleware(FilterMiddleware):
                     child_scope["path_params"],
                     actions,
                     role_finder,
-                    is_bot=isinstance(user_or_bot, Bot),
                 )
                 if not is_authorized:
                     response = JsonResponse(content=ApiErrorCode.PE1001, status_code=status.HTTP_403_FORBIDDEN)

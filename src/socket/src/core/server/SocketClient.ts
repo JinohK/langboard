@@ -9,6 +9,9 @@ import { Utils } from "@langboard/core/utils";
 import { ESocketStatus, ESocketTopic } from "@langboard/core/enums";
 import Logger from "@/core/utils/Logger";
 
+// Lifetime management for socket clients
+const clients = new Set<ISocketClient>();
+
 class SocketClient implements ISocketClient {
     #ws: WebSocket;
     #request: IncomingMessage;
@@ -30,13 +33,16 @@ class SocketClient implements ISocketClient {
         };
 
         Object.entries(this.#eventListeners).forEach(([event, listeners]) => {
-            if (!listeners || !Array.isArray(listeners)) {
+            if (!listeners) {
                 return;
             }
+
             listeners.forEach((listener) => {
                 this.#ws.addEventListener(event, listener);
             });
         });
+
+        clients.add(this);
     }
 
     public async subscribe(topic: ESocketTopic | string, topicId: string | string[]) {
@@ -50,6 +56,10 @@ class SocketClient implements ISocketClient {
     public send<TData = unknown>(event: TSocketSendParams<TData>): void {
         event.topic = Utils.String.convertSafeEnum(ESocketTopic, event.topic);
 
+        if (this.#ws.readyState !== WebSocket.OPEN) {
+            return;
+        }
+
         this.#ws.send(
             JSON.stringify(event),
             {
@@ -57,7 +67,7 @@ class SocketClient implements ISocketClient {
             },
             (error) => {
                 if (error) {
-                    Logger.red("WebSocket send error", error, "\n");
+                    Logger.red(error, "\n");
                 }
             }
         );
@@ -142,19 +152,25 @@ class SocketClient implements ISocketClient {
         connection.callbacks.onClose.forEach((callback) => callback(document));
     }
 
-    public async onClose() {
-        const listeners = this.#eventListeners.close;
-        if (listeners) {
+    public onClose() {
+        Object.entries(this.#eventListeners).forEach(([event, listeners]) => {
+            if (!listeners) {
+                return;
+            }
+
             listeners.forEach((listener) => {
-                this.#ws.removeEventListener("close", listener);
+                this.#ws.addEventListener(event, listener);
             });
-        }
+        });
 
-        await Subscription.unsubscribeAll(this);
+        Subscription.unsubscribeAll(this);
 
+        clients.delete(this);
         this.#ws = undefined!;
         this.#request = undefined!;
         this.#user = undefined!;
+        this.#hocusDocNames.clear();
+        this.#eventListeners = {};
     }
 }
 

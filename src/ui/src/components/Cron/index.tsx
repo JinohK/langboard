@@ -61,7 +61,7 @@ function Cron(props: CronProps) {
             setPeriod,
             t
         );
-    }, []);
+    }, [value]);
 
     useEffect(() => {
         // Only change the value if a user touched a field

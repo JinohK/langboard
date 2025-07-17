@@ -31,7 +31,7 @@ export interface Interface extends IBaseModel {
 }
 
 class InternalBotModel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "InternalBotModel" as const;
     }
 

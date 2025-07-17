@@ -1,8 +1,8 @@
 export * as ActivityModel from "@/core/models/ActivityModel";
 export * as AppSettingModel from "@/core/models/AppSettingModel";
 export * as AuthUser from "@/core/models/AuthUser";
+export * as BotLogModel from "@/core/models/BotLogModel";
 export * as BotModel from "@/core/models/BotModel";
-export * as BotSchedule from "@/core/models/BotSchedule";
 export * as InternalBotModel from "@/core/models/InternalBotModel";
 export * as ChatMessageModel from "@/core/models/ChatMessageModel";
 export * as ChatTemplateModel from "@/core/models/ChatTemplateModel";
@@ -21,3 +21,10 @@ export * as ProjectWiki from "@/core/models/ProjectWiki";
 export * as User from "@/core/models/User";
 export * as UserGroup from "@/core/models/UserGroup";
 export * as UserNotification from "@/core/models/UserNotification";
+
+export * as ProjectColumnBotScope from "@/core/models/botScopes/ProjectColumnBotScope";
+export * as ProjectCardBotScope from "@/core/models/botScopes/ProjectCardBotScope";
+
+export * as BaseBotScheduleModel from "@/core/models/botSchedules/BaseBotScheduleModel";
+export * as ProjectColumnBotSchedule from "@/core/models/botSchedules/ProjectColumnBotSchedule";
+export * as ProjectCardBotSchedule from "@/core/models/botSchedules/ProjectCardBotSchedule";

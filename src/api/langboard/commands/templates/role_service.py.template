@@ -8,8 +8,8 @@ class {class_name}RoleService(BaseRoleService[{class_name}Role]):
         super().__init__({class_name}Role)
 
     @extract_func_param(4)({class_name}Role)  # type: ignore
-    async def get_roles(self, **kwargs):
-        return await super().get_roles(**kwargs)
+    async def get_list(self, **kwargs):
+        return await super().get_list(**kwargs)
 
     @extract_func_param(3)({class_name}Role)  # type: ignore
     async def grant(self, **kwargs):

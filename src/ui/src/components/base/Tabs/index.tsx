@@ -102,6 +102,7 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
                 left: 0,
                 width: 0,
             });
+            setActiveValue(undefined);
         }
     }, [activeValue, uiUpdated]);
 

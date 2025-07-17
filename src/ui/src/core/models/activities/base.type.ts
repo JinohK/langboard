@@ -45,17 +45,10 @@ export interface IChangesInActivityHistory {
     };
 }
 
-export interface IUpdatedAssignedBotsInActivityHistory {
-    removed_bots: IBotInActivityHistory[];
-    added_bots: IBotInActivityHistory[];
-}
-
 export interface IUpdatedAssignedUsersInActivityHistory {
     removed_users: IUserInActivityHistory[];
     added_users: IUserInActivityHistory[];
 }
-
-export interface IUpdatedAssigneesInActivityHistory extends IUpdatedAssignedBotsInActivityHistory, IUpdatedAssignedUsersInActivityHistory {}
 
 export interface IUpdatedLabelsInActivityHistory {
     removed_labels: IUserInActivityHistory[];

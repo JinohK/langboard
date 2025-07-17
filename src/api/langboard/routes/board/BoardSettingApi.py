@@ -4,13 +4,12 @@ from core.schema import OpenApiSchema
 from core.utils.Converter import convert_python_data
 from fastapi import status
 from models import Bot, Card, ChatTemplate, InternalBot, Project, ProjectColumn, ProjectLabel, ProjectRole, User
-from models.BaseRoleModel import ALL_GRANTED
+from models.bases import ALL_GRANTED
 from models.ProjectRole import ProjectRoleAction
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import (
-    AssignBotsForm,
+from .forms import (
     ChangeInternalBotForm,
     ChangeRootOrderForm,
     CreateProjectLabelForm,
@@ -35,19 +34,16 @@ from .scopes import (
                         "schema": {
                             "all_members": [User],
                             "invited_member_uids": "string[]",
-                            "bots": [Bot],
                             "internal_bots": [InternalBot],
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                             "labels": [ProjectLabel],
-                            "bot_roles": {"<bot uid>": [ALL_GRANTED, ProjectRoleAction]},
                             "member_roles": {"<user uid>": [ALL_GRANTED, ProjectRoleAction]},
                             "chat_templates": [ChatTemplate],
                         }
                     },
                 ),
-                "bots": [Bot],
                 "internal_bots": [InternalBot],
-                "columns": [ProjectColumn],
+                "project_columns": [(ProjectColumn, {"schema": {"count": "integer"}})],
                 "cards": [(Card, {"schema": {"column_name": "string"}})],
             }
         )
@@ -70,16 +66,14 @@ async def get_project_details(
     response["ai_description"] = project.ai_description
     response["internal_bots"] = await service.project.get_assigned_internal_bots(project, as_api=True)
 
-    bots = await service.bot.get_list(as_api=True)
     internal_bots = await service.internal_bot.get_list(as_api=True, is_setting=False)
-    columns = await service.project_column.get_all_by_project(project, as_api=True)
+    columns = await service.project_column.get_all_by_project(project.id, as_api=True)
     cards = await service.card.get_all_by_project(project, as_api=True)
     templates = await service.chat.get_templates(Project.__tablename__, project_uid)
 
     return JsonResponse(
         content={
             "project": response,
-            "bots": bots,
             "internal_bots": internal_bots,
             "columns": columns,
             "cards": cards,
@@ -114,7 +108,7 @@ async def change_project_details(
     "/board/{project_uid}/settings/internal-bot",
     tags=["Board.Settings"],
     description="Change internal bot for a project.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2021).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2019).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -123,60 +117,7 @@ async def change_project_internal_bot(
 ) -> JsonResponse:
     result = await service.project.change_internal_bot(project_uid, form.internal_bot_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2021, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse()
-
-
-@AppRouter.schema(form=AssignBotsForm)
-@AppRouter.api.put(
-    "/board/{project_uid}/settings/assigned-bots",
-    tags=["Board.Settings"],
-    description="Update assigned bots for a project.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2001).get(),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
-@AuthFilter.add("user")
-async def update_project_assigned_bots(
-    project_uid: str, form: AssignBotsForm, user: User = Auth.scope("api_user"), service: Service = Service.scope()
-) -> JsonResponse:
-    result = await service.project.update_assigned_bots(user, project_uid, form.assigned_bots)
-    if result is None:
-        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse()
-
-
-@AppRouter.api.put(
-    "/board/{project_uid}/settings/roles/bot/{bot_uid}",
-    tags=["Board.Settings"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
-@AuthFilter.add("user")
-async def update_project_bot_roles(
-    project_uid: str, bot_uid: str, form: UpdateRolesForm, service: Service = Service.scope()
-) -> JsonResponse:
-    result = await service.project.update_bot_roles(project_uid, bot_uid, form.roles)
-    if not result:
-        return JsonResponse(content=ApiErrorCode.NF2007, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse()
-
-
-@AppRouter.api.put(
-    "/board/{project_uid}/settings/bot/{bot_uid}/toggle-activation",
-    tags=["Board.Settings"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
-)
-@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
-@AuthFilter.add("user")
-async def toggle_project_bot_activation(
-    project_uid: str, bot_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
-) -> JsonResponse:
-    result = await service.project.toggle_bot_activation(user, project_uid, bot_uid)
-    if not result:
-        return JsonResponse(content=ApiErrorCode.NF2007, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2019, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -184,7 +125,7 @@ async def toggle_project_bot_activation(
 @AppRouter.api.put(
     "/board/{project_uid}/settings/roles/user/{user_uid}",
     tags=["Board.Settings"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2008).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2006).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -193,7 +134,7 @@ async def update_project_user_roles(
 ) -> JsonResponse:
     result = await service.project.update_user_roles(project_uid, user_uid, form.roles)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2006, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -239,7 +180,7 @@ async def create_project_label(
         )
         .auth()
         .forbidden()
-        .err(404, ApiErrorCode.NF2009)
+        .err(404, ApiErrorCode.NF2007)
         .get()
     ),
 )
@@ -254,7 +195,7 @@ async def change_project_label_details(
 ) -> JsonResponse:
     result = await service.project_label.update(user_or_bot, project_uid, label_uid, form.model_dump())
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2009, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2007, status_code=status.HTTP_404_NOT_FOUND)
 
     if result is True:
         response = {}
@@ -275,7 +216,7 @@ async def change_project_label_details(
     "/board/{project_uid}/settings/label/{label_uid}/order",
     tags=["Board.Settings"],
     description="Change project label order.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2009).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -284,7 +225,7 @@ async def change_project_label_order(
 ) -> JsonResponse:
     result = await service.project_label.change_order(project_uid, label_uid, form.order)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2009, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2007, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -294,7 +235,7 @@ async def change_project_label_order(
     "/board/{project_uid}/settings/label/{label_uid}",
     tags=["Board.Settings"],
     description="Delete a project label.",
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2009).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2007).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
@@ -303,7 +244,7 @@ async def delete_label(
 ) -> JsonResponse:
     result = await service.project_label.delete(user_or_bot, project_uid, label_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2009, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2007, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse()
 
@@ -311,7 +252,7 @@ async def delete_label(
 @AppRouter.api.delete(
     "/board/{project_uid}/settings/delete",
     tags=["Board.Settings"],
-    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2002).err(404, ApiErrorCode.NF2001).get(),
+    responses=OpenApiSchema().auth().forbidden().err(403, ApiErrorCode.PE2001).err(404, ApiErrorCode.NF2001).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -323,7 +264,7 @@ async def delete_project(
         return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
 
     if project.owner_id != user.id and not user.is_admin:
-        return JsonResponse(content=ApiErrorCode.PE2002, status_code=status.HTTP_403_FORBIDDEN)
+        return JsonResponse(content=ApiErrorCode.PE2001, status_code=status.HTTP_403_FORBIDDEN)
 
     result = await service.project.delete(user, project_uid)
     if not result:

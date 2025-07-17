@@ -21,7 +21,7 @@ def _get_py_config(config_type: _TPyConfigType):
 
     config_map: dict[_TPyConfigType, _TPyConfig] = {
         "model": _TPyConfig(
-            dirpath=BASE_DIR / ".." / ".." / "shared" / "models",
+            dirpath=BASE_DIR / ".." / ".." / "shared" / "py" / "models",
             filename="{name}.py",
             should_update_init=True,
         ),

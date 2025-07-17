@@ -17,7 +17,7 @@ export interface IStore extends Interface {
 }
 
 class ProjectCardAttachment extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             user: User.Model.MODEL_NAME,
         };
@@ -25,7 +25,7 @@ class ProjectCardAttachment extends BaseModel<IStore> {
     override get FOREIGN_MODELS() {
         return ProjectCardAttachment.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectCardAttachment" as const;
     }
 

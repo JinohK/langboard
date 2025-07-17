@@ -26,10 +26,6 @@ export const DashboardProvider = ({ currentUser, children }: IDashboardProps): R
     const projects = Project.Model.useModels(() => true);
 
     useEffect(() => {
-        if (!currentUser) {
-            return;
-        }
-
         const subscribableProjects: Project.TModel[] = [];
         for (let i = 0; i < projects.length; ++i) {
             const project = projects[i];
@@ -48,11 +44,6 @@ export const DashboardProvider = ({ currentUser, children }: IDashboardProps): R
             subscribableProjects.map((project) => project.uid)
         );
 
-        for (let i = 0; i < subscribableProjects.length; ++i) {
-            const project = subscribableProjects[i];
-            project.subscribeDashboardSocketHandlers(currentUser.uid);
-        }
-
         return () => {
             if (location.pathname.startsWith(ROUTES.DASHBOARD.ROUTE)) {
                 return;
@@ -60,10 +51,10 @@ export const DashboardProvider = ({ currentUser, children }: IDashboardProps): R
 
             socket.unsubscribe(
                 ESocketTopic.Dashboard,
-                projects.map((project) => project.uid)
+                subscribableProjects.map((project) => project.uid)
             );
         };
-    }, [currentUser, projects]);
+    }, []);
 
     return (
         <DashboardContext.Provider

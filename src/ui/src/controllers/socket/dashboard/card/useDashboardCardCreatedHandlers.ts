@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { Project } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboardCardCreatedRawResponse {
@@ -8,32 +8,25 @@ export interface IDashboardCardCreatedRawResponse {
 }
 
 export interface IUseDashboardCardCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
+    project: Project.TModel;
 }
 
-const useDashboardCardCreatedHandlers = ({ callback, projectUID }: IUseDashboardCardCreatedHandlersProps) => {
+const useDashboardCardCreatedHandlers = ({ callback, project }: IUseDashboardCardCreatedHandlersProps) => {
     return useSocketHandler<{}, IDashboardCardCreatedRawResponse>({
         topic: ESocketTopic.Dashboard,
-        topicId: projectUID,
-        eventKey: `dashboard-card-created-${projectUID}`,
+        topicId: project.uid,
+        eventKey: `dashboard-card-created-${project.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.CREATED,
-            params: { uid: projectUID },
+            params: { uid: project.uid },
             callback,
             responseConverter: (data) => {
-                const project = Project.Model.getModel(projectUID);
-                if (!project) {
+                const column = ProjectColumn.Model.getModel((model) => model.uid === data.column_uid);
+                if (!column) {
                     return {};
                 }
 
-                const columns = project.columns;
-                for (let i = 0; i < columns.length; ++i) {
-                    if (columns[i].uid === data.column_uid) {
-                        ++columns[i].count;
-                        break;
-                    }
-                }
-                project.columns = columns;
+                ++column.count;
                 return {};
             },
         },

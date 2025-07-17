@@ -5,9 +5,8 @@ from core.storage import StorageName
 from fastapi import File, UploadFile, status
 from models import Bot
 from ...core.storage import Storage
-from ...security import Auth
 from ...services import Service
-from .Form import CreateBotForm, PredefineBotTriggerConditionForm, ToggleBotTriggerConditionForm, UpdateBotForm
+from .Form import CreateBotForm, UpdateBotForm
 
 
 @AppRouter.api.post(
@@ -34,7 +33,8 @@ async def create_bot(
         uploaded_avatar = file_model
 
     if form.ip_whitelist is not None:
-        ip_whitelist = form.ip_whitelist.strip().replace(" ", "").split(",")
+        ip_whitelist = form.ip_whitelist.strip().replace(" ", "")
+        ip_whitelist = ip_whitelist.split(",") if ip_whitelist else []
     else:
         ip_whitelist = []
 
@@ -106,7 +106,8 @@ async def update_bot(
         return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
 
     if form.ip_whitelist is not None:
-        ip_whitelist = form.ip_whitelist.strip().replace(" ", "").split(",")
+        ip_whitelist = form.ip_whitelist.strip().replace(" ", "")
+        ip_whitelist = ip_whitelist.split(",") if ip_whitelist else []
         ip_result = await service.bot.update_ip_whitelist(bot, ip_whitelist)
         if not ip_result:
             return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
@@ -145,40 +146,6 @@ async def generate_new_bot_api_token(bot_uid: str, service: Service = Service.sc
             "revealed_app_api_token": bot.app_api_token,
         }
     )
-
-
-@AppRouter.schema(form=PredefineBotTriggerConditionForm)
-@AppRouter.api.put(
-    "/settings/bot/trigger-condition/predefine",
-    tags=["AppSettings"],
-    description="Predefine bot trigger conditions.",
-    responses=OpenApiSchema().auth(only_bot=True).forbidden().err(404, ApiErrorCode.NF3001).get(),
-)
-@AuthFilter.add("bot")
-async def predefine_bot_trigger_condition(
-    form: PredefineBotTriggerConditionForm, bot: Bot = Auth.scope("api_bot"), service: Service = Service.scope()
-) -> JsonResponse:
-    result = await service.bot.predefine_conditions(bot, form.conditions)
-    if not result:
-        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse()
-
-
-@AppRouter.api.put(
-    "/settings/bot/{bot_uid}/trigger-condition",
-    tags=["AppSettings"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF3001).get(),
-)
-@AuthFilter.add("admin")
-async def toggle_bot_trigger_condition(
-    bot_uid: str, form: ToggleBotTriggerConditionForm, service: Service = Service.scope()
-) -> JsonResponse:
-    bot = await service.bot.toggle_condition(bot_uid, form.condition)
-    if not bot:
-        return JsonResponse(content=ApiErrorCode.NF3001, status_code=status.HTTP_404_NOT_FOUND)
-
-    return JsonResponse()
 
 
 @AppRouter.api.delete(

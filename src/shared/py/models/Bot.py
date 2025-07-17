@@ -6,6 +6,9 @@ from sqlalchemy import TEXT
 from sqlmodel import Field
 
 
+ALLOWED_ALL_IPS = "*"
+
+
 class BotAPIAuthType(Enum):
     Langflow = "langflow"
 

@@ -11,7 +11,7 @@ from models import (
     ProjectLabel,
     User,
 )
-from models.BaseActivityModel import BaseActivityModel
+from models.bases import BaseActivityModel
 from .ActivityHistoryHelper import ActivityHistoryHelper
 
 
@@ -42,12 +42,6 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
             db.insert(activity)
 
         return activity
-
-    def get_updated_bots(self, old_bot_ids: list[int], new_bot_ids: list[int]):
-        def create_bot_history(bot: Bot):
-            return ActivityHistoryHelper.create_user_or_bot_history(bot)
-
-        return self.__get_updated(Bot, old_bot_ids, new_bot_ids, create_bot_history)
 
     def get_updated_users(self, old_user_ids: list[int], new_user_ids: list[int]):
         def create_user_history(user: User):

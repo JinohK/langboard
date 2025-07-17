@@ -8,7 +8,7 @@ interface ISocketClient {
     subscribe(topic: ESocketTopic | string, topicId: string | string[]): Promise<void>;
     unsubscribe(topic: ESocketTopic | string, topicId: string | string[]): Promise<void>;
     send<TData = unknown>(event: TSocketSendParams<TData>): void;
-    onClose(): Promise<void>;
+    onClose(): void;
 }
 
 export default ISocketClient;

@@ -113,15 +113,15 @@ function BoardCardAttachmentList(): JSX.Element {
                             ))}
                         </Flex>
                     </Collapsible.Content>
-                    <Collapsible.Trigger asChild>
-                        <Flex justify="start" mt="2">
+                    <Flex justify="start" mt="2">
+                        <Collapsible.Trigger asChild>
                             <Button size="sm" variant="secondary">
                                 {t(`card.${isOpened ? "Show fewer attachments" : "Show all attachments ({attachments} hidden)"}`, {
                                     attachments: attachments.length - 5,
                                 })}
                             </Button>
-                        </Flex>
-                    </Collapsible.Trigger>
+                        </Collapsible.Trigger>
+                    </Flex>
                 </Collapsible.Root>
             )}
 

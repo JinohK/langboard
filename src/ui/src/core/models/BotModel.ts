@@ -3,14 +3,13 @@ import { registerModel } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
-import { EBotTriggerCondition } from "@/core/models/bot.type";
-import useBotSettingTriggerConditionPredefinedHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionPredefinedHandlers";
-import useBotSettingTriggerConditionToggledHandlers from "@/controllers/socket/settings/bots/useBotSettingTriggerConditionToggledHandlers";
 import useBotSettingUpdatedHandlers from "@/controllers/socket/settings/bots/useBotSettingUpdatedHandlers";
 
 export enum EAPIAuthType {
     Langflow = "langflow",
 }
+
+export const ALLOWED_ALL_IPS = "*";
 
 export interface Interface extends IBaseModel {
     name: string;
@@ -22,33 +21,23 @@ export interface Interface extends IBaseModel {
     app_api_token: string;
     ip_whitelist: string[];
     prompt: string;
-    conditions: Partial<Record<EBotTriggerCondition, { is_predefined: bool }>>;
 }
 
 class BotModel extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "BotModel" as const;
     }
 
-    static get BOT_UNAME_PREFIX() {
+    public static get BOT_UNAME_PREFIX() {
         return "bot-";
     }
 
     constructor(model: Record<string, unknown>) {
         super(model);
 
-        this.subscribeSocketEvents(
-            [
-                useBotUpdatedHandlers,
-                useBotSettingUpdatedHandlers,
-                useBotSettingTriggerConditionPredefinedHandlers,
-                useBotSettingTriggerConditionToggledHandlers,
-                useBotDeletedHandlers,
-            ],
-            {
-                bot: this,
-            }
-        );
+        this.subscribeSocketEvents([useBotUpdatedHandlers, useBotSettingUpdatedHandlers, useBotDeletedHandlers], {
+            bot: this,
+        });
     }
 
     public static convertModel(model: Interface): Interface {
@@ -58,15 +47,6 @@ class BotModel extends BaseModel<Interface> {
 
         if (Utils.Type.isString(model.api_auth_type)) {
             model.api_auth_type = Utils.String.convertSafeEnum(EAPIAuthType, model.api_auth_type);
-        }
-
-        if (model.conditions) {
-            Object.entries(model.conditions).forEach(([key, value]) => {
-                if (Utils.Type.isString(key)) {
-                    const conditionKey = key as EBotTriggerCondition;
-                    model.conditions[conditionKey] = value;
-                }
-            });
         }
 
         return model;
@@ -133,13 +113,6 @@ class BotModel extends BaseModel<Interface> {
     }
     public set prompt(value) {
         this.update({ prompt: value });
-    }
-
-    public get conditions() {
-        return this.getValue("conditions");
-    }
-    public set conditions(value) {
-        this.update({ conditions: value });
     }
 }
 

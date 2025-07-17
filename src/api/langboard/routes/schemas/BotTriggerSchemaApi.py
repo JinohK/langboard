@@ -4,7 +4,7 @@ from core.routing import AppRouter, JsonResponse
 from fastapi.openapi.docs import get_swagger_ui_html
 from fastapi.responses import HTMLResponse
 from models import Bot, ProjectLabel
-from models.BotTrigger import BotTriggerCondition
+from models.bases import BotTriggerCondition
 from ...core.broker import Broker
 
 

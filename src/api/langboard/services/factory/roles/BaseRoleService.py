@@ -1,7 +1,7 @@
 from abc import ABC
 from typing import Generic, TypeVar
 from core.db import DbSession, SqlBuilder
-from models.BaseRoleModel import BaseRoleModel
+from models.bases import BaseRoleModel
 
 
 _TRoleModel = TypeVar("_TRoleModel", bound=BaseRoleModel)
@@ -11,7 +11,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
     def __init__(self, model_class: type[_TRoleModel]):
         self._model_class = model_class
 
-    async def get_roles(self, **kwargs) -> list[_TRoleModel]:
+    async def get_list(self, **kwargs) -> list[_TRoleModel]:
         """Get roles by filtering with the given parameters.
 
         If the given parameters are not in the model's fields or are `None`, they will be ignored.
@@ -30,7 +30,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
             records = result.all()
         return records
 
-    async def get_role(self, **kwargs) -> _TRoleModel | None:
+    async def get_one(self, **kwargs) -> _TRoleModel | None:
         """Get a role by filtering with the given parameters.
 
         If the given parameters are not in the model's fields or are `None`, they will be ignored.
@@ -52,9 +52,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
     async def grant(self, **kwargs) -> _TRoleModel:
         """Grant actions to the role.
 
-        If both `user_id` and `bot_id` are provided, the `user_id` will be used.
-
-        If none of them are provided, a `ValueError` will be raised.
+        If `user_id` aren't provided, a `ValueError` will be raised.
 
         After the method is executed, db must be committed to save the changes.
         """
@@ -73,9 +71,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
     async def grant_all(self, **kwargs) -> _TRoleModel:
         """Grant all actions to the role. :meth:`BaseRoleModel.set_all_actions` will be called.
 
-        If both `user_id` and `bot_id` are provided, the `user_id` will be used.
-
-        If none of them are provided, a `ValueError` will be raised.
+        If `user_id` aren't provided, a `ValueError` will be raised.
 
         After the method is executed, db must be committed to save the changes.
         """
@@ -93,9 +89,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
     async def grant_default(self, **kwargs) -> _TRoleModel:
         """Grant default actions to the role. :meth:`BaseRoleModel.set_default_actions` will be called.
 
-        If both `user_id` and `bot_id` are provided, the `user_id` will be used.
-
-        If none of them are provided, a `ValueError` will be raised.
+        If `user_id` aren't provided, a `ValueError` will be raised.
 
         After the method is executed, db must be committed to save the changes.
         """
@@ -113,9 +107,7 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
     async def withdraw(self, **kwargs) -> _TRoleModel | None:
         """Withdraw the role.
 
-        If both `user_id` and `bot_id` are provided, the `user_id` will be used.
-
-        If none of them are provided, a `ValueError` will be raised.
+        If `user_id` aren't provided, a `ValueError` will be raised.
 
         After the method is executed, db must be committed to save the changes.
         """
@@ -132,11 +124,8 @@ class BaseRoleService(ABC, Generic[_TRoleModel]):
         if kwargs.get("user_id", None) is not None:
             target_id_column = self._model_class.user_id
             target_id = kwargs["user_id"]
-        elif kwargs.get("bot_id", None) is not None:
-            target_id_column = self._model_class.bot_id
-            target_id = kwargs["bot_id"]
         else:
-            raise ValueError("user_id or bot_id must be provided.")
+            raise ValueError("user_id must be provided.")
 
         query = SqlBuilder.select.table(self._model_class).where(target_id_column == target_id)
         filterable_columns = self._model_class.get_filterable_columns()

@@ -2,6 +2,7 @@ import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
+import { getAuthStore } from "@/core/stores/AuthStore";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IDashboardProjectAssignedUsersUpdatedRawResponse {
@@ -10,14 +11,9 @@ export interface IDashboardProjectAssignedUsersUpdatedRawResponse {
 
 export interface IUseDashboardProjectAssignedUsersUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
-    userUID: string;
 }
 
-const useDashboardProjectAssignedUsersUpdatedHandlers = ({
-    callback,
-    projectUID,
-    userUID,
-}: IUseDashboardProjectAssignedUsersUpdatedHandlersProps) => {
+const useDashboardProjectAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseDashboardProjectAssignedUsersUpdatedHandlersProps) => {
     const socket = useSocketOutsideProvider();
 
     return useSocketHandler<{}, IDashboardProjectAssignedUsersUpdatedRawResponse>({
@@ -29,7 +25,12 @@ const useDashboardProjectAssignedUsersUpdatedHandlers = ({
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
-                if (!data.assigned_users.some((user) => user.uid === userUID)) {
+                const currentUser = getAuthStore().currentUser;
+                if (!currentUser) {
+                    return {};
+                }
+
+                if (!data.assigned_users.some((user) => user.uid === currentUser.uid)) {
                     Project.Model.deleteModel(projectUID);
                     socket.unsubscribe(ESocketTopic.Dashboard, [projectUID]);
                 }

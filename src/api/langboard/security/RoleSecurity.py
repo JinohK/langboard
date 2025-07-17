@@ -1,6 +1,6 @@
 from typing import Any, TypeVar, cast
 from core.db import DbSession, SqlBuilder
-from models.BaseRoleModel import BaseRoleModel
+from models.bases import BaseRoleModel
 from sqlmodel.sql.expression import SelectOfScalar
 from ..filter.RoleFilter import _RoleFinderFunc
 
@@ -14,18 +14,14 @@ class RoleSecurity:
 
     async def is_authorized(
         self,
-        user_or_bot_id: int,
+        user_id: int,
         path_params: dict[str, Any],
         actions: list[str],
         role_finder: _RoleFinderFunc[_TRoleModel],
-        is_bot: bool = False,
     ) -> bool:
-        column_name = "bot_id" if is_bot else "user_id"
-        query = SqlBuilder.select.table(self._model_class).where(
-            self._model_class.column(column_name) == user_or_bot_id
-        )
+        query = SqlBuilder.select.table(self._model_class).where(self._model_class.column("user_id") == user_id)
 
-        query = role_finder(cast(SelectOfScalar[_TRoleModel], query), path_params, user_or_bot_id, is_bot)
+        query = role_finder(cast(SelectOfScalar[_TRoleModel], query), path_params, user_id)
 
         role = None
         with DbSession.use(readonly=True) as db:

@@ -1,9 +1,9 @@
-import { TGetRefreshableListForm } from "@/controllers/api/shared/types";
+import { TGetListForm } from "@/controllers/api/shared/types";
 import { API_ROUTES } from "@/controllers/constants";
 import { ActivityModel, User } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 
-export const getRefreshableData = (form: TGetRefreshableListForm) => {
+export const getListRequestData = (form: TGetListForm) => {
     let model;
     let url;
     switch (form.listType) {

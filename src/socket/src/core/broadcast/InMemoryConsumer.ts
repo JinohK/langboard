@@ -5,7 +5,7 @@ import * as fs from "fs";
 import * as path from "path";
 
 class InMemoryConsumer extends BaseConsumer {
-    static get BROADCAST_DIR() {
+    public static get BROADCAST_DIR() {
         return path.join(DATA_DIR, "broadcast");
     }
     #watcher!: fs.FSWatcher;
@@ -36,7 +36,7 @@ class InMemoryConsumer extends BaseConsumer {
                 // Ignore invalid JSON files
             }
 
-            fs.unlinkSync(filename);
+            this.#tryDeleteFile(filename);
         });
     }
 
@@ -67,8 +67,21 @@ class InMemoryConsumer extends BaseConsumer {
             } catch {
                 // Ignore invalid JSON files
             } finally {
-                fs.unlinkSync(filePath);
+                this.#tryDeleteFile(filePath);
             }
+        }
+    }
+
+    async #tryDeleteFile(filePath: string) {
+        try {
+            fs.unlinkSync(filePath);
+        } catch {
+            await new Promise<void>((resolve) => {
+                setTimeout(() => {
+                    resolve();
+                }, 1000);
+            });
+            await this.#tryDeleteFile(filePath);
         }
     }
 }

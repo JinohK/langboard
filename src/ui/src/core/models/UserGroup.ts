@@ -8,7 +8,7 @@ export interface Interface extends IBaseModel {
 }
 
 class UserGroup extends BaseModel<Interface> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             users: User.Model.MODEL_NAME,
         };
@@ -16,7 +16,7 @@ class UserGroup extends BaseModel<Interface> {
     override get FOREIGN_MODELS() {
         return UserGroup.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "UserGroup" as const;
     }
 

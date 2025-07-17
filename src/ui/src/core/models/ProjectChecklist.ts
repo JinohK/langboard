@@ -19,7 +19,7 @@ export interface IStore extends Interface {
 }
 
 class ProjectChecklist extends BaseModel<IStore> {
-    static override get FOREIGN_MODELS() {
+    public static override get FOREIGN_MODELS() {
         return {
             checkitems: ProjectCheckitem.Model.MODEL_NAME,
         };
@@ -27,7 +27,7 @@ class ProjectChecklist extends BaseModel<IStore> {
     override get FOREIGN_MODELS() {
         return ProjectChecklist.FOREIGN_MODELS;
     }
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "ProjectChecklist" as const;
     }
 

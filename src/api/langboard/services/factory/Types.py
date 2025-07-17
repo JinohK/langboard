@@ -1,7 +1,6 @@
 from models import (
     AppSetting,
     Bot,
-    BotSchedule,
     Card,
     CardAttachment,
     CardComment,
@@ -20,22 +19,23 @@ from models import (
 )
 
 
+TBaseParam = int | str | None
+
 TUserOrBot = User | Bot
-TProjectParam = Project | int | str | None
-TColumnParam = ProjectColumn | int | str | None
-TCardParam = Card | int | str | None
-TAttachmentParam = CardAttachment | int | str | None
-TCommentParam = CardComment | int | str | None
-TChecklistParam = Checklist | int | str | None
-TCheckitemParam = Checkitem | int | str | None
-TWikiParam = ProjectWiki | int | str | None
-TUserParam = User | int | str | None
-TUserGroupParam = UserGroup | int | str | None
-TProjectLabelParam = ProjectLabel | int | str | None
-TBotParam = Bot | int | str | None
-TSettingParam = AppSetting | int | str | None
-TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | int | str | None
-TNotificationParam = UserNotification | int | str | None
-TBotScheduleParam = BotSchedule | int | str | None
-TChatTemplateParam = ChatTemplate | int | str | None
-TInternalBotParam = InternalBot | int | str | None
+TProjectParam = Project | TBaseParam
+TColumnParam = ProjectColumn | TBaseParam
+TCardParam = Card | TBaseParam
+TAttachmentParam = CardAttachment | TBaseParam
+TCommentParam = CardComment | TBaseParam
+TChecklistParam = Checklist | TBaseParam
+TCheckitemParam = Checkitem | TBaseParam
+TWikiParam = ProjectWiki | TBaseParam
+TUserParam = User | TBaseParam
+TUserGroupParam = UserGroup | TBaseParam
+TProjectLabelParam = ProjectLabel | TBaseParam
+TBotParam = Bot | TBaseParam
+TSettingParam = AppSetting | TBaseParam
+TGlobalCardRelationshipTypeParam = GlobalCardRelationshipType | TBaseParam
+TNotificationParam = UserNotification | TBaseParam
+TChatTemplateParam = ChatTemplate | TBaseParam
+TInternalBotParam = InternalBot | TBaseParam

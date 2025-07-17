@@ -4,16 +4,16 @@ import { getDatetimeType } from "@/core/db/DbType";
 
 @Entity({ name: "user" })
 class User extends BaseModel {
-    static get USER_TYPE(): string {
+    public static get USER_TYPE(): string {
         return "user";
     }
-    static get UNKNOWN_USER_TYPE(): string {
+    public static get UNKNOWN_USER_TYPE(): string {
         return "unknown";
     }
-    static get BOT_TYPE(): string {
+    public static get BOT_TYPE(): string {
         return "bot";
     }
-    static get GROUP_EMAIL_TYPE(): string {
+    public static get GROUP_EMAIL_TYPE(): string {
         return "group_email";
     }
 

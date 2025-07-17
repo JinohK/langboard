@@ -10,7 +10,7 @@ export interface Interface extends IBaseModel {
 }
 
 class GlobalRelationshipType extends BaseModel<Interface> {
-    static get MODEL_NAME() {
+    public static get MODEL_NAME() {
         return "GlobalRelationshipType" as const;
     }
 

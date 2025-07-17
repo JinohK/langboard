@@ -8,7 +8,7 @@ from ...filter import RoleFilter
 from ...publishers import ProjectPublisher
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .scopes import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate
+from .forms import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate
 
 
 @AppRouter.api.get(
@@ -81,7 +81,7 @@ async def create_chat_template(
 @AppRouter.api.put(
     "/board/{project_uid}/chat/template/{template_uid}",
     tags=["Board.Chat"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2018).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
@@ -90,11 +90,11 @@ async def update_chat_template(
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if not project:
-        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
 
     result = await service.chat.update_template(template_uid, form.name, form.template)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
 
     if result is True:
         return JsonResponse()
@@ -108,18 +108,18 @@ async def update_chat_template(
 @AppRouter.api.delete(
     "/board/{project_uid}/chat/template/{template_uid}",
     tags=["Board.Chat"],
-    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2020).get(),
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2018).get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def delete_chat_template(project_uid: str, template_uid: str, service: Service = Service.scope()) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if not project:
-        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
 
     result = await service.chat.delete_template(template_uid)
     if not result:
-        return JsonResponse(content=ApiErrorCode.NF2020, status_code=status.HTTP_404_NOT_FOUND)
+        return JsonResponse(content=ApiErrorCode.NF2018, status_code=status.HTTP_404_NOT_FOUND)
 
     await ProjectPublisher.chat_template_deleted(project, template_uid)
 
