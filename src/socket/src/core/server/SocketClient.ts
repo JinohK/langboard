@@ -56,6 +56,13 @@ class SocketClient implements ISocketClient {
     public send<TData = unknown>(event: TSocketSendParams<TData>): void {
         event.topic = Utils.String.convertSafeEnum(ESocketTopic, event.topic);
 
+        if (this.#ws.readyState === WebSocket.CONNECTING) {
+            setTimeout(() => {
+                this.send(event);
+            }, 1000);
+            return;
+        }
+
         if (this.#ws.readyState !== WebSocket.OPEN) {
             return;
         }

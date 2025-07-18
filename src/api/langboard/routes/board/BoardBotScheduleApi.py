@@ -122,7 +122,8 @@ async def get_bot_schedules_by_column(
 async def schedule_bot_crons(
     project_uid: str, bot_uid: str, form: CreateBotCronTimeForm, service: Service = Service.scope()
 ) -> JsonResponse:
-    if not BotScheduleHelper.is_valid_interval_str(form.interval_str):
+    form.interval_str = BotScheduleHelper.convert_valid_interval_str(form.interval_str)
+    if not form.interval_str:
         return JsonResponse(content=ApiErrorCode.VA3001, status_code=status.HTTP_400_BAD_REQUEST)
 
     if form.running_type == BotScheduleRunningType.Duration and not form.start_at:

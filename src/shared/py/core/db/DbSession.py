@@ -21,9 +21,7 @@ _TSelectParam = TypeVar("_TSelectParam", bound=Any)
 
 class Result(Generic[_TSelectParam]):
     def __init__(self, records: Sequence[Any]):
-        self.__records = []
-        for record in records:
-            self.__records.append(self.__copy_record(record))
+        self.__records = [self.__copy_record(record) for record in records]
 
     def all(self) -> list[_TSelectParam]:
         return self.__records
@@ -39,13 +37,7 @@ class Result(Generic[_TSelectParam]):
         return record
 
     def __convert_tuple_record(self, record: tuple) -> tuple:
-        tuple_record = []
-        for item in record:
-            if isinstance(item, BaseSqlModel):
-                tuple_record.append(self.__copy_model(item))
-            else:
-                tuple_record.append(item)
-        return tuple(tuple_record)
+        return tuple(self.__copy_model(item) if isinstance(item, BaseSqlModel) else item for item in record)
 
     def __copy_model(self, record: BaseSqlModel) -> BaseSqlModel:
         return record.__class__.model_validate(record.model_dump())
@@ -73,22 +65,13 @@ class DbSession:
             db = None
             try:
                 engine = DbEngine.get_readonly_engine() if readonly else DbEngine.get_main_engine()
-                with Session(engine, expire_on_commit=False) as session:
-                    db = DbSession(session, readonly=readonly)
-                    with session.begin():
+                with Session(engine, expire_on_commit=False) as db_session:
+                    db = DbSession(db_session, readonly=readonly)
+                    session = db_session
+                    with db_session.begin():
                         yield db
-                    db.close()
-                    session.close()
-                    db = None
-                    session = None
                 break
             except Exception as e:
-                if db:
-                    db.close()
-                    db = None
-                if session:
-                    session.close()
-                    session = None
                 if isinstance(e, OperationalError) and isinstance(e.orig, psycopg.errors.OperationalError):
                     if str(e.orig).count("max_client_conn") > 0:
                         sleep(1)

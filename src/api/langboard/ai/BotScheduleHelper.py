@@ -108,13 +108,17 @@ class BotScheduleHelper:
             pass
 
     @staticmethod
-    def is_valid_interval_str(interval_str: str) -> bool:
+    def convert_valid_interval_str(interval_str: str) -> str:
+        """Convert a string to a valid cron interval string.
+
+        If the string is not valid, return an empty string.
+        """
         try:
             job = CronItem()
             job.setall(interval_str)
-            return True
+            return str(job.slices)
         except Exception:
-            return False
+            return ""
 
     @staticmethod
     def get_default_status_with_dates(
@@ -148,7 +152,8 @@ class BotScheduleHelper:
         end_at: SafeDateTime | None = None,
         tz: str | float = "UTC",
     ) -> tuple[BotSchedule, _TBotScheduleModel] | None:
-        if not BotScheduleHelper.is_valid_interval_str(interval_str):
+        interval_str = BotScheduleHelper.convert_valid_interval_str(interval_str)
+        if not interval_str:
             return None
 
         interval_str = BotScheduleHelper.__adjust_interval_for_utc(interval_str, tz)
@@ -255,7 +260,8 @@ class BotScheduleHelper:
                     bot_schedule.end_at = end_at
                     model["end_at"] = end_at
 
-        if interval_str and BotScheduleHelper.is_valid_interval_str(interval_str):
+        if interval_str:
+            interval_str = BotScheduleHelper.convert_valid_interval_str(interval_str)
             interval_str = BotScheduleHelper.__adjust_interval_for_utc(interval_str, tz)
 
             if old_interval_str != interval_str:

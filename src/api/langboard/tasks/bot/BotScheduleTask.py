@@ -31,7 +31,8 @@ async def run_scheduled_bots_cron(interval_str: str):
         await _check_bot_schedule_runnable(interval_str.removeprefix("scheduled "))
         return
 
-    if not BotScheduleHelper.is_valid_interval_str(interval_str):
+    interval_str = BotScheduleHelper.convert_valid_interval_str(interval_str)
+    if not interval_str:
         logger.error(f"Invalid interval string: {interval_str}")
         return
 
@@ -97,9 +98,7 @@ async def _check_bot_schedule_runnable(interval_str: str):
                 project = result.first()
 
         if project:
-            await ProjectBotPublisher.rescheduled(
-                project, model.__tablename__, schedule_model, {"status": bot_schedule.status.value}
-            )
+            await ProjectBotPublisher.rescheduled(project, schedule_model, {"status": bot_schedule.status.value})
 
         await _run_scheduler(bot, bot_schedule, schedule_model, model)
 
@@ -156,6 +155,4 @@ async def _run_scheduler(
             await BotScheduleHelper.change_status(schedule_model.__class__, schedule_model, BotScheduleStatus.Stopped)
 
     if project and bot_schedule.status != old_status:
-        await ProjectBotPublisher.rescheduled(
-            project, model.__tablename__, schedule_model, {"status": bot_schedule.status.value}
-        )
+        await ProjectBotPublisher.rescheduled(project, schedule_model, {"status": bot_schedule.status.value})
