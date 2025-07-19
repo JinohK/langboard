@@ -45,8 +45,8 @@ async def run_scheduled_bots_cron(interval_str: str):
                 .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
                 .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
                 .where(
-                    (model_class.column("interval_str") == interval_str)
-                    & (model_class.column("status") == BotScheduleStatus.Started)
+                    (BotSchedule.column("interval_str") == interval_str)
+                    & (BotSchedule.column("status") == BotScheduleStatus.Started)
                 )
             )
             records.extend(result.all())
@@ -64,11 +64,11 @@ async def _check_bot_schedule_runnable(interval_str: str):
             result = db.exec(
                 SqlBuilder.select.tables(model_class, BotSchedule, Bot)
                 .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
-                .join(Bot, model_class.column("bot_id") == Bot.column("id"))
+                .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
                 .where(
-                    (model_class.column("status") == BotScheduleStatus.Pending)
-                    & (model_class.column("start_at") <= current_time)
-                    & (model_class.column("interval_str") == interval_str)
+                    (BotSchedule.column("status") == BotScheduleStatus.Pending)
+                    & (BotSchedule.column("start_at") <= current_time)
+                    & (BotSchedule.column("interval_str") == interval_str)
                 )
             )
             records.extend(result.all())

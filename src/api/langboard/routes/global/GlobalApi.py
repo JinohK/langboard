@@ -2,7 +2,7 @@ from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from fastapi import status
-from models import InternalBot, User
+from models import Bot, InternalBot, User
 from ...security import Auth
 from ...services import Service
 
@@ -26,3 +26,16 @@ async def get_internal_bot(
         return JsonResponse(content=ApiErrorCode.NF3004, status_code=status.HTTP_404_NOT_FOUND)
 
     return JsonResponse(content={"internal_bot": internal_bot.api_response(is_setting=user.is_admin)})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
+    "/global/bots",
+    tags=["Global"],
+    responses=OpenApiSchema().suc({"bots": Bot.api_schema()}).auth().forbidden().get(),
+)
+@AuthFilter.add()
+async def get_bots(service: Service = Service.scope()) -> JsonResponse:
+    bots = await service.bot.get_list(True)
+
+    return JsonResponse(content={"bots": bots})

@@ -1,6 +1,6 @@
 from os import environ
 from subprocess import run as subprocess_run
-from typing import Any, Callable, Literal, cast, overload
+from typing import Any, Callable, Literal, TypeVar, cast, overload
 from zoneinfo import ZoneInfo
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.Env import Env
@@ -12,7 +12,6 @@ from models import Bot, BotSchedule
 from models.bases import BaseBotScheduleModel
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from psutil import process_iter
-from pyparsing import TypeVar
 from sqlalchemy import tuple_
 from ..Constants import CRON_TAB_FILE
 from ..core.service import ServiceHelper
@@ -66,10 +65,10 @@ class BotScheduleHelper:
         )
 
         if status:
-            query = query.where(schedule_model_class.column("status") == status)
+            query = query.where(BotSchedule.column("status") == status)
 
         if refer_time is not None:
-            query = query.where(schedule_model_class.column("created_at") <= refer_time)
+            query = query.where(BotSchedule.column("created_at") <= refer_time)
 
         if pagination:
             query = query.limit(pagination.limit).offset((pagination.page - 1) * pagination.limit)
