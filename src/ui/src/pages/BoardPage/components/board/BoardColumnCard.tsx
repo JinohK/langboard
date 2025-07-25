@@ -1,17 +1,14 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
 import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
-import { ProjectCard, ProjectCardRelationship, ProjectChecklist } from "@/core/models";
-import { Box, Card, Flex, Popover, Skeleton } from "@/components/base";
+import { ProjectCard, ProjectCardRelationship } from "@/core/models";
+import { Box, Card, Flex, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
 import { useBoard } from "@/core/providers/BoardProvider";
-import useHoverEffect from "@/core/hooks/useHoverEffect";
-import { DISABLE_DRAGGING_ATTR } from "@/constants";
-import BoardColumnCardPreview from "@/pages/BoardPage/components/board/BoardColumnCardPreview";
 import BoardColumnCardCollapsible from "@/pages/BoardPage/components/board/BoardColumnCardCollapsible";
 import { cn } from "@/core/utils/ComponentUtils";
 import { SkeletonUserAvatarList } from "@/components/UserAvatarList";
@@ -45,8 +42,6 @@ const outerStyles: { [Key in TRowState["type"]]?: string } = {
     // Keeping the refs allows us to continue to receive events during the drag.
     "is-dragging-and-left-self": "opacity-40",
 };
-
-const HOVER_DELAY = 500;
 
 function BoardColumnCard({ card }: { card: ProjectCard.TModel }) {
     const { canDragAndDrop } = useBoard();
@@ -105,29 +100,6 @@ function BoardColumnCardDisplay({
 }) {
     const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
     const { filters, canDragAndDrop, navigateWithFilters } = useBoard();
-    const description = card.useField("description");
-    const projectMembers = card.useForeignField("project_members");
-    const cardMemberUIDs = card.useField("member_uids");
-    const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
-    const isHoverCardOpened = card.useField("isHoverCardOpened");
-    const labels = card.useForeignField("labels");
-    const checklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
-    const { onPointerEnter: onCardPointerEnter, onPointerLeave: onCardPointerLeave } = useHoverEffect({
-        isOpened: isHoverCardOpened ?? false,
-        setIsOpened: (opened) => {
-            if (state.type !== "idle") {
-                return;
-            }
-
-            card.isHoverCardOpened = opened;
-        },
-        scopeAttr: HOVER_CARD_UID_ATTR,
-        expectedScopeValue: card.uid,
-        delay: HOVER_DELAY,
-    });
-
-    const canViewPreview =
-        state.type === "idle" && (!!description.content.trim().length || !!cardMembers.length || !!labels.length || !!checklists.length);
 
     const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {
         if (!filters[relationshipType]) {
@@ -146,9 +118,9 @@ function BoardColumnCardDisplay({
     const cardClassName = cn(
         "min-w-[theme(spacing.72)_+_theme(spacing.1)]",
         canDragAndDrop
-            ? "cursor-pointer touch-none ring-primary hover:ring-2"
+            ? "cursor-pointer touch-none"
             : cn(
-                  !selectCardViewType || !isDisabledCard(card.uid) ? "cursor-pointer hover:ring-2 ring-primary" : "cursor-not-allowed",
+                  !selectCardViewType || !isDisabledCard(card.uid) ? "cursor-pointer" : "cursor-not-allowed",
                   !!selectCardViewType && currentCardUIDRef.current === card.uid && "hidden",
                   !!selectCardViewType && isSelectedCard(card.uid) && "ring-2",
                   !!selectCardViewType && isDisabledCard(card.uid) && "opacity-30"
@@ -160,28 +132,10 @@ function BoardColumnCardDisplay({
         <ModelRegistry.ProjectCard.Provider model={card} params={{ setFilters }}>
             <Flex gap="2" direction="col" className={outerStyles[state.type]}>
                 {state.type === "is-over" && state.closestEdge === "top" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
-                <Box
-                    className={cardClassName}
-                    onPointerEnter={onCardPointerEnter}
-                    onPointerLeave={onCardPointerLeave}
-                    {...{ [HOVER_CARD_UID_ATTR]: card.uid }}
-                    ref={outerRef}
-                >
-                    <Popover.Root open={!!isHoverCardOpened && canViewPreview}>
-                        <Popover.Trigger asChild>
-                            <Box ref={innerRef} className="!w-[theme(spacing.72)_+_theme(spacing.1)]">
-                                <BoardColumnCardCollapsible isDragging={state.type !== "idle"} />
-                            </Box>
-                        </Popover.Trigger>
-                        <Popover.Content
-                            side="right"
-                            align="start"
-                            className="w-64 max-w-[var(--radix-popper-available-width)] cursor-auto p-2.5 peer-first:hidden"
-                            {...{ [DISABLE_DRAGGING_ATTR]: "", [HOVER_CARD_UID_ATTR]: card.uid }}
-                        >
-                            {state.type === "idle" && <BoardColumnCardPreview />}
-                        </Popover.Content>
-                    </Popover.Root>
+                <Box className={cardClassName} {...{ [HOVER_CARD_UID_ATTR]: card.uid }} ref={outerRef}>
+                    <Box ref={innerRef} className="!w-[theme(spacing.72)_+_theme(spacing.1)]">
+                        <BoardColumnCardCollapsible isDragging={state.type !== "idle"} />
+                    </Box>
                 </Box>
                 {state.type === "is-over" && state.closestEdge === "bottom" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
             </Flex>

@@ -46,7 +46,12 @@ const stateStyles: { [Key in TColumnState["type"]]: string } = {
     "is-column-over": "bg-secondary",
 };
 
-function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
+export interface IBoardColumnProps {
+    column: ProjectColumn.TModel;
+    updateBoard: () => void;
+}
+
+function BoardColumn({ column, updateBoard }: IBoardColumnProps) {
     const { hasRoleAction } = useBoard();
     const scrollableRef = useRef<HTMLDivElement | null>(null);
     const outerFullHeightRef = useRef<HTMLDivElement | null>(null);
@@ -98,15 +103,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
                 )}
             >
                 <BoardColumnHeader isDragging={state.type !== "idle"} column={column} headerProps={{ ref: headerRef }} />
-                <ScrollArea.Root
-                    viewportRef={scrollableRef}
-                    viewportClassName="!overflow-y-auto"
-                    onScroll={() => {
-                        ProjectCard.Model.getModels((model) => !!model.isHoverCardOpened).forEach((model) => {
-                            model.isHoverCardOpened = false;
-                        });
-                    }}
-                >
+                <ScrollArea.Root viewportRef={scrollableRef} viewportClassName="!overflow-y-auto">
                     <Card.Content
                         className={cn(
                             "flex flex-grow flex-col gap-2 p-3",
@@ -117,7 +114,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
                         {...{ [BLOCK_BOARD_PANNING_ATTR]: true }}
                         ref={innerRef}
                     >
-                        <BoardColumnCardList column={column} />
+                        <BoardColumnCardList column={column} updateBoard={updateBoard} />
                         <BoardColumnAddCard />
                     </Card.Content>
                     <ScrollArea.Bar />
@@ -135,7 +132,7 @@ function BoardColumn({ column }: { column: ProjectColumn.TModel }) {
  *
  * Created so that state changes to the column don't require all cards to be rendered
  */
-const BoardColumnCardList = memo(({ column }: { column: ProjectColumn.TModel }) => {
+const BoardColumnCardList = memo(({ column, updateBoard }: IBoardColumnProps) => {
     const { project, socket, filters, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [updated, forceUpdate] = updater;
@@ -172,15 +169,17 @@ const BoardColumnCardList = memo(({ column }: { column: ProjectColumn.TModel }) 
                     }
 
                     forceUpdate();
+                    updateBoard();
                 },
             }),
-        [forceUpdate]
+        [updateBoard, forceUpdate]
     );
     const { rows: columnCards } = useRowReordered({
         type: "ProjectCard",
         eventNameParams: { uid: column.uid },
         topicId: project.uid,
         rows: cards,
+        columnUID: column.uid,
         socket,
         updater,
         otherHandlers: [cardCreatedHandlers, columnDeletedHandlers],

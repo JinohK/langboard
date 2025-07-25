@@ -119,16 +119,16 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
         e.preventDefault();
         e.stopPropagation();
         card.isCollapseOpened = !card.isCollapseOpened;
-        setTimeout(() => {
-            card.isHoverCardOpened = true;
-        }, 0);
     };
 
     return (
         <>
             <Card.Root
                 id={`board-card-${card.uid}`}
-                className={cn("relative", !!selectCardViewType && isDisabledCard(card.uid) ? "cursor-not-allowed" : "cursor-pointer")}
+                className={cn(
+                    "relative hover:border-primary",
+                    !!selectCardViewType && isDisabledCard(card.uid) ? "cursor-not-allowed" : "cursor-pointer"
+                )}
                 onClick={openCard}
             >
                 <Collapsible.Root
@@ -148,7 +148,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                         <Card.Title className="max-w-[calc(100%_-_theme(spacing.8))] break-all leading-tight">{title}</Card.Title>
                         <Button
                             variant="ghost"
-                            className="absolute right-2.5 top-2.5 mt-0"
+                            className={cn("absolute right-2.5 top-2.5 mt-0")}
                             size="icon-sm"
                             title={t(`common.${isCollapseOpened ? "Collapse" : "Expand"}`)}
                             titleSide="top"

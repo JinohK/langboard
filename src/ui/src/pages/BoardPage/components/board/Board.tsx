@@ -71,6 +71,23 @@ export function SkeletonBoard() {
 }
 
 export function Board() {
+    const scrollableRef = useRef<HTMLDivElement | null>(null);
+
+    return (
+        <ScrollArea.Root
+            className="h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]"
+            viewportClassName="!overflow-x-auto"
+            viewportRef={scrollableRef}
+        >
+            <Flex direction="row" items="start" gap={{ initial: "6", sm: "8" }} p="4" className="w-max" h="full">
+                <BoardDisplay scrollableRef={scrollableRef} />
+            </Flex>
+            <ScrollArea.Bar orientation="horizontal" />
+        </ScrollArea.Root>
+    );
+}
+
+function BoardDisplay({ scrollableRef }: { scrollableRef: React.RefObject<HTMLDivElement | null> }) {
     const { project, columns: flatColumns, cardsMap, socket, canDragAndDrop } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [_, forceUpdate] = updater;
@@ -82,7 +99,6 @@ export function Board() {
         socket,
         updater,
     });
-    const scrollableRef = useRef<HTMLDivElement | null>(null);
     const { mutate: changeColumnOrderMutate } = useChangeProjectColumnOrder();
     const { mutate: changeCardOrderMutate } = useChangeCardOrder();
 
@@ -183,25 +199,18 @@ export function Board() {
             },
         ]);
 
-        return function cleanupAll() {
+        return () => {
             cleanupStart();
             cleanupActive?.();
         };
     }, []);
 
     return (
-        <ScrollArea.Root
-            className="h-[calc(100vh_-_theme(spacing.28)_-_theme(spacing.2))]"
-            viewportClassName="!overflow-y-auto"
-            viewportRef={scrollableRef}
-        >
-            <Flex direction="row" items="start" gap={{ initial: "8", sm: "10" }} p="4" className="w-max" h="full">
-                {columns.map((column) => (
-                    <BoardColumn key={column.uid} column={column} />
-                ))}
-                {canDragAndDrop && <BoardColumnAdd />}
-            </Flex>
-            <ScrollArea.Bar orientation="horizontal" />
-        </ScrollArea.Root>
+        <>
+            {columns.map((column) => (
+                <BoardColumn key={`board-columnr-${column.uid}`} column={column} updateBoard={forceUpdate} />
+            ))}
+            {canDragAndDrop && <BoardColumnAdd />}
+        </>
     );
 }

@@ -207,6 +207,7 @@ const BoardCardCheckitemList = memo(({ checklist, checkitemsMap }: IBoardCardChe
         topicId: card.uid,
         eventNameParams: { uid: checklist.uid },
         rows: groupCheckitems,
+        columnUID: checklist.uid,
         socket,
         updater,
     });

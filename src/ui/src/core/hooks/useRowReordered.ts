@@ -14,6 +14,7 @@ export interface IUseRowReorderedProps<TRowModelName extends IUseRowOrderChanged
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
     topicId: string;
     rows: TPickedModel<TRowModelName>[];
+    columnUID: string;
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
     otherHandlers?: TSocketHandler[];
@@ -24,6 +25,7 @@ function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps[
     eventNameParams,
     topicId,
     rows: flatRows,
+    columnUID,
     socket,
     updater,
     otherHandlers,
@@ -36,9 +38,29 @@ function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps[
                 type,
                 topicId,
                 params: eventNameParams,
-                callback: forceUpdate,
+                callback: (data) => {
+                    switch (data.move_type) {
+                        case "from_column":
+                            if (data.column_uid !== columnUID) {
+                                return;
+                            }
+                            break;
+                        case "in_column":
+                            if (data.column_uid !== columnUID) {
+                                return;
+                            }
+                            break;
+                        case "to_column":
+                            if (data.column_uid !== columnUID) {
+                                return;
+                            }
+                            break;
+                    }
+
+                    forceUpdate();
+                },
             }),
-        [type, topicId, eventNameParams, forceUpdate]
+        [type, topicId, eventNameParams, columnUID, forceUpdate]
     );
     useSwitchSocketHandlers({
         socket,

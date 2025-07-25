@@ -45,7 +45,6 @@ export interface IStore extends Interface {
     relationships: ProjectCardRelationship.Interface[];
 
     // variable set from the client side
-    isHoverCardOpened?: bool;
     isCollapseOpened?: bool;
 }
 
@@ -215,13 +214,6 @@ class ProjectCard extends BaseModel<IStore> {
     }
     public set relationships(value: (ProjectCardRelationship.TModel | ProjectCardRelationship.Interface)[]) {
         this.update({ relationships: value });
-    }
-
-    public get isHoverCardOpened() {
-        return this.getValue("isHoverCardOpened");
-    }
-    public set isHoverCardOpened(value) {
-        this.update({ isHoverCardOpened: value });
     }
 
     public get isCollapseOpened() {

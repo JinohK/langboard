@@ -45,7 +45,7 @@ const BoardProject = memo(({ project, currentUser }: IBoardProps) => {
                 <SkeletonBoard />
             ) : (
                 <BoardProvider project={project} currentUser={currentUser}>
-                    <BoardResult />
+                    <BoardResult key={`board-result-${project.uid}`} project={project} />
                 </BoardProvider>
             )}
         </>
@@ -53,7 +53,7 @@ const BoardProject = memo(({ project, currentUser }: IBoardProps) => {
 });
 BoardProject.displayName = "BoardProject";
 
-const BoardResult = memo(() => {
+const BoardResult = memo(({ project }: { project: Project.TModel }) => {
     const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
     const [t] = useTranslation();
 
@@ -91,7 +91,7 @@ const BoardResult = memo(() => {
                 </Flex>
             </Flex>
 
-            <Board />
+            <Board key={`board-${project.uid}`} />
         </>
     );
 });

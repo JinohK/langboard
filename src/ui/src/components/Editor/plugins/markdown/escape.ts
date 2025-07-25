@@ -11,7 +11,9 @@ const escapeNonHtmlAngles = (str: string): string => {
 
         if (char === "<") {
             let slashCount = 0;
-            for (let j = i - 1; j >= 0 && str[j] === "\\"; j--) slashCount++;
+            for (let j = i - 1; j >= 0 && str[j] === "\\"; --j) {
+                slashCount++;
+            }
             const isEscaped = slashCount % 2 === 1;
 
             const remaining = str.slice(i);
@@ -23,14 +25,16 @@ const escapeNonHtmlAngles = (str: string): string => {
                 i += tagMatch.length;
             } else if (!isEscaped) {
                 result += "&lt;";
-                i++;
+                ++i;
             } else {
                 result += char;
-                i++;
+                ++i;
             }
         } else if (char === ">") {
             let slashCount = 0;
-            for (let j = i - 1; j >= 0 && str[j] === "\\"; j--) slashCount++;
+            for (let j = i - 1; j >= 0 && str[j] === "\\"; --j) {
+                slashCount++;
+            }
             const isEscaped = slashCount % 2 === 1;
 
             if (!isEscaped) {
@@ -38,10 +42,10 @@ const escapeNonHtmlAngles = (str: string): string => {
             } else {
                 result += char;
             }
-            i++;
+            ++i;
         } else {
             result += char;
-            i++;
+            ++i;
         }
     }
 
@@ -182,10 +186,19 @@ export const deserialize = (isInline: bool) => (editor: SlateEditor, text: strin
         }
 
         newText += text.slice(lastIndex);
-        return escapeNonHtmlAngles(newText);
+        const escapedContent = escapeNonHtmlAngles(newText);
+
+        const lines = escapedContent.split("\n");
+        for (let i = 0; i < lines.length; ++i) {
+            const line = lines[i].trimStart();
+            if (line.startsWith("&gt;")) {
+                lines[i] = lines[i].replace(/^(\s*)&gt;(\s*)/, "$1>$2");
+            }
+        }
+
+        return lines.join("\n");
     };
 
-    // math block 단위로 나눠서 처리
     const segments = splitMathBlocks(text);
     const processed = segments.map(({ isMath, content }) => (isMath ? content : escapeNonMathContent(content))).join("");
 
