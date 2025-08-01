@@ -21,7 +21,10 @@ const BoardCardPage = memo(() => {
     }
 
     const close = () => {
-        navigate(ROUTES.BOARD.MAIN(projectUID));
+        navigate({
+            pathname: ROUTES.BOARD.MAIN(projectUID),
+            search: window.location.search,
+        });
     };
 
     return (

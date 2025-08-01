@@ -1,5 +1,5 @@
+import { Edge } from "@/core/helpers/dnd/auto-scroll/internal-types";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
-import { Edge } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/dist/types/internal-types";
 
 export type TColumnRowSymbolSet = {
     column: symbol;

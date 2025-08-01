@@ -46,6 +46,11 @@
   "JSON Viewer": "JSON Viewer",
   "JSON Editor": "JSON Editor",
   "default": "default",
+  "External Link Warning": "External Link Warning",
+  "This link leads to an external website.": "This link leads to an external website.",
+  "We can't guarantee the safety or privacy of external sites, so please proceed with caution.": "We can't guarantee the safety or privacy of external sites, so please proceed with caution.",
+  "Go to link": "Go to link",
+  "Open in new tab": "Open in new tab",
   "avatarActions": {
     "Create & assign a card": "Create & assign a card",
     "View cards": "View cards",

@@ -2,7 +2,7 @@
 
 import { memo, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import invariant from "tiny-invariant";
-import BoardColumnCard, { SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
+import BoardColumnCard, { BoardColumnCardShadow, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
@@ -115,6 +115,7 @@ function BoardColumn({ column, updateBoard }: IBoardColumnProps) {
                         ref={innerRef}
                     >
                         <BoardColumnCardList column={column} updateBoard={updateBoard} />
+                        {state.type === "is-row-over" && !state.isOverChildRow && <BoardColumnCardShadow dragging={state.dragging} />}
                         <BoardColumnAddCard />
                     </Card.Content>
                     <ScrollArea.Bar />

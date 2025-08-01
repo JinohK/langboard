@@ -5,7 +5,7 @@ from core.Env import Env
 
 
 # Directory
-BASE_DIR = Path(dirname(__file__)) if not Env.IS_EXECUTABLE else Path(dirname(executable))
+BASE_DIR = Path(dirname(__file__ if not Env.IS_EXECUTABLE else executable))
 ROOT_DIR = BASE_DIR / ".." / ".." / ".."
 DATA_DIR = ROOT_DIR / "local" if not Env.IS_EXECUTABLE else BASE_DIR / "data"
 SCHEMA_DIR = DATA_DIR / "schemas"

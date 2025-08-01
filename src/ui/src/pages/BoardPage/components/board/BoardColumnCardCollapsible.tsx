@@ -13,6 +13,7 @@ import { Utils } from "@langboard/core/utils";
 import { LabelModelBadge } from "@/components/LabelBadge";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
+import useCardStore, { useCardIsCollapsed } from "@/core/stores/CardStore";
 
 export interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;
@@ -28,7 +29,8 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
     const cardMemberUIDs = card.useField("member_uids");
     const cardMembers = useMemo(() => projectMembers.filter((member) => cardMemberUIDs.includes(member.uid)), [projectMembers, cardMemberUIDs]);
     const commentCount = card.useField("count_comment");
-    const isCollapseOpened = card.useField("isCollapseOpened");
+    const { updateCollapsed } = useCardStore();
+    const isCollapsed = useCardIsCollapsed(card.uid);
     const labels = card.useForeignField("labels");
     const cardRelationships = card.useForeignField("relationships");
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
@@ -54,6 +56,15 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
             navigateWithFilters(ROUTES.BOARD.CARD(project.uid, card.uid));
         },
         [isDragging, selectCardViewType, isDisabledCard, setIsSelectRelationshipDialogOpened]
+    );
+
+    const handleOpenCollapsible = useCallback(
+        (e: React.MouseEvent<HTMLButtonElement>) => {
+            e.preventDefault();
+            e.stopPropagation();
+            updateCollapsed(card.uid, !isCollapsed);
+        },
+        [isCollapsed, updateCollapsed]
     );
     const presentableRelationships = useMemo(() => {
         const relationships: [string, string][] = [];
@@ -101,24 +112,18 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
 
     useEffect(() => {
         if (selectCardViewType && selectedRelationship) {
-            card.isCollapseOpened = true;
+            updateCollapsed(card.uid, false);
         }
     }, [selectCardViewType]);
 
     useEffect(() => {
         if (presentableRelationships.length) {
-            card.isCollapseOpened = true;
+            updateCollapsed(card.uid, false);
         }
     }, [filters]);
 
     const attributes = {
         [DISABLE_DRAGGING_ATTR]: "",
-    };
-
-    const handleOpenCollapsible = (e: React.MouseEvent<HTMLButtonElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        card.isCollapseOpened = !card.isCollapseOpened;
     };
 
     return (
@@ -132,13 +137,13 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                 onClick={openCard}
             >
                 <Collapsible.Root
-                    open={isCollapseOpened}
+                    open={!isCollapsed}
                     onOpenChange={(opened) => {
-                        card.isCollapseOpened = opened;
+                        updateCollapsed(card.uid, !opened);
                     }}
                 >
                     <Card.Header className="relative block space-y-0 py-4">
-                        {isCollapseOpened && !!labels.length && (
+                        {!isCollapsed && !!labels.length && (
                             <Flex items="center" gap="1" mb="1.5" wrap>
                                 {labels.map((label) => (
                                     <LabelModelBadge key={`board-card-label-${label.uid}`} model={label} />
@@ -150,12 +155,12 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                             variant="ghost"
                             className={cn("absolute right-2.5 top-2.5 mt-0")}
                             size="icon-sm"
-                            title={t(`common.${isCollapseOpened ? "Collapse" : "Expand"}`)}
+                            title={t(`common.${!isCollapsed ? "Collapse" : "Expand"}`)}
                             titleSide="top"
                             onClick={handleOpenCollapsible}
                             {...attributes}
                         >
-                            <IconComponent icon="chevron-down" size="4" className={cn("transition-all", isCollapseOpened && "rotate-180")} />
+                            <IconComponent icon="chevron-down" size="4" className={cn("transition-all", !isCollapsed && "rotate-180")} />
                         </Button>
                     </Card.Header>
                     <Collapsible.Content

@@ -1,16 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { reorderWithEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/reorder-with-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
-import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 import { TColumnRowSettings, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
 import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowDataHelper";
 import { canReorderByClosestEdge } from "@/core/helpers/dnd/utils";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
+import { unsafeOverflowAutoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/unsafe-overflow/element";
+import { autoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/element";
 
 export interface ICreateDndRootEventsProps<
     TColumnModel extends TOrderableModel<TOrderableModelName>,

@@ -215,13 +215,6 @@ class ProjectCard extends BaseModel<IStore> {
     public set relationships(value: (ProjectCardRelationship.TModel | ProjectCardRelationship.Interface)[]) {
         this.update({ relationships: value });
     }
-
-    public get isCollapseOpened() {
-        return this.getValue("isCollapseOpened");
-    }
-    public set isCollapseOpened(value) {
-        this.update({ isCollapseOpened: value });
-    }
 }
 
 registerModel(ProjectCard);

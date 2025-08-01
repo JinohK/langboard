@@ -1,16 +1,16 @@
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
 import { getReorderDestinationIndex } from "@atlaskit/pragmatic-drag-and-drop-hitbox/util/get-reorder-destination-index";
 import { monitorForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import { extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
-import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import createDndSingleDataHelper from "@/core/helpers/dnd/createDndSingleDataHelper";
 import { TSingleRowSettings, TSingleSymbolSet } from "@/core/helpers/dnd/types";
 import { canReorderByClosestEdge } from "@/core/helpers/dnd/utils";
 import { CleanupFn } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
+import { unsafeOverflowAutoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/unsafe-overflow/element";
+import { autoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/element";
 
 export interface ICreateDndSingleRootEventsProps<TRowModel extends TOrderableModel<TOrderableModelName>> {
     rowsMap: Record<string, TRowModel>;

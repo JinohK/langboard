@@ -7,7 +7,7 @@ import { BasicBlocksKit } from "@/components/Editor/plugins/basic-blocks-kit";
 import { BasicMarksKit } from "@/components/Editor/plugins/basic-marks-kit";
 import { BlockMenuKit } from "@/components/Editor/plugins/block-menu-kit";
 import { BlockPlaceholderKit } from "@/components/Editor/plugins/block-placeholder-kit";
-import { CalloutKit } from "./plugins/callout-kit";
+import { CalloutKit } from "@/components/Editor/plugins/callout-kit";
 import { CodeBlockKit } from "@/components/Editor/plugins/code-block-kit";
 import { CursorOverlayKit } from "@/components/Editor/plugins/cursor-overlay-kit";
 import { DateKit } from "@/components/Editor/plugins/date-kit";

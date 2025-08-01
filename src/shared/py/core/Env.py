@@ -1,8 +1,19 @@
 from enum import Enum
 from importlib.metadata import version
 from os import environ
+from pathlib import Path
 from typing import Any, Literal, cast
+from dotenv import load_dotenv
 from .utils.decorators import class_instance, thread_safe_singleton
+
+
+expected_env_paths = ["../../../../.env", "../../../.env", "../../.env", "../.env", "./.env"]
+for env_path in expected_env_paths:
+    env_path = Path(env_path)
+    if not env_path.is_file():
+        continue
+    load_dotenv(env_path)
+expected_env_paths.clear()
 
 
 @class_instance()

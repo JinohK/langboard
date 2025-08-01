@@ -1,6 +1,6 @@
 import { BaseBasicBlocksKit } from "@/components/Editor/plugins/basic-blocks-base-kit";
 import { BaseBasicMarksKit } from "@/components/Editor/plugins/basic-marks-base-kit";
-import { BaseCalloutKit } from "./plugins/callout-base-kit";
+import { BaseCalloutKit } from "@/components/Editor/plugins/callout-base-kit";
 import { BaseCodeBlockKit } from "@/components/Editor/plugins/code-block-base-kit";
 import { BaseDateKit } from "@/components/Editor/plugins/date-base-kit";
 import { BaseLinkKit } from "@/components/Editor/plugins/link-base-kit";

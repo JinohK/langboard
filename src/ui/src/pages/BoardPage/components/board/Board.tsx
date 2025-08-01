@@ -79,7 +79,7 @@ export function Board() {
             viewportClassName="!overflow-x-auto"
             viewportRef={scrollableRef}
         >
-            <Flex direction="row" items="start" gap={{ initial: "6", sm: "8" }} p="4" className="w-max" h="full">
+            <Flex direction="row" items="start" gap={{ initial: "6", sm: "8" }} p="4" h="full">
                 <BoardDisplay scrollableRef={scrollableRef} />
             </Flex>
             <ScrollArea.Bar orientation="horizontal" />

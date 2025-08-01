@@ -5,7 +5,7 @@ import { type DropdownMenuProps, DropdownMenuItemIndicator } from "@radix-ui/rea
 import { CheckIcon, EyeIcon, PenIcon } from "lucide-react";
 import { useEditorRef, usePlateState } from "platejs/react";
 import { DropdownMenu } from "@/components/base";
-import { ToolbarButton } from "./toolbar";
+import { ToolbarButton } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
 
 export function ModeToolbarButton(props: DropdownMenuProps) {

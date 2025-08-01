@@ -9,7 +9,7 @@ import { useEmojiDropdownMenuState } from "@platejs/emoji/react";
 import { PlateElement } from "platejs/react";
 import { Button } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
-import { EmojiPicker, EmojiPopover } from "./emoji-toolbar-button";
+import { EmojiPicker, EmojiPopover } from "@/components/plate-ui/emoji-toolbar-button";
 
 export function CalloutElement({ attributes, children, className, ...props }: React.ComponentProps<typeof PlateElement>) {
     const { emojiPickerState, isOpen, setIsOpen } = useEmojiDropdownMenuState({

@@ -57,15 +57,40 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         useLayoutEffect(() => {
             const rowEl = measureRef.current;
             if (rowEl) {
-                const count = Array.from(rowEl.children).filter(
-                    (child) => child.nodeType === 1 && (child as HTMLElement).offsetParent !== null
-                ).length;
-                if (count > 0) setColumnCount(count);
+                const children = Array.from(rowEl.children);
+                let firstChildOffsetTop = -1;
+                let count = 0;
+                for (let i = 0; i < children.length; ++i) {
+                    const child = children[i] as HTMLElement;
+                    if (child.offsetParent === null) {
+                        continue;
+                    }
+
+                    if (firstChildOffsetTop === -1) {
+                        firstChildOffsetTop = child.offsetTop;
+                    }
+
+                    if (firstChildOffsetTop !== child.offsetTop) {
+                        break;
+                    }
+
+                    ++count;
+                }
+
+                if (count > 0) {
+                    setColumnCount(count);
+                }
             }
         }, [children]);
 
+        gap = Utils.Type.isString(gap) ? parseInt(gap) : gap;
+
         const sampleRow = (
-            <RowComp ref={measureRef} className={cn(rowClassName, "pointer-events-none invisible absolute grid w-full")} style={{ display: "grid" }}>
+            <RowComp
+                ref={measureRef}
+                className={cn(rowClassName, "pointer-events-none invisible absolute grid w-full")}
+                style={{ display: "grid", gap: `${gap}px`, padding: `${gap / 2}px` }}
+            >
                 {flatItems}
             </RowComp>
         );
@@ -88,13 +113,14 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         const loaderIndex = hasMore ? (virtualItems[virtualItems.length - 1]?.index ?? "-1") : "-1";
         const loaderY = hasMore ? (virtualItems[virtualItems.length - 1]?.start ?? -99999) : -99999;
 
-        gap = Utils.Type.isString(gap) ? parseInt(gap) : gap;
-
         return (
             <Comp
                 {...props}
                 className={cn(className, "relative")}
-                style={{ ...props.style, height: `${virtualizer.getTotalSize()}px` }}
+                style={{
+                    ...props.style,
+                    height: `${virtualizer.getTotalSize()}px`,
+                }}
                 ref={composeRefs(ref, containerRef)}
             >
                 {sampleRow}
@@ -105,7 +131,6 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                     }
 
                     const rowItems = items[virtualRow.index] as React.ReactElement[];
-
                     if (!rowItems) {
                         return null;
                     }

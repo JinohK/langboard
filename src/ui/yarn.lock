@@ -107,14 +107,6 @@
     "@atlaskit/feature-gate-js-client" "^5.0.0"
     "@babel/runtime" "^7.0.0"
 
-"@atlaskit/pragmatic-drag-and-drop-auto-scroll@^2.1.1":
-  version "2.1.1"
-  resolved "https://registry.yarnpkg.com/@atlaskit/pragmatic-drag-and-drop-auto-scroll/-/pragmatic-drag-and-drop-auto-scroll-2.1.1.tgz#4754d94d26b5e876395bc3063b3f1e31d4df4dc9"
-  integrity sha512-VAQEb3NVLY9Q5ZgC5Eiws9Uf6xOINY9/pAZMdbOVlF90uRXEkmpYqdTL+zeyZ8U8deuqYCmXr7oWIEnxpNQVzA==
-  dependencies:
-    "@atlaskit/pragmatic-drag-and-drop" "^1.7.0"
-    "@babel/runtime" "^7.0.0"
-
 "@atlaskit/pragmatic-drag-and-drop-hitbox@^1.1.0":
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@atlaskit/pragmatic-drag-and-drop-hitbox/-/pragmatic-drag-and-drop-hitbox-1.1.0.tgz#3a031ac295513a394eff116f9b75869e64d3e559"

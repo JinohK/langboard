@@ -5,13 +5,15 @@ import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
 import { Utils } from "@langboard/core/utils";
 
-if (fs.existsSync("../../../.env")) {
-    dotenv.config({ path: "../../../.env" });
-} else if (fs.existsSync("../.env")) {
-    dotenv.config({ path: "../.env" });
-} else if (fs.existsSync("./.env")) {
-    dotenv.config();
+const expectedEnvPaths = ["../../../.env", "../../.env", "../.env", "./.env"];
+for (let i = 0; i < expectedEnvPaths.length; ++i) {
+    const envPath = expectedEnvPaths[i];
+    if (fs.existsSync(envPath)) {
+        dotenv.config({ path: envPath });
+        break;
+    }
 }
+expectedEnvPaths.splice(0);
 
 type TGetEnvParams<TValue extends string | number> = {
     key: string;

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import invariant from "tiny-invariant";
-import { BOARD_DND_SYMBOL_SET, HOVER_CARD_UID_ATTR } from "@/pages/BoardPage/components/board/BoardConstants";
+import { BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
 import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { Box, Card, Flex, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
@@ -132,7 +132,7 @@ function BoardColumnCardDisplay({
         <ModelRegistry.ProjectCard.Provider model={card} params={{ setFilters }}>
             <Flex gap="2" direction="col" className={outerStyles[state.type]}>
                 {state.type === "is-over" && state.closestEdge === "top" ? <BoardColumnCardShadow dragging={state.dragging} /> : null}
-                <Box className={cardClassName} {...{ [HOVER_CARD_UID_ATTR]: card.uid }} ref={outerRef}>
+                <Box className={cardClassName} ref={outerRef}>
                     <Box ref={innerRef} className="!w-[theme(spacing.72)_+_theme(spacing.1)]">
                         <BoardColumnCardCollapsible isDragging={state.type !== "idle"} />
                     </Box>

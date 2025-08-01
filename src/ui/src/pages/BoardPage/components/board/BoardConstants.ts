@@ -23,4 +23,3 @@ export const BOARD_DND_SYMBOL_SET: TColumnRowSymbolSet = {
 };
 
 export const BLOCK_BOARD_PANNING_ATTR = "data-block-board-panning" as const;
-export const HOVER_CARD_UID_ATTR = "data-hover-card-uid" as const;

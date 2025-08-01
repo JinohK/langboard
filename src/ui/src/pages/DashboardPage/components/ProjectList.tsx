@@ -40,27 +40,25 @@ const ProjectList = memo(({ projects, updateStarredProjects, scrollAreaUpdater, 
     const { items, nextPage, hasMore } = useInfiniteScrollPager({ allItems: projects, size: PAGE_SIZE, updater: scrollAreaUpdater });
 
     return (
-        <>
-            <InfiniteScroller.Grid
-                as={Box}
-                row={Box}
-                className={cn("mt-4", className)}
-                rowClassName="md:grid-cols-2 lg:grid-cols-4"
-                scrollable={() => document.getElementById("main")}
-                loadMore={nextPage}
-                hasMore={hasMore}
-                totalCount={projects.length}
-                loader={<SkeletonProjectList key={Utils.String.Token.shortUUID()} />}
-            >
-                {items.map((project) => (
-                    <ProjectItem
-                        key={`${project.uid}-${Utils.String.Token.shortUUID()}`}
-                        project={project}
-                        updateStarredProjects={updateStarredProjects}
-                    />
-                ))}
-            </InfiniteScroller.Grid>
-        </>
+        <InfiniteScroller.Grid
+            as={Box}
+            row={Box}
+            className={cn("mt-4", className)}
+            rowClassName="md:grid-cols-2 lg:grid-cols-4"
+            scrollable={() => document.getElementById("main")}
+            loadMore={nextPage}
+            hasMore={hasMore}
+            totalCount={projects.length}
+            loader={<SkeletonProjectList key={Utils.String.Token.shortUUID()} />}
+        >
+            {items.map((project) => (
+                <ProjectItem
+                    key={`${project.uid}-${Utils.String.Token.shortUUID()}`}
+                    project={project}
+                    updateStarredProjects={updateStarredProjects}
+                />
+            ))}
+        </InfiniteScroller.Grid>
     );
 });
 

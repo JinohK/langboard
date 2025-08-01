@@ -1,7 +1,5 @@
 import { draggable as draggableFn, dropTargetForElements } from "@atlaskit/pragmatic-drag-and-drop/element/adapter";
 import invariant from "tiny-invariant";
-import { autoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/element";
-import { unsafeOverflowAutoScrollForElements } from "@atlaskit/pragmatic-drag-and-drop-auto-scroll/unsafe-overflow/element";
 import { combine } from "@atlaskit/pragmatic-drag-and-drop/combine";
 import { preserveOffsetOnSource } from "@atlaskit/pragmatic-drag-and-drop/element/preserve-offset-on-source";
 import { setCustomNativeDragPreview } from "@atlaskit/pragmatic-drag-and-drop/element/set-custom-native-drag-preview";
@@ -10,6 +8,8 @@ import createDndColumnRowDataHelper from "@/core/helpers/dnd/createDndColumnRowD
 import { attachClosestEdge, extractClosestEdge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/closest-edge";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
+import { autoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/element";
+import { unsafeOverflowAutoScrollForElements } from "@/core/helpers/dnd/auto-scroll/entry-point/unsafe-overflow/element";
 
 export const COLUMN_IDLE = { type: "idle" } satisfies TColumnState;
 
