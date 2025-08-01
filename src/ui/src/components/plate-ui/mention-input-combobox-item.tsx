@@ -3,35 +3,41 @@
 import { getMentionOnSelectItem } from "@platejs/mention";
 import { InlineComboboxItem } from "@/components/plate-ui/inline-combobox";
 import { BotModel, User } from "@/core/models";
-import UserAvatar from "@/components/UserAvatar";
 import { Utils } from "@langboard/core/utils";
 import { PlateEditor } from "platejs/react";
 import type { TMentionableUser } from "@/components/plate-ui/mention-node";
-import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import UserLikeComponent from "@/components/UserLikeComponent";
+import { TUserLikeModel } from "@/core/models/ModelRegistry";
+import UserAvatarTrigger from "@/components/UserAvatar/Trigger";
 
 const onSelectItem = getMentionOnSelectItem();
 
-export interface IMentionInputComboboxItem {
+export interface IMentionInputComboboxItemProps {
     search: string;
-    userOrBot: TMentionableUser;
+    userOrBot: { raw: TUserLikeModel; value: TMentionableUser };
     editor: PlateEditor;
-    projectUID?: string;
 }
 
-export const MentionInputComboboxItem = ({ userOrBot, ...props }: IMentionInputComboboxItem) => {
+interface IMentionInputComboboxItemInnerProps extends IMentionInputComboboxItemProps {
+    value: TMentionableUser;
+}
+
+export const MentionInputComboboxItem = ({ userOrBot, ...props }: IMentionInputComboboxItemProps) => {
     return (
         <UserLikeComponent
-            userOrBot={userOrBot}
+            userOrBot={userOrBot.raw}
             userComp={MentionInputComboboxUserItem}
             botComp={MentionInputComboboxBotItem}
-            props={props}
+            props={{
+                ...props,
+                value: userOrBot.value,
+            }}
             shouldReturnNull
         />
     );
 };
 
-const MentionInputComboboxUserItem = ({ user, ...props }: Omit<IMentionInputComboboxItem, "userOrBot"> & { user: User.TModel }) => {
+const MentionInputComboboxUserItem = ({ user, value, ...props }: Omit<IMentionInputComboboxItemInnerProps, "userOrBot"> & { user: User.TModel }) => {
     const firstname = user.useField("firstname");
     const lastname = user.useField("lastname");
     const username = user.useField("username");
@@ -42,12 +48,15 @@ const MentionInputComboboxUserItem = ({ user, ...props }: Omit<IMentionInputComb
             value={`${firstname} ${lastname} ${username}`}
             username={username}
             names={`${firstname} ${lastname}`}
-            userOrBot={user as TMentionableUser}
+            userOrBot={{
+                raw: user,
+                value,
+            }}
         />
     );
 };
 
-const MentionInputComboboxBotItem = ({ bot, ...props }: Omit<IMentionInputComboboxItem, "userOrBot"> & { bot: BotModel.TModel }) => {
+const MentionInputComboboxBotItem = ({ bot, value, ...props }: Omit<IMentionInputComboboxItemInnerProps, "userOrBot"> & { bot: BotModel.TModel }) => {
     const name = bot.useField("name");
     const username = bot.useField("bot_uname");
 
@@ -57,31 +66,31 @@ const MentionInputComboboxBotItem = ({ bot, ...props }: Omit<IMentionInputCombob
             value={`${name} ${username}`}
             username={username}
             names={name}
-            userOrBot={bot as TMentionableUser}
+            userOrBot={{
+                raw: bot,
+                value,
+            }}
         />
     );
 };
 
-interface IMentionInputComboboxItemInnerProps extends IMentionInputComboboxItem {
-    value: string;
-    username: string;
-    names: string;
-}
-
-const MentionInputComboboxItemInner = ({ search, value, username, names, userOrBot, editor, projectUID }: IMentionInputComboboxItemInnerProps) => {
+const MentionInputComboboxItemInner = ({
+    search,
+    value,
+    username,
+    names,
+    userOrBot,
+    editor,
+}: Omit<IMentionInputComboboxItemInnerProps, "value"> & { value: string; username: string; names: string }) => {
     return (
         <InlineComboboxItem
             key={Utils.String.Token.shortUUID()}
             value={value}
-            onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onSelectItem(editor, userOrBot, search);
-            }}
+            onClick={() => onSelectItem(editor, userOrBot.value, search)}
             className="h-auto p-0"
         >
-            <UserAvatar.Root
-                userOrBot={userOrBot}
+            <UserAvatarTrigger
+                userOrBot={userOrBot.raw}
                 withNameProps={{
                     className: "gap-1 p-1 w-full",
                     customName: (
@@ -91,9 +100,7 @@ const MentionInputComboboxItemInner = ({ search, value, username, names, userOrB
                         </div>
                     ),
                 }}
-            >
-                <UserAvatarDefaultList userOrBot={userOrBot} projectUID={projectUID} />
-            </UserAvatar.Root>
+            />
         </InlineComboboxItem>
     );
 };

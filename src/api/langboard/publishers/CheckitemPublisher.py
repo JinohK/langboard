@@ -83,16 +83,16 @@ class CheckitemPublisher(BaseSocketPublisher):
                     SocketPublishModel(
                         topic=SocketTopic.BoardCard,
                         topic_id=topic_id,
-                        event=f"board:card:checkitem:order:changed:{old_checklist.get_uid()}",
+                        event=f"board:card:checkitem:order:changed:{new_checklist.get_uid()}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "from_column", "column_uid": old_checklist.get_uid()},
+                        custom_data={"move_type": "to_column", "column_uid": new_checklist.get_uid()},
                     ),
                     SocketPublishModel(
                         topic=SocketTopic.BoardCard,
                         topic_id=topic_id,
-                        event=f"board:card:checkitem:order:changed:{new_checklist.get_uid()}",
+                        event=f"board:card:checkitem:order:changed:{old_checklist.get_uid()}",
                         data_keys=["uid", "order"],
-                        custom_data={"move_type": "to_column", "column_uid": new_checklist.get_uid()},
+                        custom_data={"move_type": "from_column", "column_uid": old_checklist.get_uid()},
                     ),
                 ]
             )

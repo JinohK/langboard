@@ -19,7 +19,7 @@ import {
     InlineComboboxInput,
 } from "@/components/plate-ui/inline-combobox";
 import { useTranslation } from "react-i18next";
-import { MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
+import { IMentionInputComboboxItemProps, MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
 import { Utils } from "@langboard/core/utils";
 
 export type TMentionableUser = TUserLikeModel & {
@@ -38,7 +38,7 @@ export function MentionElement(
     const selected = useSelected();
     const focused = useFocused();
     const mounted = useMounted();
-    const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
+    const mentioned = mentionables.find((userOrBot) => userOrBot.uid === element.key) ?? User.Model.createUnknownUser();
     const renderLabel = React.useCallback(() => {
         const mentionable = mentionables.find((val) => val.uid === element.key);
         if (isModel(mentionable, "User")) {
@@ -92,13 +92,13 @@ export function MentionElement(
             }}
         >
             <UserAvatar.Root
-                userOrBot={mentionedUser}
+                userOrBot={mentioned}
                 withNameProps={{
                     noAvatar: true,
                     customName: customName,
                 }}
             >
-                <UserAvatarDefaultList userOrBot={mentionedUser} projectUID={form?.project_uid} />
+                <UserAvatarDefaultList userOrBot={mentioned} projectUID={form?.project_uid} />
             </UserAvatar.Root>
         </PlateElement>
     );
@@ -107,10 +107,10 @@ export function MentionElement(
 export function MentionInputElement(props: PlateElementProps<TComboboxInputElement>) {
     const { editor, element } = props;
     const [t] = useTranslation();
-    const { currentUser, mentionables: flatMentionables, form } = useEditorData();
+    const { currentUser, mentionables: flatMentionables } = useEditorData();
     const [search, setSearch] = React.useState("");
     const mentionables = React.useMemo(() => {
-        const userOrBots: TMentionableUser[] = [];
+        const userOrBots: IMentionInputComboboxItemProps["userOrBot"][] = [];
         for (let i = 0; i < flatMentionables.length; ++i) {
             const userOrBot = flatMentionables[i];
             if (userOrBot.uid === currentUser.uid) {
@@ -133,7 +133,7 @@ export function MentionInputElement(props: PlateElementProps<TComboboxInputEleme
             fakeUser.text = username;
             fakeUser.key = userOrBot.uid;
 
-            userOrBots.push(fakeUser);
+            userOrBots.push({ raw: userOrBot, value: fakeUser });
         }
         return userOrBots;
     }, [flatMentionables]);
@@ -150,13 +150,7 @@ export function MentionInputElement(props: PlateElementProps<TComboboxInputEleme
 
                     <InlineComboboxGroup>
                         {mentionables.map((mentionable) => (
-                            <MentionInputComboboxItem
-                                key={Utils.String.Token.shortUUID()}
-                                search={search}
-                                userOrBot={mentionable}
-                                editor={editor}
-                                projectUID={form?.project_uid}
-                            />
+                            <MentionInputComboboxItem key={Utils.String.Token.shortUUID()} search={search} userOrBot={mentionable} editor={editor} />
                         ))}
                     </InlineComboboxGroup>
                 </InlineComboboxContent>

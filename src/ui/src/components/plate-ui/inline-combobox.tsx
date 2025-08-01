@@ -15,6 +15,7 @@ import {
     Portal,
     useComboboxContext,
     useComboboxStore,
+    useStoreState,
 } from "@ariakit/react";
 import { filterWords } from "@platejs/combobox";
 import { type UseComboboxInputResult, useComboboxInput, useHTMLInputCursorState } from "@platejs/combobox/react";
@@ -144,7 +145,7 @@ const InlineCombobox = ({
         setValue: (newValue) => React.startTransition(() => setValue(newValue)),
     });
 
-    const items = store.useState("items");
+    const items = useStoreState(store, "items");
 
     /**
      * If there is no active ID and the list of items changes, select the first
@@ -169,7 +170,7 @@ const InlineComboboxInput = React.forwardRef<HTMLInputElement, React.HTMLAttribu
     const { inputProps, inputRef: contextRef, showTrigger, trigger } = React.useContext(InlineComboboxContext);
 
     const store = useComboboxContext()!;
-    const value = store.useState("value");
+    const value = useStoreState(store, "value");
 
     const ref = useComposedRef(propRef, contextRef);
 
@@ -254,7 +255,7 @@ const InlineComboboxItem = ({
     const store = useComboboxContext()!;
 
     // Optimization: Do not subscribe to value if filter is false
-    const search = filter && store.useState("value");
+    const search = filter && useStoreState(store, "value");
 
     const visible = React.useMemo(
         () => !filter || filter({ group, keywords, label, value }, search as string),
@@ -278,7 +279,7 @@ const InlineComboboxItem = ({
 const InlineComboboxEmpty = ({ children, className }: React.HTMLAttributes<HTMLDivElement>) => {
     const { setHasEmpty } = React.useContext(InlineComboboxContext);
     const store = useComboboxContext()!;
-    const items = store.useState("items");
+    const items = useStoreState(store, "items");
 
     React.useEffect(() => {
         setHasEmpty(true);

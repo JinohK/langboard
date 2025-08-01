@@ -16,7 +16,7 @@ export function MentionElementStatic(
 ) {
     const { mentionables, form } = useEditorData();
     const element = props.element;
-    const mentionedUser = mentionables.find((user) => user.uid === element.key) ?? User.Model.createUnknownUser();
+    const mentioned = mentionables.find((userOrBot) => userOrBot.uid === element.key) ?? User.Model.createUnknownUser();
     const renderLabel = useCallback(() => {
         const mentionable = mentionables.find((val) => val.uid === element.key);
         if (isModel(mentionable, "User")) {
@@ -61,13 +61,13 @@ export function MentionElementStatic(
             {...props}
         >
             <UserAvatar.Root
-                userOrBot={mentionedUser}
+                userOrBot={mentioned}
                 withNameProps={{
                     noAvatar: true,
                     customName: customName,
                 }}
             >
-                <UserAvatarDefaultList userOrBot={mentionedUser} projectUID={form?.project_uid} />
+                <UserAvatarDefaultList userOrBot={mentioned} projectUID={form?.project_uid} />
             </UserAvatar.Root>
         </SlateElement>
     );
