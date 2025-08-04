@@ -206,7 +206,7 @@ function InternalBotValueJsonInput({
                             <IconComponent icon="ellipsis-vertical" size="4" />
                         </Button>
                     </Popover.Trigger>
-                    <Popover.Content side="bottom" align="start">
+                    <Popover.Content side="bottom" align="start" className="w-auto p-0">
                         <Flex direction="col">
                             {fileInput}
                             <Button

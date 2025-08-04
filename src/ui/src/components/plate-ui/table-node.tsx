@@ -37,7 +37,10 @@ export const TableElement = withHOC(TableProvider, function TableElement({ child
         <PlateElement {...props} className="-ml-2 overflow-x-auto py-5 *:data-[slot=block-selection]:left-2" style={{ paddingLeft: marginLeft }}>
             <div className="group/table relative w-fit">
                 <table
-                    className={cn("ml-2 mr-0 table h-px table-fixed border-collapse", isSelectingCell && "selection:bg-transparent")}
+                    className={cn(
+                        "ml-2 mr-0 table h-px w-[calc(100%_-_theme(spacing.2))] table-fixed border-collapse",
+                        isSelectingCell && "selection:bg-transparent"
+                    )}
                     {...tableProps}
                 >
                     <tbody className="min-w-full">{children}</tbody>
@@ -201,8 +204,7 @@ export function TableCellElement({
             {...props}
             as={isHeader ? "th" : "td"}
             className={cn(
-                "h-full overflow-visible border-none bg-background p-0",
-                element.background ? "bg-(--cellBackground)" : "bg-background",
+                "h-full overflow-visible border-none p-0",
                 isHeader && "text-left *:m-0",
                 "before:size-full",
                 selected && "before:z-10 before:bg-brand/5",
@@ -215,8 +217,8 @@ export function TableCellElement({
             style={
                 {
                     "--cellBackground": element.background,
-                    maxWidth: width || 240,
-                    minWidth: width || 120,
+                    maxWidth: width,
+                    minWidth: width,
                 } as React.CSSProperties
             }
             attributes={{

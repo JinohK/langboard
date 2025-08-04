@@ -79,7 +79,7 @@ const DiffPlugin = toPlatePlugin(
                         <Component
                             className={cn(
                                 diffOperationColors[diffOperation.type],
-                                "[&_.slate-table]:py-0 [&_.slate-table_table]:ml-0 [&_.slate-table_table]:w-full [&_td]:bg-background/20"
+                                "[&_.slate-table]:ml-0 [&_.slate-table]:py-0 [&_td]:bg-background/20"
                             )}
                             aria-label={label}
                         >

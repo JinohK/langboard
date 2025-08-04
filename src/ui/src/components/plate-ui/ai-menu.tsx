@@ -262,7 +262,7 @@ Start writing a new paragraph AFTER <Document> ONLY ONE SENTENCE`
         label: "editor.Insert below",
         value: "insertBelow",
         onSelect: ({ aiEditor, editor }) => {
-            void editor.getTransforms(AIChatPlugin).aiChat.insertBelow(aiEditor);
+            void editor.getTransforms(AIChatPlugin).aiChat.insertBelow(aiEditor, { format: "none" });
         },
     },
     makeLonger: {

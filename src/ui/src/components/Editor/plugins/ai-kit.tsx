@@ -4,7 +4,7 @@
 import type { AIChatPluginConfig } from "@platejs/ai/react";
 import { streamInsertChunk, withAIBatch } from "@platejs/ai";
 import { AIChatPlugin, AIPlugin, useChatChunk } from "@platejs/ai/react";
-import { KEYS, PathApi } from "platejs";
+import { getPluginType, KEYS, PathApi } from "platejs";
 import { usePluginOption } from "platejs/react";
 import { AILoadingBar, AIMenu } from "@/components/plate-ui/ai-menu";
 import { AIAnchorElement, AILeaf } from "@/components/plate-ui/ai-node";
@@ -52,7 +52,7 @@ export const createAiKit = ({ socket, eventKey, events, commonEventData }: ICrea
                                 editor.tf.insertNodes(
                                     {
                                         children: [{ text: "" }],
-                                        type: KEYS.aiChat,
+                                        type: getPluginType(editor, KEYS.aiChat),
                                     },
                                     {
                                         at: PathApi.next(editor.selection!.focus.path.slice(0, 1)),
@@ -70,7 +70,7 @@ export const createAiKit = ({ socket, eventKey, events, commonEventData }: ICrea
                                     editor.tf.withScrolling(() => {
                                         streamInsertChunk(editor, chunk, {
                                             textProps: {
-                                                ai: true,
+                                                [getPluginType(editor, KEYS.ai)]: true,
                                             },
                                         });
                                     });

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { useEditorPlugin, useEditorSelector } from "platejs/react";
+import { useEditorPlugin, useEditorSelector, usePlateState } from "platejs/react";
 import { AIChatPlugin } from "@platejs/ai/react";
 import { KEYS } from "platejs";
 import { BLOCK_CONTEXT_MENU_ID, BlockMenuPlugin, BlockSelectionPlugin, useBlockSelectionNodes } from "@platejs/selection/react";
@@ -16,6 +16,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
     const [t] = useTranslation();
     const { api, editor } = useEditorPlugin(BlockMenuPlugin);
     const [value, setValue] = useState<Value>(null);
+    const [readOnly] = usePlateState("readOnly");
     const isTouch = useIsTouchDevice();
     const tableRelatedKeys: string[] = [TablePlugin.key, TableCellPlugin.key, TableRowPlugin.key];
     const tableRelatedSelected = useEditorSelector((editor) => editor.api.some({ match: { type: tableRelatedKeys } }), []);
@@ -61,7 +62,7 @@ export function BlockContextMenu({ children }: { children: React.ReactNode }) {
                 onContextMenu={(event) => {
                     const dataset = (event.target as HTMLElement).dataset;
 
-                    const disabled = dataset?.slateEditor === "true";
+                    const disabled = dataset?.slateEditor === "true" || readOnly || dataset?.plateOpenContextMenu === "false";
 
                     if (disabled) return event.preventDefault();
 
