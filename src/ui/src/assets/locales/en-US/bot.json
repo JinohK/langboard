@@ -4,6 +4,8 @@
   "Triggers": "Triggers",
   "Logs": "Logs",
   "No logs found": "No logs found",
+  "Scoped": "Scoped",
+  "Scheduled": "Scheduled",
   "schedules": {
     "Schedule": "Schedule",
     "Set start time": "Set start time",

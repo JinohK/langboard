@@ -1,4 +1,5 @@
 import { IEditorContent } from "@/core/models/Base";
+import { getEditorStore, useIsCurrentEditor } from "@/core/stores/EditorStore";
 import { measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import { useCallback, useRef, useState } from "react";
@@ -21,17 +22,32 @@ export type TValueRef<TValue extends TValueType> = TValue extends "textarea"
         ? IEditorContent
         : string | undefined;
 
-export interface IUseChangeEditModeProps<TValue extends TValueType> {
+interface IBaseUseChangeEditModeProps<TValue extends TValueType> {
     canEdit: () => bool;
-    save: (value: TValue extends "editor" ? IEditorContent : string, endCallback: () => void) => void;
     customStartEditing?: () => void;
     valueType: TValue;
-    originalValue?: TValue extends "editor" ? IEditorContent : string;
     disableNewLine?: bool;
     canEmpty?: bool;
-    isEditingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
     onStopEditing?: () => void;
 }
+
+interface IEditorUseChangeEditModeProps extends IBaseUseChangeEditModeProps<"editor"> {
+    save: (value: IEditorContent, endCallback: () => void) => void;
+    originalValue?: IEditorContent;
+    isEditingState?: never;
+    editorName: string;
+}
+
+interface IOtherUseChangeEditModeProps<TValue extends TValueType> extends IBaseUseChangeEditModeProps<TValue> {
+    save: (value: string, endCallback: () => void) => void;
+    originalValue?: string;
+    isEditingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
+    editorName?: never;
+}
+
+export type TUseChangeEditModeProps<TValue extends TValueType> = TValue extends "editor"
+    ? IEditorUseChangeEditModeProps
+    : IOtherUseChangeEditModeProps<TValue>;
 
 interface IUseChangeEditMode<TValue extends TValueType> {
     valueRef: TValue extends "textarea" | "input" ? React.RefObject<TElementValueRef<TValue>> : React.RefObject<TObjectValueRef<TValue>>;
@@ -41,6 +57,27 @@ interface IUseChangeEditMode<TValue extends TValueType> {
     setIsEditing: React.Dispatch<React.SetStateAction<bool>>;
     changeMode: (mode: "edit" | "view") => void;
 }
+
+const useEditorState = (editorName: string): [bool, React.Dispatch<React.SetStateAction<bool>>] => {
+    const isCurrentEditor = useIsCurrentEditor(editorName);
+    const setCurrentEditor = useCallback(
+        (state: bool | ((prevState: bool) => bool)) => {
+            if (Utils.Type.isFunction(state)) {
+                state = state(isCurrentEditor);
+            }
+
+            if (!state) {
+                getEditorStore().setCurrentEditor(null);
+                return;
+            }
+
+            getEditorStore().setCurrentEditor(editorName);
+        },
+        [isCurrentEditor]
+    );
+
+    return [isCurrentEditor, setCurrentEditor];
+};
 
 const useChangeEditMode = <
     TValue extends TValueType,
@@ -54,11 +91,12 @@ const useChangeEditMode = <
     valueType,
     canEmpty = false,
     isEditingState,
+    editorName,
     onStopEditing,
-}: IUseChangeEditModeProps<TValue>): IUseChangeEditMode<TValue> => {
+}: TUseChangeEditModeProps<TValue>): IUseChangeEditMode<TValue> => {
     const valueRef = useRef<TRef>((valueType === "editor" ? originalValue : undefined) as unknown as TRef);
     const [height, setHeight] = useState(0);
-    const [isEditing, setIsEditing] = isEditingState ?? useState(false);
+    const [isEditing, setIsEditing] = valueType === "editor" ? useEditorState(editorName) : (isEditingState ?? useState(false));
 
     const trimValue = <T extends string | undefined, TReturn extends T extends string ? string : undefined>(value: T): TReturn => {
         if (!value) {
@@ -134,7 +172,7 @@ const useChangeEditMode = <
             }
 
             onStopEditing?.();
-            save(value as TValue extends "editor" ? IEditorContent : string, () => {
+            save(value as IEditorContent & string, () => {
                 if (customStartEditing) {
                     return;
                 }

@@ -25,11 +25,14 @@ Consumer.register("notification_publish", async (data: unknown) => {
             model.notification.record_list![i] = [record, id.toString()];
         }
 
-        await UserNotification.create({
+        const notification = await UserNotification.create({
             ...model.notification,
             notifier_id: model.notification.notifier_id!.toString(),
             receiver_id: model.notification.receiver_id!.toString(),
-        }).save();
+        });
+
+        notification.id = SnowflakeID.fromShortCode(model.api_notification.uid).toString();
+        await notification.save();
 
         await Subscription.publish(ESocketTopic.UserPrivate, new SnowflakeID(model.notification.receiver_id!).toShortCode(), "user:notified", {
             notification: model.api_notification,

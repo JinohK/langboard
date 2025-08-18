@@ -5,7 +5,7 @@ import { Avatar, Box, Card, Flex, IconComponent, Popover, Separator } from "@/co
 import { BotModel, User } from "@/core/models";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
-import { UserAvatarProvider, useUserAvatar } from "@/components/UserAvatar/Provider";
+import { HOVER_USER_UID_ATTR, UserAvatarProvider, useUserAvatar } from "@/components/UserAvatar/Provider";
 import UserAvatarTrigger, { TriggerVariants } from "@/components/UserAvatar/Trigger";
 import { IUserAvatarProps } from "@/components/UserAvatar/types";
 import UserLikeComponent from "@/components/UserLikeComponent";
@@ -46,6 +46,7 @@ function UserRoot(props: IUserAvatarRootProps & { user: User.TModel }) {
 
     return (
         <HoverableRoot
+            userOrBotUID={user.uid}
             trigger={trigger}
             initials={initials}
             listAlign={listAlign}
@@ -76,6 +77,7 @@ function BotRoot(props: IUserAvatarRootProps & { bot: BotModel.TModel }) {
 
     return (
         <HoverableRoot
+            userOrBotUID={bot.uid}
             trigger={trigger}
             initials={initials}
             listAlign={listAlign}
@@ -94,6 +96,7 @@ function BotRoot(props: IUserAvatarRootProps & { bot: BotModel.TModel }) {
 }
 
 interface IHoverableRootProps {
+    userOrBotUID: string;
     trigger: React.ReactNode;
     initials: string;
     listAlign?: "center" | "start" | "end";
@@ -103,7 +106,7 @@ interface IHoverableRootProps {
     children: React.ReactNode;
 }
 
-function HoverableRoot({ trigger, initials, listAlign, avatarUrl, avatarFallback, cardTitle, children }: IHoverableRootProps) {
+function HoverableRoot({ userOrBotUID, trigger, initials, listAlign, avatarUrl, avatarFallback, cardTitle, children }: IHoverableRootProps) {
     const { isOpened, hoverProps, setIsOpened, onPointerEnter, onPointerLeave, getAvatarHoverCardAttrs } = useUserAvatar();
     const [bgColor, textColor] = new Utils.Color.Generator(initials).generateAvatarColor();
 
@@ -120,7 +123,7 @@ function HoverableRoot({ trigger, initials, listAlign, avatarUrl, avatarFallback
     return (
         <Popover.Root open={isOpened} onOpenChange={setIsOpened} {...hoverAttrs}>
             <Popover.Trigger onPointerEnter={onPointerEnter} onPointerLeave={onPointerLeave} asChild>
-                <span>{trigger}</span>
+                <span {...{ [HOVER_USER_UID_ATTR]: userOrBotUID }}>{trigger}</span>
             </Popover.Trigger>
             <Popover.Content
                 className="z-[100] w-60 border-none bg-background p-0 shadow-none xs:w-72"

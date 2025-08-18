@@ -169,7 +169,9 @@ export const BoardProvider = memo(({ project, currentUser, children }: IBoardPro
         }
 
         return (
-            card.title.toLowerCase().includes(keyword.toLowerCase()) || User.Model.getModels(card.member_uids).some((member) => filterMember(member))
+            card.title.toLowerCase().includes(keyword.toLowerCase()) ||
+            card.description.content.toLowerCase().includes(keyword.toLowerCase()) ||
+            User.Model.getModels(card.member_uids).some((member) => filterMember(member))
         );
     };
 

@@ -6,7 +6,8 @@ import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { AuthUser, ProjectWiki, User } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
-import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { getEditorStore } from "@/core/stores/EditorStore";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router";
 
@@ -18,8 +19,6 @@ export interface IBoardWikiContext {
     wikis: ProjectWiki.TModel[];
     projectMembers: User.TModel[];
     currentUser: AuthUser.TModel;
-    editorsRef: React.RefObject<Record<string, (isEditing: bool) => void>>;
-    setCurrentEditor: (uid: string) => void;
     canAccessWiki: (shouldNavigate: bool, uid?: string) => bool;
     modeType: TBoardWikiMode;
     setModeType: React.Dispatch<React.SetStateAction<TBoardWikiMode>>;
@@ -40,8 +39,6 @@ const initialContext = {
     wikis: [],
     projectMembers: [],
     currentUser: {} as AuthUser.TModel,
-    editorsRef: { current: {} },
-    setCurrentEditor: () => {},
     canAccessWiki: () => false,
     modeType: "view" as TBoardWikiMode,
     setModeType: () => {},
@@ -58,8 +55,6 @@ export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembe
     const { wikiUID } = useParams();
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
     const [t] = useTranslation();
-    const editorsRef = useRef<Record<string, (isEditing: bool) => void>>({});
-    const currentEditorRef = useRef("");
     const [modeType, setModeType] = useState<TBoardWikiMode>("view");
     const wikiTabListId = `board-wiki-tab-list-${projectUID}`;
     const boardWikiCreatedHandlers = useBoardWikiCreatedHandlers({
@@ -95,18 +90,6 @@ export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembe
         };
     }, [wikis]);
 
-    const setCurrentEditor = (uid: string) => {
-        if (currentEditorRef.current) {
-            editorsRef.current[currentEditorRef.current]?.(false);
-        }
-
-        if (uid) {
-            editorsRef.current[uid]?.(true);
-        }
-
-        currentEditorRef.current = uid;
-    };
-
     const canAccessWiki = (shouldNavigate: bool, uid?: string) => {
         if (!uid) {
             return true;
@@ -116,7 +99,7 @@ export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembe
         if (!wiki || wiki.project_uid !== projectUID || wiki.forbidden) {
             if (shouldNavigate) {
                 Toast.Add.error(t("errors.requests.PE2005"));
-                setCurrentEditor("");
+                getEditorStore().setCurrentEditor(null);
                 navigate(ROUTES.BOARD.WIKI(projectUID));
             }
             return false;
@@ -137,13 +120,13 @@ export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembe
                 } else {
                     navigate(ROUTES.BOARD.WIKI_PAGE(projectUID, uid));
                 }
-                setCurrentEditor("");
+                getEditorStore().setCurrentEditor(null);
             } else {
                 navigate(ROUTES.BOARD.WIKI(projectUID));
-                setCurrentEditor("");
+                getEditorStore().setCurrentEditor(null);
             }
         },
-        [projectUID, wikiUID, navigate, canAccessWiki, setCurrentEditor]
+        [projectUID, wikiUID, navigate, canAccessWiki]
     );
 
     return (
@@ -154,8 +137,6 @@ export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembe
                 wikis,
                 projectMembers,
                 currentUser,
-                editorsRef,
-                setCurrentEditor,
                 canAccessWiki,
                 modeType,
                 setModeType,

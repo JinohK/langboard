@@ -10,6 +10,7 @@ from models import (
     GlobalCardRelationshipType,
     Project,
     ProjectColumn,
+    ProjectColumnBotSchedule,
     ProjectColumnBotScope,
     ProjectLabel,
     ProjectRole,
@@ -147,6 +148,7 @@ async def get_project_columns(project_uid: str, service: Service = Service.scope
                     )
                 ],
                 "column_bot_scopes": [ProjectColumnBotScope],
+                "column_bot_schedules": [ProjectColumnBotSchedule],
                 "checklists": [Checklist],
                 "global_relationships": [GlobalCardRelationshipType],
                 "columns": [(ProjectColumn, {"schema": {"count": "integer"}})],
@@ -169,6 +171,7 @@ async def get_project_cards(project_uid: str, service: Service = Service.scope()
     cards = await service.card.get_board_list(project)
     checklists = await service.checklist.get_list_only_by_project(project)
     column_bot_scopes = await service.project_column.get_bot_scopes_by_project(project)
+    column_bot_schedules = await service.project_column.get_bot_schedules_by_project(project, columns, as_api=True)
     return JsonResponse(
         content={
             "cards": cards,
@@ -176,6 +179,7 @@ async def get_project_cards(project_uid: str, service: Service = Service.scope()
             "global_relationships": global_relationships,
             "columns": columns,
             "column_bot_scopes": [scope.api_response() for scope in column_bot_scopes],
+            "column_bot_schedules": column_bot_schedules,
         }
     )
 

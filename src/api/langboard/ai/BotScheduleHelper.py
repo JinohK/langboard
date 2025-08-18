@@ -27,8 +27,8 @@ class BotScheduleHelper:
     @staticmethod
     async def get_all_by_scope(
         schedule_model_class: type[_TBotScheduleModel],
-        bot: Bot,
-        scope_model: BaseSqlModel,
+        bot: Bot | None,
+        scope_model: BaseSqlModel | list[BaseSqlModel] | tuple[type[BaseSqlModel], int | list[int]],
         as_api: Literal[False],
         pagination: Pagination | None = None,
         status: BotScheduleStatus | None = None,
@@ -38,8 +38,8 @@ class BotScheduleHelper:
     @staticmethod
     async def get_all_by_scope(
         schedule_model_class: type[_TBotScheduleModel],
-        bot: Bot,
-        scope_model: BaseSqlModel,
+        bot: Bot | None,
+        scope_model: BaseSqlModel | list[BaseSqlModel] | tuple[type[BaseSqlModel], int | list[int]],
         as_api: Literal[True],
         pagination: Pagination | None = None,
         status: BotScheduleStatus | None = None,
@@ -48,21 +48,36 @@ class BotScheduleHelper:
     @staticmethod
     async def get_all_by_scope(
         schedule_model_class: type[_TBotScheduleModel],
-        bot: Bot,
-        scope_model: BaseSqlModel,
+        bot: Bot | None,
+        scope_model: BaseSqlModel | list[BaseSqlModel] | tuple[type[BaseSqlModel], int | list[int]],
         as_api: bool,
         pagination: Pagination | None = None,
         status: BotScheduleStatus | None = None,
         refer_time: SafeDateTime | None = None,
     ) -> list[tuple[_TBotScheduleModel, BotSchedule]] | list[dict[str, Any]]:
-        query = (
-            SqlBuilder.select.tables(schedule_model_class, BotSchedule)
-            .join(BotSchedule, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"))
-            .where(
-                (BotSchedule.column("bot_id") == bot.id)
-                & (schedule_model_class.column(f"{scope_model.__tablename__}_id") == scope_model.id)
-            )
+        query = SqlBuilder.select.tables(schedule_model_class, BotSchedule).join(
+            BotSchedule, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id")
         )
+
+        if isinstance(scope_model, list):
+            query = query.where(
+                schedule_model_class.column(f"{scope_model[0].__tablename__}_id").in_([s.id for s in scope_model])
+            )
+        elif isinstance(scope_model, tuple):
+            scope_model_class, scope_model_id = scope_model
+            if isinstance(scope_model_id, list):
+                query = query.where(
+                    schedule_model_class.column(f"{scope_model_class.__tablename__}_id").in_(scope_model_id)
+                )
+            else:
+                query = query.where(
+                    schedule_model_class.column(f"{scope_model_class.__tablename__}_id") == scope_model_id
+                )
+        else:
+            query = query.where(schedule_model_class.column(f"{scope_model.__tablename__}_id") == scope_model.id)
+
+        if bot:
+            query = query.where(BotSchedule.column("bot_id") == bot.id)
 
         if status:
             query = query.where(BotSchedule.column("status") == status)

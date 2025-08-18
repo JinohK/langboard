@@ -1,5 +1,6 @@
 import { Box, Button, Flex, Skeleton, Toast } from "@/components/base";
-import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
+import { TEditor } from "@/components/Editor/editor-kit";
+import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeWikiDetails from "@/controllers/api/wiki/useChangeWikiDetails";
 import useBoardUIWikiDeletedHandlers from "@/controllers/socket/wiki/useBoardUIWikiDeletedHandlers";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
@@ -39,9 +40,10 @@ export function SkeletonWikiContent() {
 
 const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     const navigate = usePageNavigateRef();
-    const { projectUID, socket, projectMembers, currentUser, editorsRef, setCurrentEditor, changeTab } = useBoardWiki();
+    const { projectUID, socket, projectMembers, currentUser, changeTab } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
+    const editorName = `${wiki.uid}-wiki-description`;
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField("assigned_members");
     const bots = BotModel.Model.useModels(() => true);
@@ -51,12 +53,17 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     );
     const content = wiki.useField("content");
     const editorRef = useRef<TEditor>(null);
-    const editorComponentRef = useRef<HTMLDivElement>(null);
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
-        customStartEditing: () => setCurrentEditor(wiki.uid),
+        customStartEditing: () => {
+            setIsEditing(true);
+            setTimeout(() => {
+                editorRef.current?.tf.focus();
+            }, 0);
+        },
         valueType: "editor",
         canEmpty: true,
+        editorName,
         save: (value) => {
             const promise = changeWikiDetailsMutateAsync({
                 project_uid: projectUID,
@@ -84,7 +91,7 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
                     return t("successes.Content changed successfully.");
                 },
                 finally: () => {
-                    setCurrentEditor("");
+                    setIsEditing(false);
                 },
             });
         },
@@ -122,10 +129,6 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
         handlers: boardUIWikiDeletedHandlers,
         dependencies: [boardUIWikiDeletedHandlers],
     });
-
-    editorsRef.current[wiki.uid] = (editing: bool) => {
-        setIsEditing(editing);
-    };
 
     useEffect(() => {
         if (!isEditing) {
@@ -166,7 +169,6 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
                     placeholder={!isEditing ? t("wiki.No content") : undefined}
                     setValue={setValue}
                     editorRef={editorRef}
-                    editorComponentRef={editorComponentRef}
                 />
             </Box>
             <Flex items="center" justify="start" pt="2" mx="2" gap="2" className="border-t">

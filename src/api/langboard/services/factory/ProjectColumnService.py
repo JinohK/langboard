@@ -2,7 +2,7 @@ from typing import Any, Literal, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
-from models import Card, Project, ProjectColumn, ProjectColumnBotSchedule, ProjectColumnBotScope, User
+from models import BotSchedule, Card, Project, ProjectColumn, ProjectColumnBotSchedule, ProjectColumnBotScope, User
 from sqlalchemy import func
 from langboard.ai import BotScheduleHelper
 from ...core.service import ServiceHelper
@@ -25,10 +25,6 @@ class ProjectColumnService(BaseService):
     @overload
     async def get_all_by_project(
         self, project_ids: SnowflakeID | list[SnowflakeID], as_api: Literal[False]
-    ) -> list[ProjectColumn]: ...
-    @overload
-    async def get_all_by_project(
-        self, project_ids: SnowflakeID | list[SnowflakeID], as_api: Literal[False]
     ) -> tuple[list[ProjectColumn], dict[SnowflakeID, int]]: ...
     @overload
     async def get_all_by_project(
@@ -36,7 +32,7 @@ class ProjectColumnService(BaseService):
     ) -> list[dict[str, Any]]: ...
     async def get_all_by_project(
         self, project_ids: SnowflakeID | list[SnowflakeID], as_api: bool
-    ) -> list[ProjectColumn] | tuple[list[ProjectColumn], dict[SnowflakeID, int]] | list[dict[str, Any]]:
+    ) -> tuple[list[ProjectColumn], dict[SnowflakeID, int]] | list[dict[str, Any]]:
         if not isinstance(project_ids, list):
             project_ids = [project_ids]
         sql_query = SqlBuilder.select.tables(ProjectColumn, func.count(Card.column("id")).label("count")).outerjoin(
@@ -121,6 +117,47 @@ class ProjectColumnService(BaseService):
         )
 
         return scopes
+
+    @overload
+    async def get_bot_schedules_by_project(
+        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: Literal[False]
+    ) -> list[tuple[ProjectColumnBotSchedule, BotSchedule]]: ...
+    @overload
+    async def get_bot_schedules_by_project(
+        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: Literal[True]
+    ) -> list[dict[str, Any]]: ...
+    async def get_bot_schedules_by_project(
+        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: bool
+    ) -> list[tuple[ProjectColumnBotSchedule, BotSchedule]] | list[dict[str, Any]]:
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return []
+
+        scope_column_ids: list[int] = []
+        if isinstance(columns, list):
+            for column in columns:
+                if isinstance(column, dict):
+                    scope_column_ids.append(SnowflakeID.from_short_code(column["uid"]))
+                else:
+                    scope_column_ids.append(column.id)
+        else:
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(
+                    SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("project_id") == project.id)
+                )
+                scope_column_ids = [column.id for column in result.all()]
+
+        if not scope_column_ids:
+            return []
+
+        schedules = await BotScheduleHelper.get_all_by_scope(
+            ProjectColumnBotSchedule,
+            None,
+            (ProjectColumn, scope_column_ids),
+            as_api=as_api,
+        )
+
+        return schedules
 
     async def count_cards(self, project: TProjectParam, column: TColumnParam) -> int:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))

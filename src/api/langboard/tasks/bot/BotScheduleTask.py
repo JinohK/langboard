@@ -47,6 +47,7 @@ async def run_scheduled_bots_cron(interval_str: str):
                 .where(
                     (BotSchedule.column("interval_str") == interval_str)
                     & (BotSchedule.column("status") == BotScheduleStatus.Started)
+                    & (BotSchedule.column("running_type") != BotScheduleRunningType.Onetime)
                 )
             )
             records.extend(result.all())
@@ -72,6 +73,18 @@ async def _check_bot_schedule_runnable(interval_str: str):
                 )
             )
             records.extend(result.all())
+
+    with DbSession.use(readonly=False) as db:
+        db.exec(
+            SqlBuilder.update.table(BotSchedule)
+            .values({"status": BotScheduleStatus.Started})
+            .where(
+                (BotSchedule.column("status") == BotScheduleStatus.Pending)
+                & (BotSchedule.column("start_at") <= current_time)
+                & (BotSchedule.column("interval_str") == interval_str)
+                & (BotSchedule.column("running_type") == BotScheduleRunningType.Onetime)
+            )
+        )
 
     for schedule_model, bot_schedule, bot in records:
         if bot_schedule.running_type == BotScheduleRunningType.Duration:

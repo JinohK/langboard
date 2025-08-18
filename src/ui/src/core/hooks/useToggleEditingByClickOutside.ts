@@ -15,7 +15,8 @@ const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edi
                 target.closest("embed") ||
                 target.closest("audio") ||
                 target.closest("img") ||
-                target.closest(".slate-file")
+                target.closest(".slate-file") ||
+                target.closest("[data-reply-component")
             ) {
                 return;
             }
@@ -59,7 +60,8 @@ const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edi
                 target.closest(boxAttr) ||
                 target.closest("[data-plate-combobox-content]") || // Editor's combobox
                 target.closest("[data-radix-popper-content-wrapper]") || // Editor's dropdown menu
-                target.closest("[data-radix-alert-dialog-content-wrapper]") // Editor's alert dialog
+                target.closest("[data-radix-alert-dialog-content-wrapper]") || // Editor's alert dialog
+                target.closest("[data-reply-component")
             ) {
                 return;
             }

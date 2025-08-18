@@ -1,4 +1,5 @@
 import { Box, Flex, Skeleton } from "@/components/base";
+import { TEditor } from "@/components/Editor/editor-kit";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
@@ -8,10 +9,11 @@ import { BotModel, ProjectCardComment, User } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { useIsCurrentEditor } from "@/core/stores/EditorStore";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCommentFooter from "@/pages/BoardPage/components/card/comment/BoardCommentFooter";
 import { IBoardCommentContextParams } from "@/pages/BoardPage/components/card/comment/types";
-import { memo, useMemo, useRef, useState } from "react";
+import { memo, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 export function SkeletonBoardComment({ ref }: { ref?: React.Ref<HTMLDivElement> }): JSX.Element {
@@ -35,9 +37,11 @@ export interface IBoardCommentProps {
 }
 
 const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX.Element => {
-    const { projectUID, card, currentUser, editorsRef } = useBoardCard();
-    const [isEditing, setIsEditing] = useState(false);
+    const { projectUID, card, currentUser } = useBoardCard();
+    const editorName = `${card.uid}-comment-${comment.uid}`;
+    const isCurrentEditor = useIsCurrentEditor(editorName);
     const projectMembers = card.useForeignField("project_members");
+    const editorRef = useRef<TEditor>(null);
     const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const content = comment.useField("content");
@@ -48,17 +52,12 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
     };
-    const editorComponentRef = useRef<HTMLDivElement>(null);
-    const canEdit = currentUser.uid === commentAuthor.uid || currentUser.is_admin;
-
-    editorsRef.current[comment.uid] = (editing: bool) => {
-        if (canEdit) {
-            setIsEditing(editing);
-        }
-    };
 
     return (
-        <ModelRegistry.ProjectCardComment.Provider model={comment} params={{ author: commentAuthor, deletedComment, valueRef, isEditing }}>
+        <ModelRegistry.ProjectCardComment.Provider
+            model={comment}
+            params={{ author: commentAuthor, deletedComment, valueRef, editorName, isCurrentEditor, editorRef }}
+        >
             <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
                 <Box>
                     <BoardCommentUserAvatar projectUID={projectUID} />
@@ -77,14 +76,14 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                         px="3"
                         py="1.5"
                         rounded="lg"
-                        className={cn("rounded-ss-none bg-accent/70", isEditing ? "border bg-transparent p-0" : "w-fit max-w-full")}
+                        className={cn("rounded-ss-none bg-accent/70", isCurrentEditor ? "border bg-transparent p-0" : "w-fit max-w-full")}
                     >
                         <PlateEditor
                             value={comment.content}
                             currentUser={currentUser}
                             mentionables={mentionables}
-                            className={isEditing ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
-                            readOnly={!isEditing}
+                            className={isCurrentEditor ? "h-full max-h-[min(70vh,300px)] min-h-[min(70vh,300px)] overflow-y-auto px-6 py-3" : ""}
+                            readOnly={!isCurrentEditor}
                             editorType="card-comment"
                             form={{
                                 project_uid: projectUID,
@@ -92,7 +91,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
                                 comment_uid: comment.uid,
                             }}
                             setValue={setValue}
-                            editorComponentRef={editorComponentRef}
+                            editorRef={editorRef}
                         />
                     </Flex>
                     <BoardCommentFooter />

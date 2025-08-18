@@ -6,24 +6,25 @@ import { Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { getEditorStore } from "@/core/stores/EditorStore";
 import BoardCommentReaction from "@/pages/BoardPage/components/card/comment/BoardCommentReaction";
 import { IBoardCommentContextParams } from "@/pages/BoardPage/components/card/comment/types";
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 function BoardCommentFooter(): JSX.Element {
     const { params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
-    const { isEditing } = params;
+    const { isCurrentEditor } = params;
 
     return (
         <Flex items="center" gap="2">
-            {isEditing ? <BoardCommentFooterEditButtons /> : <BoardCommentFooterActions />}
+            {isCurrentEditor ? <BoardCommentFooterEditButtons /> : <BoardCommentFooterActions />}
         </Flex>
     );
 }
 
 function BoardCommentFooterEditButtons() {
-    const { projectUID, card, setCurrentEditor } = useBoardCard();
+    const { projectUID, card } = useBoardCard();
     const [t] = useTranslation();
     const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
     const { valueRef } = params;
@@ -35,7 +36,7 @@ function BoardCommentFooterEditButtons() {
 
     const cancelEditing = () => {
         setValue(comment.content);
-        setCurrentEditor("");
+        getEditorStore().setCurrentEditor(null);
     };
 
     const saveComment = () => {
@@ -95,13 +96,12 @@ function BoardCommentFooterEditButtons() {
 }
 
 function BoardCommentFooterActions() {
-    const { projectUID, card, currentUser, hasRoleAction, setCurrentEditor, replyRef } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction, replyRef } = useBoardCard();
     const [t] = useTranslation();
     const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
-    const { author, deletedComment } = params;
+    const { author, deletedComment, editorName, editorRef } = params;
     const projectMembers = card.useForeignField("project_members");
     const [isValidating, setIsValidating] = useState(false);
-    const editorComponentRef = useRef<HTMLDivElement>(null);
     const canEdit = currentUser.uid === author.uid || currentUser.is_admin;
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment({ interceptToast: true });
 
@@ -146,7 +146,13 @@ function BoardCommentFooterActions() {
                 projectMembers.find((user) => user.uid === author.uid) && (
                     <>
                         <Separator orientation="vertical" className="h-1/2" />
-                        <Button variant="link" size="sm" className="h-5 p-0 text-accent-foreground/50" onClick={() => replyRef.current?.(author)}>
+                        <Button
+                            variant="link"
+                            size="sm"
+                            data-reply-component
+                            className="h-5 p-0 text-accent-foreground/50"
+                            onClick={() => replyRef.current?.(author)}
+                        >
                             {t("card.Reply")}
                         </Button>
                     </>
@@ -159,11 +165,9 @@ function BoardCommentFooterActions() {
                         size="sm"
                         className="h-5 p-0 text-accent-foreground/50"
                         onClick={() => {
-                            setCurrentEditor(comment.uid);
+                            getEditorStore().setCurrentEditor(editorName);
                             setTimeout(() => {
-                                if (editorComponentRef.current) {
-                                    editorComponentRef.current.focus();
-                                }
+                                editorRef.current?.tf.focus();
                             }, 50);
                         }}
                         disabled={isValidating}

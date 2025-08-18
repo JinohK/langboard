@@ -8,8 +8,7 @@ import { IEditorContent } from "@/core/models/Base";
 import { useRef } from "react";
 import { FocusScope } from "@radix-ui/react-focus-scope";
 import { EditorDataProvider, TEditorDataProviderProps } from "@/core/providers/EditorDataProvider";
-
-export type TEditor = ReturnType<typeof useCreateEditor>;
+import { TEditor } from "@/components/Editor/editor-kit";
 
 interface IBasePlateEditorProps extends Omit<TUseCreateEditor, "plugins"> {
     setValue?: (value: IEditorContent) => void;

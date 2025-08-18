@@ -3,7 +3,7 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
-import { ProjectColumn, ProjectCard, GlobalRelationshipType, ProjectChecklist, ProjectColumnBotScope } from "@/core/models";
+import { ProjectColumn, ProjectCard, GlobalRelationshipType, ProjectChecklist, ProjectColumnBotScope, ProjectColumnBotSchedule } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 
 export interface IGetCardsForm {
@@ -40,6 +40,7 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
         );
 
         ProjectColumnBotScope.Model.fromArray(res.data.column_bot_scopes, true);
+        ProjectColumnBotSchedule.Model.fromArray(res.data.column_bot_schedules, true);
 
         return { isUpdated: true };
     };

@@ -1,5 +1,6 @@
 import { Box, Skeleton, Toast } from "@/components/base";
-import { PlateEditor, TEditor } from "@/components/Editor/plate-editor";
+import { TEditor } from "@/components/Editor/editor-kit";
+import { PlateEditor } from "@/components/Editor/plate-editor";
 import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
@@ -7,6 +8,7 @@ import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClick
 import { BotModel, Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
+import { getEditorStore } from "@/core/stores/EditorStore";
 import { cn } from "@/core/utils/ComponentUtils";
 import { AIChatPlugin, AIPlugin } from "@platejs/ai/react";
 import { memo, useEffect, useMemo, useReducer, useRef } from "react";
@@ -23,27 +25,27 @@ export function SkeletonBoardCardDescription() {
 }
 
 const BoardCardDescription = memo((): JSX.Element => {
-    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, hasRoleAction } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction } = useBoardCard();
     const [t] = useTranslation();
     const { mutateAsync: changeCardDetailsMutateAsync } = useChangeCardDetails("description", { interceptToast: true });
     const [_, forceUpdate] = useReducer((x) => x + 1, 0);
     const editorRef = useRef<TEditor>(null);
-    const editorComponentRef = useRef<HTMLDivElement | null>(null);
+    const editorName = `${card.uid}-card-description`;
     const projectMembers = card.useForeignField("project_members");
     const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const description = card.useField("description");
-    const editorName = `${card.uid}-description`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
-        customStartEditing: () => {
-            setCurrentEditor(editorName);
-            setTimeout(() => {
-                editorComponentRef.current?.focus();
-            }, 0);
-        },
         valueType: "editor",
         canEmpty: true,
+        editorName,
+        customStartEditing: () => {
+            setIsEditing(true);
+            setTimeout(() => {
+                editorRef.current?.tf.focus();
+            }, 0);
+        },
         save: (value) => {
             const promise = changeCardDetailsMutateAsync({
                 project_uid: projectUID,
@@ -64,7 +66,7 @@ const BoardCardDescription = memo((): JSX.Element => {
                     return t("successes.Description changed successfully.");
                 },
                 finally: () => {
-                    setCurrentEditor("");
+                    getEditorStore().setCurrentEditor(null);
                 },
             });
         },
@@ -85,12 +87,6 @@ const BoardCardDescription = memo((): JSX.Element => {
         valueRef.current = value;
     };
     const { startEditing, stopEditing } = useToggleEditingByClickOutside("[data-card-description]", changeMode, isEditing);
-
-    editorsRef.current[editorName] = (editing: bool) => {
-        if (hasRoleAction(Project.ERoleAction.CardUpdate)) {
-            setIsEditing(editing);
-        }
-    };
 
     useEffect(() => {
         setValue(description);
@@ -125,7 +121,6 @@ const BoardCardDescription = memo((): JSX.Element => {
                 placeholder={!isEditing ? t("card.No description") : undefined}
                 setValue={setValue}
                 editorRef={editorRef}
-                editorComponentRef={editorComponentRef}
             />
         </Box>
     );

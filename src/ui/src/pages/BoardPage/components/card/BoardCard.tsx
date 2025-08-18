@@ -23,6 +23,7 @@ import BoardCardLabelList from "@/pages/BoardPage/components/card/label/BoardCar
 import { AuthUser, ProjectCardAttachment, ProjectChecklist } from "@/core/models";
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
+import { getEditorStore } from "@/core/stores/EditorStore";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -153,13 +154,13 @@ export function SkeletonBoardCard(): JSX.Element {
 }
 
 function BoardCardResult(): JSX.Element {
-    const { card, setCurrentEditor } = useBoardCard();
+    const { card } = useBoardCard();
     const attachments = ProjectCardAttachment.Model.useModels((model) => model.card_uid === card.uid);
     const checklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
 
     useEffect(() => {
         return () => {
-            setCurrentEditor("");
+            getEditorStore().setCurrentEditor("");
         };
     }, []);
 

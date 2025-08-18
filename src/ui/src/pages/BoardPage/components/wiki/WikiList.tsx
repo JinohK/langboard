@@ -4,6 +4,7 @@ import useGrabbingScrollHorizontal from "@/core/hooks/useGrabbingScrollHorizonta
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useBoardWiki } from "@/core/providers/BoardWikiProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { getEditorStore } from "@/core/stores/EditorStore";
 import WikiContent, { SkeletonWikiContent } from "@/pages/BoardPage/components/wiki/WikiContent";
 import WikiCreateButton from "@/pages/BoardPage/components/wiki/WikiCreateButton";
 import WikiTabList, { SkeletonWikiTabList } from "@/pages/BoardPage/components/wiki/WikiTabList";
@@ -29,11 +30,11 @@ export function SkeletonWikiList() {
 const WikiList = memo(() => {
     const { wikiUID } = useParams();
     const navigate = usePageNavigateRef();
-    const { projectUID, canAccessWiki, setCurrentEditor } = useBoardWiki();
+    const { projectUID, canAccessWiki } = useBoardWiki();
 
     useEffect(() => {
         if (!canAccessWiki(true, wikiUID)) {
-            setCurrentEditor("");
+            getEditorStore().setCurrentEditor(null);
             navigate(ROUTES.BOARD.WIKI(projectUID));
         }
     }, [wikiUID]);

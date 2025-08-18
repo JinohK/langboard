@@ -5,6 +5,7 @@ from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.Converter import convert_python_data
 from models import (
+    BotSchedule,
     Card,
     CardAssignedProjectLabel,
     CardAssignedUser,
@@ -294,6 +295,31 @@ class CardService(BaseService):
             return scopes
 
         return [scope.api_response() for scope in scopes]
+
+    @overload
+    async def get_bot_schedules(
+        self, project: TProjectParam, card: TCardParam, as_api: Literal[False]
+    ) -> list[tuple[CardBotSchedule, BotSchedule]]: ...
+    @overload
+    async def get_bot_schedules(
+        self, project: TProjectParam, card: TCardParam, as_api: Literal[True]
+    ) -> list[dict[str, Any]]: ...
+    async def get_bot_schedules(
+        self, project: TProjectParam, card: TCardParam, as_api: bool
+    ) -> list[tuple[CardBotSchedule, BotSchedule]] | list[dict[str, Any]]:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
+        if not params:
+            return []
+        project, card = params
+
+        schedules = await BotScheduleHelper.get_all_by_scope(
+            CardBotSchedule,
+            None,
+            card,
+            as_api=as_api,
+        )
+
+        return schedules
 
     async def create(
         self,

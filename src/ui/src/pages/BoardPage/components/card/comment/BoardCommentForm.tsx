@@ -10,6 +10,9 @@ import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
 import { BotModel } from "@/core/models";
+import { getEditorStore, useIsCurrentEditor } from "@/core/stores/EditorStore";
+import { TEditor } from "@/components/Editor/editor-kit";
+import { getMentionOnSelectItem } from "@platejs/mention";
 
 export function SkeletonBoardCommentForm() {
     return (
@@ -28,8 +31,10 @@ export function SkeletonBoardCommentForm() {
     );
 }
 
+const mention = getMentionOnSelectItem();
+
 const BoardCommentForm = memo((): JSX.Element => {
-    const { projectUID, card, currentUser, editorsRef, setCurrentEditor, replyRef } = useBoardCard();
+    const { projectUID, card, currentUser, replyRef } = useBoardCard();
     const [t] = useTranslation();
     const projectMembers = card.useForeignField("project_members");
     const bots = BotModel.Model.useModels(() => true);
@@ -39,15 +44,15 @@ const BoardCommentForm = memo((): JSX.Element => {
         valueRef.current = value;
     };
     const drawerRef = useRef<HTMLDivElement>(null);
-    const editorComponentRef = useRef<HTMLDivElement>(null);
-    const [isOpened, setIsOpened] = useState(false);
+    const editorRef = useRef<TEditor>(null);
+    const editorName = `${card.uid}-comment-form`;
+    const isCurrentEditor = useIsCurrentEditor(editorName);
     const [isValidating, setIsValidating] = useState(false);
     const { mutate: addCommentMutate } = useAddCardComment();
-    const editorName = `${card.uid}-comment-form`;
     const isClickedRef = useRef(false);
     const { stopEditing } = useToggleEditingByClickOutside("[data-card-comment-form]", (mode) => {
         if (mode === "view") {
-            setCurrentEditor("");
+            getEditorStore().setCurrentEditor(null);
         }
     });
     const onDrawerHandlePointerStart = useCallback(
@@ -67,7 +72,7 @@ const BoardCommentForm = memo((): JSX.Element => {
 
             setTimeout(() => {
                 if (isClickedRef.current) {
-                    setCurrentEditor("");
+                    getEditorStore().setCurrentEditor(null);
                     return;
                 }
 
@@ -95,20 +100,21 @@ const BoardCommentForm = memo((): JSX.Element => {
             return;
         }
 
-        if (!isOpened) {
-            setCurrentEditor(editorName);
-            setIsOpened(true);
+        if (!isCurrentEditor || !editorRef.current) {
+            getEditorStore().setCurrentEditor(editorName);
+            setValue({
+                content: `[**@${username}**](${target.uid}) `,
+            });
+            setTimeout(() => {
+                editorRef.current?.tf.focus();
+            }, 0);
+            return;
         }
 
-        setValue({
-            content: `[**@${username}**](${target.uid}) `,
+        mention(editorRef.current, {
+            key: target.uid,
+            text: username,
         });
-
-        setTimeout(() => {
-            if (editorComponentRef.current) {
-                editorComponentRef.current.focus();
-            }
-        }, 0);
     };
 
     const changeOpenState = (opened: bool) => {
@@ -116,25 +122,23 @@ const BoardCommentForm = memo((): JSX.Element => {
             return;
         }
 
+        setValue({ content: "" });
         if (!opened) {
             drawerRef.current?.setAttribute("data-state", "closed");
             setTimeout(() => {
                 if (drawerRef.current) {
                     drawerRef.current.style.display = "none";
                 }
-                setValue({ content: "" });
-                setIsOpened(opened);
+                getEditorStore().setCurrentEditor(null);
             }, 450);
             return;
         }
 
-        setIsOpened(opened);
+        getEditorStore().setCurrentEditor(editorName);
         setTimeout(() => {
-            editorComponentRef.current?.focus();
+            editorRef.current?.tf.focus();
         }, 0);
     };
-
-    editorsRef.current[editorName] = changeOpenState;
 
     const saveComment = () => {
         if (isValidating) {
@@ -157,7 +161,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                 },
                 onSettled: () => {
                     setIsValidating(false);
-                    setCurrentEditor("");
+                    getEditorStore().setCurrentEditor(null);
                     setTimeout(() => {
                         changeOpenState(false);
                     }, 0);
@@ -167,7 +171,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     };
 
     const clickOutside = (e: React.MouseEvent | CustomEvent) => {
-        if (!isOpened) {
+        if (!isCurrentEditor) {
             return;
         }
 
@@ -176,19 +180,7 @@ const BoardCommentForm = memo((): JSX.Element => {
 
     return (
         <Form.Root className="sticky bottom-0 z-[100] -ml-[calc(theme(spacing.4))] w-[calc(100%_+_theme(spacing.8))] sm:-bottom-2">
-            <Drawer.Root
-                modal={false}
-                handleOnly
-                repositionInputs={false}
-                open={isOpened}
-                onOpenChange={(opened: bool) => {
-                    if (opened) {
-                        setCurrentEditor(editorName);
-                    } else {
-                        setCurrentEditor("");
-                    }
-                }}
-            >
+            <Drawer.Root modal={false} handleOnly repositionInputs={false} open={isCurrentEditor} onOpenChange={changeOpenState}>
                 <Drawer.Trigger asChild>
                     <Flex items="center" gap="4" p="2" className="rounded-b-lg border-t bg-background">
                         <UserAvatar.Root userOrBot={currentUser} avatarSize="sm" />
@@ -236,14 +228,14 @@ const BoardCommentForm = memo((): JSX.Element => {
                                     card_uid: card.uid,
                                 }}
                                 setValue={setValue}
-                                editorComponentRef={editorComponentRef}
+                                editorRef={editorRef}
                             />
                         </Box>
                         <Flex items="center" gap="2" justify="start" p="1">
                             <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
                                 {t("common.Save")}
                             </SubmitButton>
-                            <Button variant="secondary" onClick={() => setCurrentEditor("")} disabled={isValidating}>
+                            <Button variant="secondary" onClick={() => getEditorStore().setCurrentEditor(null)} disabled={isValidating}>
                                 {t("common.Cancel")}
                             </Button>
                         </Flex>
