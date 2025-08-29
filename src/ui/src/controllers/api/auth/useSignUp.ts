@@ -24,7 +24,7 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
                 return;
             }
 
-            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is FileList => targetKey === "avatar";
+            const isAvatar = (targetKey: string, _: unknown): _ is FileList => targetKey === "avatar";
 
             if (isAvatar(key, value)) {
                 if (!value.length) {

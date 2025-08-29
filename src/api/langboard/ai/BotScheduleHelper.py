@@ -7,7 +7,7 @@ from core.Env import Env
 from core.schema import Pagination
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.decorators import staticclass
-from crontab import CronItem, CronTab, OrderedVariableList
+from crontab import SPECIALS, CronItem, CronTab, OrderedVariableList
 from models import Bot, BotSchedule
 from models.bases import BaseBotScheduleModel
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
@@ -541,9 +541,17 @@ class BotScheduleHelper:
         if tz == 0.0:
             return interval_str
 
+        real_interval_str = interval_str
+        special = SPECIALS.get(interval_str.replace("@", ""), None)
+        if special:
+            real_interval_str = special
+
+        if real_interval_str.lower() == "@reboot":
+            return interval_str
+
         cron_item = CronItem()
         cron_item.setall(interval_str)
-        cron_chunks = interval_str.split(" ")
+        cron_chunks = real_interval_str.split(" ")
 
         diff_minutes = int((tz - int(tz)) * 60)
         diff_hours = int(tz)

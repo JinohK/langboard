@@ -2,6 +2,7 @@ x-server-common-env: &server-common-env
   PROJECT_NAME: ${PROJECT_NAME}
   PROJECT_SHORT_NAME: ${PROJECT_SHORT_NAME}
   PUBLIC_UI_URL: ${PUBLIC_UI_URL:-http://localhost:${NGINX_UI_EXPOSE_PORT}}
+  API_URL: ${API_URL:-http://localhost:${NGINX_API_EXPOSE_PORT}}
 
 x-server-env: &server-env
   <<: *server-common-env
@@ -30,6 +31,10 @@ x-server-env: &server-env
   MAIL_STARTTLS: ${MAIL_STARTTLS}
   MAIL_SSL_TLS: ${MAIL_SSL_TLS}
   FLOWS_PORT: ${FLOWS_PORT}
+  DEFAULT_FLOWS_URL: ${PROJECT_NAME}_flows:5019
+  API_PORT: ${API_PORT}
+  UI_PORT: ${NGINX_UI_EXPOSE_PORT}
+  SOCKET_PORT: ${SOCKET_PORT}
 
 services:
   server:
@@ -67,7 +72,6 @@ services:
     environment:
       <<: *server-common-env
       SOCKET_URL: ${SOCKET_URL:-http://localhost:${NGINX_SOCKET_EXPOSE_PORT}}
-      API_URL: ${API_URL:-http://localhost:${NGINX_API_EXPOSE_PORT}}
     working_dir: /app
     command: yarn build
     volumes:
@@ -90,7 +94,6 @@ services:
     environment:
       <<: *server-env
       API_HOST: ${PROJECT_NAME}_api
-      API_PORT: ${API_PORT}
       DOMAIN: ${DOMAIN}
       CRON_TAB_FILE: ${CRON_TAB_FILE}
       SENTRY_DSN: ${SENTRY_DSN}
@@ -99,7 +102,6 @@ services:
       S3_SECRET_ACCESS_KEY: ${S3_SECRET_ACCESS_KEY}
       S3_REGION_NAME: ${S3_REGION_NAME}
       S3_BUCKET_NAME: ${S3_BUCKET_NAME}
-      UI_PORT: ${NGINX_UI_EXPOSE_PORT}
     working_dir: /app
     command: ${PROJECT_NAME} run --workers ${API_WORKERS_COUNT:-1}
     volumes:
@@ -141,8 +143,6 @@ services:
     environment:
       <<:
         - *server-env
-      SOCKET_PORT: ${SOCKET_PORT}
-      UI_PORT: ${NGINX_UI_EXPOSE_PORT}
       LOGGING_DIR: ${SOCKET_LOGGING_DIR}
     working_dir: /app
     volumes:
@@ -156,6 +156,36 @@ services:
       - kafka0
       - kafka1
       - kafka2
+    networks:
+      - net
+    restart: always
+
+  flows:
+    init: true
+    container_name: ${PROJECT_NAME}_flows
+    build:
+      context: ../src/flows
+    environment:
+      <<: *server-env
+      LANGFLOW_HOST: ${PROJECT_NAME}_flows
+      SENTRY_DSN: ${SENTRY_DSN}
+      LOGGING_DIR: ${FLOWS_LOGGING_DIR}
+    working_dir: /app/src/flows
+    command: uv run flows run --workers ${FLOWS_WORKERS_COUNT:-1}
+    volumes:
+      - ../src/flows/${PROJECT_NAME}_flows:/app/src/flows/${PROJECT_NAME}_flows
+      - ../src/shared/py/core:/app/src/shared/py/core
+      - ../src/shared/py/models:/app/src/shared/py/models
+      - ../src/resources:/app/src/resources
+      - ../src/flows/pyproject.toml:/app/src/flows/pyproject.toml
+      - ../src/flows/uv.lock:/app/src/flows/uv.lock
+      - ../local:/app/local
+    depends_on:
+      - db-bouncer
+      - kafka0
+      - kafka1
+      - kafka2
+      - api
     networks:
       - net
     restart: always

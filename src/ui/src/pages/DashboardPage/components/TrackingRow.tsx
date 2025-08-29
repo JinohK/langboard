@@ -17,7 +17,7 @@ export interface ITrackingRowProps extends React.HTMLAttributes<HTMLTableRowElem
 function TrackingRow({ checkitem, className, ...props }: ITrackingRowProps): JSX.Element | null {
     const [t] = useTranslation();
     const navigate = usePageNavigateRef();
-    const projectUIDRef = useRef<string>("");
+    const projectUIDRef = useRef("");
     const title = checkitem.useField("title");
     const rawStatus = checkitem.useField("status");
     const rawStartedAt = checkitem.useField("initial_timer_started_at");

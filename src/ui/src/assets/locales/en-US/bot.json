@@ -6,6 +6,16 @@
   "No logs found": "No logs found",
   "Scoped": "Scoped",
   "Scheduled": "Scheduled",
+  "Select running type": "Select running type",
+  "platforms": {
+    "default": "Default",
+    "langflow": "LangFlow"
+  },
+  "platformRunningTypes": {
+    "default": "Default",
+    "endpoint": "Endpoint",
+    "flow_json": "Flow JSON"
+  },
   "schedules": {
     "Schedule": "Schedule",
     "Set start time": "Set start time",
@@ -48,6 +58,26 @@
       "info": "Info",
       "success": "Success",
       "error": "Error"
+    }
+  },
+  "agent": {
+    "Agent settings": "Agent settings",
+    "Select a model": "Select a model",
+    "System prompt": "System prompt",
+    "Select API(s) to use": "Select API(s) to use",
+    "errors": {
+      "missing": {
+        "agent_llm": "Agent LLM model is required.",
+        "api_key": "API key is required.",
+        "api_version": "API version is required.",
+        "azure_endpoint": "Endpoint is required.",
+        "azure_deployment": "Deployment name is required.",
+        "aws_access_key_id": "Access key ID is required.",
+        "aws_secret_access_key": "Secret access key is required.",
+        "model_name": "Model is required.",
+        "model_id": "Model is required.",
+        "region_name": "Region is required."
+      }
     }
   }
 }

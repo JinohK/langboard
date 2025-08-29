@@ -1,23 +1,23 @@
-import { Box, Select, Toast } from "@/components/base";
+import { Box, Floating, Select, Toast } from "@/components/base";
 import useUpdateBot from "@/controllers/api/settings/bots/useUpdateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { BotModel } from "@/core/models";
+import { EBotPlatform } from "@/core/models/bot.related.type";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { EHttpStatus } from "@langboard/core/enums";
 import { memo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const BotApiAuthType = memo(() => {
+const BotPlatformInput = memo(() => {
     const [t] = useTranslation();
-    const { model: bot } = ModelRegistry.BotModel.useContext();
+    const { model: internalBot } = ModelRegistry.BotModel.useContext();
     const navigate = usePageNavigateRef();
-    const apiAuthType = bot.useField("api_auth_type");
+    const platform = internalBot.useField("platform");
     const [isValidating, setIsValidating] = useState(false);
-    const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
+    const { mutateAsync } = useUpdateBot(internalBot, { interceptToast: true });
 
-    const changeAPIAuthType = async (value: BotModel.EAPIAuthType) => {
+    const changePlatform = async (value: EBotPlatform) => {
         if (isValidating) {
             return;
         }
@@ -25,7 +25,7 @@ const BotApiAuthType = memo(() => {
         setIsValidating(true);
 
         const promise = mutateAsync({
-            api_auth_type: value,
+            platform: value,
         });
 
         Toast.Add.promise(promise, {
@@ -45,7 +45,7 @@ const BotApiAuthType = memo(() => {
                 return messageRef.message;
             },
             success: () => {
-                return t("successes.Bot API auth type changed successfully.");
+                return t("successes.Bot platform changed successfully.");
             },
             finally: () => {
                 setIsValidating(false);
@@ -55,23 +55,23 @@ const BotApiAuthType = memo(() => {
 
     return (
         <Box>
-            <Select.Root value={apiAuthType} onValueChange={changeAPIAuthType} disabled={isValidating}>
-                <Select.Trigger defaultValue={apiAuthType.toString()}>
-                    <Select.Value placeholder={t("settings.Select an api auth type")} />
-                </Select.Trigger>
-                <Select.Content>
-                    {Object.keys(BotModel.EAPIAuthType).map((authTypeKey) => {
-                        const authType = BotModel.EAPIAuthType[authTypeKey];
-                        return (
-                            <Select.Item value={authType.toString()} key={`bot-auth-type-select-${authType}`}>
-                                {t(`settings.authTypes.${authType}`)}
-                            </Select.Item>
-                        );
-                    })}
-                </Select.Content>
-            </Select.Root>
+            <Floating.LabelSelect
+                label={t("settings.Select a platform")}
+                value={platform}
+                defaultValue={platform.toString()}
+                onValueChange={changePlatform}
+                disabled={isValidating}
+                options={Object.keys(EBotPlatform).map((platformKey) => {
+                    const targetPlatform = EBotPlatform[platformKey];
+                    return (
+                        <Select.Item value={targetPlatform.toString()} key={`bot-platform-select-${targetPlatform}`}>
+                            {t(`bot.platforms.${targetPlatform}`)}
+                        </Select.Item>
+                    );
+                })}
+            />
         </Box>
     );
 });
 
-export default BotApiAuthType;
+export default BotPlatformInput;

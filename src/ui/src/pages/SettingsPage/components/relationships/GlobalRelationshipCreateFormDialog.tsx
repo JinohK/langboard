@@ -114,12 +114,19 @@ function GlobalRelationshipCreateFormDialog({ opened, setOpened }: IGlobalRelati
                         autoFocus
                         autoComplete="off"
                         disabled={isValidating}
+                        required
                         ref={parentNameInputRef}
                     />
                     {errors.parentName && <FormErrorMessage error={errors.parentName} notInForm />}
                 </Box>
                 <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Child name")} autoComplete="off" disabled={isValidating} ref={childNameInputRef} />
+                    <Floating.LabelInput
+                        label={t("settings.Child name")}
+                        autoComplete="off"
+                        disabled={isValidating}
+                        required
+                        ref={childNameInputRef}
+                    />
                     {errors.childName && <FormErrorMessage error={errors.childName} notInForm />}
                 </Box>
                 <Box mt="4">

@@ -111,11 +111,18 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                     <Dialog.Title>{t("settings.Create webhook")}</Dialog.Title>
                 </Dialog.Header>
                 <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook name")} autoFocus autoComplete="off" disabled={isValidating} ref={nameInputRef} />
+                    <Floating.LabelInput
+                        label={t("settings.Webhook name")}
+                        autoFocus
+                        autoComplete="off"
+                        disabled={isValidating}
+                        required
+                        ref={nameInputRef}
+                    />
                     {errors.name && <FormErrorMessage error={errors.name} notInForm />}
                 </Box>
                 <Box mt="4">
-                    <Floating.LabelInput label={t("settings.Webhook URL")} autoComplete="off" disabled={isValidating} ref={urlInputRef} />
+                    <Floating.LabelInput label={t("settings.Webhook URL")} autoComplete="off" disabled={isValidating} required ref={urlInputRef} />
                     {errors.url && <FormErrorMessage error={errors.url} notInForm />}
                 </Box>
                 <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">

@@ -12,4 +12,5 @@ class FlowRequestModel(BaseModel):
     )
     tweaks: dict | None = Field(default=None, description="The tweaks")
     session_id: str = Field(..., description="The session id")
-    setting_uid: str = Field(...)
+    run_type: str = Field(..., description="The run type (internal_bot, bot)")
+    uid: str = Field(...)

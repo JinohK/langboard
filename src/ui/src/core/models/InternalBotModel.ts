@@ -1,5 +1,6 @@
 import useInternalBotSettingDefaultChangedHandlers from "@/controllers/socket/settings/internalBots/useInternalBotSettingDefaultChangedHandlers";
-import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { BaseModel } from "@/core/models/Base";
+import { EBotPlatform, EBotPlatformRunningType, IBaseBotModel } from "@/core/models/bot.related.type";
 import { registerModel } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
 
@@ -9,20 +10,9 @@ export enum EInternalBotType {
     EditorCopilot = "editor_copilot",
 }
 
-export enum EInternalBotPlatform {
-    Langflow = "langflow",
-}
-
-export enum EInternalBotPlatformRunningType {
-    FlowId = "flow_id",
-    FlowJson = "flow_json",
-}
-
-export interface Interface extends IBaseModel {
+export interface Interface extends IBaseBotModel {
     bot_type: EInternalBotType;
     display_name: string;
-    platform: EInternalBotPlatform;
-    platform_running_type: EInternalBotPlatformRunningType;
     url: string;
     api_key: string;
     value: string;
@@ -53,11 +43,11 @@ class InternalBotModel extends BaseModel<Interface> {
         }
 
         if (Utils.Type.isString(model.platform)) {
-            model.platform = Utils.String.convertSafeEnum(EInternalBotPlatform, model.platform);
+            model.platform = Utils.String.convertSafeEnum(EBotPlatform, model.platform);
         }
 
         if (Utils.Type.isString(model.platform_running_type)) {
-            model.platform_running_type = Utils.String.convertSafeEnum(EInternalBotPlatformRunningType, model.platform_running_type);
+            model.platform_running_type = Utils.String.convertSafeEnum(EBotPlatformRunningType, model.platform_running_type);
         }
 
         return model;

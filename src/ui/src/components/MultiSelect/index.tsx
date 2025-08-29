@@ -19,6 +19,7 @@ interface IBaseMultiSelectProps {
     selectedValue?: string[];
     onValueChange?: (value: string[]) => void;
     className?: string;
+    badgeListClassName?: string;
     badgeClassName?: string;
     inputClassName?: string;
     listClassName?: string;
@@ -79,6 +80,7 @@ const MultiSelect = React.memo(
         selectedValue,
         onValueChange,
         className,
+        badgeListClassName,
         badgeClassName,
         inputClassName,
         listClassName,
@@ -96,6 +98,7 @@ const MultiSelect = React.memo(
         const inputRef = React.useRef<HTMLInputElement>(null);
         const [open, setOpen] = React.useState(false);
         const [selected, setSelected] = React.useState(selectedValue ?? []);
+        const badgeListRef = React.useRef<HTMLDivElement | null>(null);
         const setSelectedWithFireEvent = React.useCallback(
             (action: React.SetStateAction<string[]>) => {
                 setSelected((prev) => {
@@ -104,6 +107,7 @@ const MultiSelect = React.memo(
                         setTimeout(() => {
                             setInputValue("");
                             onValueChange(newSelected);
+                            badgeListRef.current?.scrollTo({ top: badgeListRef.current.scrollHeight });
                         }, 0);
                     }
                     return newSelected;
@@ -269,7 +273,7 @@ const MultiSelect = React.memo(
                     border
                     rounded="md"
                     className={cn(
-                        "group border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
+                        "group w-full border-input ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-0",
                         noBadge && "cursor-pointer"
                     )}
                     onClick={() => {
@@ -279,9 +283,9 @@ const MultiSelect = React.memo(
                     }}
                     ref={setWrapper}
                 >
-                    <Flex wrap gap="1">
+                    <Flex wrap gap="1" className={badgeListClassName} ref={badgeListRef}>
                         {noBadge ? (
-                            <Flex items="center" gap="2">
+                            <Flex items="center" gap="2" w="full" justify="between">
                                 {selected.length ? createValueText?.(selected) : placeholder}
                                 <IconComponent
                                     icon="chevron-down"

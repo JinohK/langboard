@@ -128,12 +128,12 @@ class SocketClient implements ISocketClient {
         };
     }
 
-    public async startHocus(documentName: string) {
+    public startHocus(documentName: string) {
         this.#hocusDocNames.add(documentName);
         Hocus.handleConnection(this.#ws, this.#request);
     }
 
-    public async endHocus(documentName: string) {
+    public endHocus(documentName: string) {
         this.#hocusDocNames.delete(documentName);
         const document = Hocus.documents.get(documentName);
         if (!document) {

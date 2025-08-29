@@ -1,9 +1,10 @@
 from enum import Enum
 from typing import Any
-from core.db import BaseSqlModel, EnumLikeType, ModelColumnType
+from core.db import EnumLikeType, ModelColumnType
 from core.storage import FileModel
 from sqlalchemy import Text
 from sqlmodel import Field
+from .BaseBotModel import BaseBotModel, BotPlatform, BotPlatformRunningType
 
 
 class InternalBotType(Enum):
@@ -12,25 +13,12 @@ class InternalBotType(Enum):
     EditorCopilot = "editor_copilot"
 
 
-class InternalBotPlatform(Enum):
-    Langflow = "langflow"
-
-
-class InternalBotPlatformRunningType(Enum):
-    FlowId = "flow_id"
-    FlowJson = "flow_json"
-
-
-class InternalBot(BaseSqlModel, table=True):
+class InternalBot(BaseBotModel, table=True):
     bot_type: InternalBotType = Field(nullable=False, sa_type=EnumLikeType(InternalBotType))
     display_name: str = Field(nullable=False)
-    platform: InternalBotPlatform = Field(nullable=False, sa_type=EnumLikeType(InternalBotPlatform))
-    platform_running_type: InternalBotPlatformRunningType = Field(
-        nullable=False, sa_type=EnumLikeType(InternalBotPlatformRunningType)
-    )
-    url: str = Field(nullable=False)
+    url: str = Field(default="", nullable=False)
     api_key: str = Field(default="", nullable=False)
-    value: str = Field(nullable=False, sa_type=Text)
+    value: str = Field(default="", nullable=False, sa_type=Text)
     is_default: bool = Field(default=False, nullable=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
 
@@ -46,8 +34,8 @@ class InternalBot(BaseSqlModel, table=True):
         if is_setting:
             schema.update(
                 {
-                    "platform": f"Literal[{', '.join([platform.value for platform in InternalBotPlatform])}]",
-                    "platform_running_type": f"Literal[{', '.join([running_type.value for running_type in InternalBotPlatformRunningType])}]",
+                    "platform": f"Literal[{', '.join([platform.value for platform in BotPlatform])}]",
+                    "platform_running_type": f"Literal[{', '.join([running_type.value for running_type in BotPlatformRunningType])}]",
                     "url": "string",
                     "api_key": "string",
                     "is_default": "bool",
@@ -78,9 +66,6 @@ class InternalBot(BaseSqlModel, table=True):
             )
 
         return setting
-
-    def notification_data(self) -> dict[str, Any]:
-        return {}
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["bot_type", "display_name", "platform", "platform_running_type", "is_default"]

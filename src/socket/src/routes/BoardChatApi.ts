@@ -35,7 +35,7 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
             return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
         }
 
-        const filePath = await BotRunner.uploadFile(internalBot, file);
+        const filePath = await BotRunner.upload(internalBot, file);
         if (!filePath) {
             return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
         }

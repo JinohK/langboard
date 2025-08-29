@@ -1,30 +1,25 @@
-from enum import Enum
 from typing import Any, ClassVar
-from core.db import CSVType, EnumLikeType, ModelColumnType, SoftDeleteModel
+from core.db import CSVType, ModelColumnType
 from core.storage import FileModel
 from sqlalchemy import TEXT
 from sqlmodel import Field
+from .BaseBotModel import BaseBotModel, BotPlatform, BotPlatformRunningType
 
 
 ALLOWED_ALL_IPS = "*"
 
 
-class BotAPIAuthType(Enum):
-    Langflow = "langflow"
-
-
-class Bot(SoftDeleteModel, table=True):
+class Bot(BaseBotModel, table=True):
     BOT_TYPE: ClassVar[str] = "bot"
     BOT_UNAME_PREFIX: ClassVar[str] = "bot-"
     name: str = Field(nullable=False)
     bot_uname: str = Field(nullable=False)
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
-    api_url: str = Field(nullable=False)
-    api_auth_type: BotAPIAuthType = Field(nullable=False, sa_type=EnumLikeType(BotAPIAuthType))
-    api_key: str = Field(nullable=False)
+    api_url: str = Field(default="", nullable=False)
+    api_key: str = Field(default="", nullable=False)
     app_api_token: str = Field(nullable=False)
     ip_whitelist: list[str] = Field(default=[], sa_type=CSVType)
-    prompt: str = Field(default="", sa_type=TEXT)
+    value: str = Field(default="", sa_type=TEXT)
 
     @staticmethod
     def api_schema(is_setting: bool = False, other_schema: dict | None = None) -> dict[str, Any]:
@@ -38,12 +33,13 @@ class Bot(SoftDeleteModel, table=True):
         if is_setting:
             schema.update(
                 {
+                    "platform": f"Literal[{', '.join([platform.value for platform in BotPlatform])}]",
+                    "platform_running_type": f"Literal[{', '.join([running_type.value for running_type in BotPlatformRunningType])}]",
                     "api_url": "string",
-                    "api_auth_type": f"Literal[{', '.join([auth_type.value for auth_type in BotAPIAuthType])}]",
                     "api_key": "string",
                     "app_api_token": "string",
                     "ip_whitelist": "List[string]",
-                    "prompt": "string",
+                    "value": "string",
                 }
             )
 
@@ -63,13 +59,14 @@ class Bot(SoftDeleteModel, table=True):
             "avatar": self.avatar.path if self.avatar else None,
         }
         if is_setting:
+            response["platform"] = self.platform.value
+            response["platform_running_type"] = self.platform_running_type.value
             response["api_url"] = self.api_url
-            response["api_auth_type"] = self.api_auth_type.value
             response["api_key"] = self.api_key
             hide_rest_value = "*" * (len(self.app_api_token) - 8)
             response["app_api_token"] = f"{self.app_api_token[:8]}{hide_rest_value}"
             response["ip_whitelist"] = self.ip_whitelist
-            response["prompt"] = self.prompt
+            response["value"] = self.value
 
         return response
 
@@ -80,9 +77,6 @@ class Bot(SoftDeleteModel, table=True):
             "bot_uname": self.bot_uname,
             "avatar": None,
         }
-
-    def notification_data(self) -> dict[str, Any]:
-        return self.api_response()
 
     def _get_repr_keys(self) -> list[str | tuple[str, str]]:
         return ["name"]

@@ -1,3 +1,4 @@
+import { IStreamResponse } from "@/core/ai/requests/types";
 import { api } from "@/core/helpers/Api";
 import Logger from "@/core/utils/Logger";
 import { Utils } from "@langboard/core/utils";
@@ -23,16 +24,8 @@ interface ILangflowStreamResponseParams {
     onEnd?: () => void;
 }
 
-const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallback }: ILangflowStreamResponseParams) => {
-    return async ({
-        onMessage,
-        onEnd,
-        onError,
-    }: {
-        onMessage: (message: string) => void | Promise<void>;
-        onEnd: () => void | Promise<void>;
-        onError?: (error: Error) => void | Promise<void>;
-    }) => {
+const langflowStreamResponse = ({ url, headers, body, signal, onEnd: onEndCallback }: ILangflowStreamResponseParams): IStreamResponse => {
+    return async ({ onMessage, onEnd, onError }) => {
         if (signal?.aborted) {
             return;
         }

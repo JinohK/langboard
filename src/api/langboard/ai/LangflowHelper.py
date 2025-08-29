@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Literal
+from core.Env import Env
 from core.utils.EditorContentParser import DATA_TEXT_FORMAT_DESCRIPTIONS
 from pydantic import BaseModel
 
@@ -27,4 +28,4 @@ class LangboardCalledVariablesComponent(LangflowComponent):
         return {LangboardCalledVariablesComponent.__name__: self.to_data()}
 
     def to_data(self) -> dict[str, Any]:
-        return self.model_dump()
+        return {"base_url": Env.API_URL, **self.model_dump()}

@@ -14,7 +14,8 @@ import InternalBotPlatform from "@/pages/SettingsPage/components/internalBots/In
 import InternalBotPlatformRunningType from "@/pages/SettingsPage/components/internalBots/InternalBotPlatformRunningType";
 import InternalBotType from "@/pages/SettingsPage/components/internalBots/InternalBotType";
 import InternalBotValue from "@/pages/SettingsPage/components/internalBots/InternalBotValue";
-import { memo, useEffect } from "react";
+import { requirements } from "@/components/BotValueInput/utils";
+import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 export interface IInternalBotDetailsProps {
@@ -27,6 +28,9 @@ const InternalBotDetails = memo(({ internalBot }: IInternalBotDetailsProps) => {
     const navigate = usePageNavigateRef();
     const { isValidating } = useAppSetting();
     const displayName = internalBot.useField("display_name");
+    const platform = internalBot.useField("platform");
+    const runningType = internalBot.useField("platform_running_type");
+    const formRequirements = useMemo(() => requirements[platform]?.[runningType] ?? [], [platform, runningType]);
 
     const moveToList = () => {
         if (isValidating) {
@@ -68,15 +72,17 @@ const InternalBotDetails = memo(({ internalBot }: IInternalBotDetailsProps) => {
                     <Flex direction="col" gap="2" w="full" className="max-w-screen-xs">
                         <InternalBotPlatform />
                         <InternalBotPlatformRunningType />
-                        <InternalBotApiURL />
-                        <InternalBotApiKey />
+                        {formRequirements.includes("url") && <InternalBotApiURL />}
+                        {formRequirements.includes("apiKey") && <InternalBotApiKey />}
                     </Flex>
                 </Flex>
-                <Flex justify="center" mt="3">
-                    <Flex justify="center" w="full" className="max-w-screen-lg">
-                        <InternalBotValue />
+                {formRequirements.includes("value") && (
+                    <Flex justify="center" mt="3">
+                        <Flex justify="center" w="full" className="max-w-screen-lg">
+                            <InternalBotValue />
+                        </Flex>
                     </Flex>
-                </Flex>
+                )}
             </Flex>
         </ModelRegistry.InternalBotModel.Provider>
     );

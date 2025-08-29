@@ -46,12 +46,12 @@ class BotRunner {
         return await bot.isAvailable(internalBot);
     }
 
-    public static async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+    public static async upload(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
         const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.uploadFile(internalBot, file);
+        return await bot.upload(internalBot, file);
     }
 
     public static isAborted(botType: EInternalBotType, task_id: string): bool {

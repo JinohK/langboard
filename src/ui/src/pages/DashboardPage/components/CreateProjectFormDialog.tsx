@@ -53,6 +53,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                             autoComplete="off"
                             className="mt-4"
                             disabled={isValidating}
+                            required
                         />
                         {errors.title && <FormErrorMessage error={errors.title} icon="circle-alert" />}
                     </Form.Field>
@@ -78,6 +79,7 @@ function CreateProjectFormDialog({ opened, setOpened }: ICreateProjectFormDialog
                             emptyMessage={projectTypeRef.current ?? ""}
                             placeholder={t("project.Project type")}
                             disabled={isValidating}
+                            required
                             className="mt-4"
                         />
                         {errors.project_type && <FormErrorMessage error={errors.project_type} icon="circle-alert" />}

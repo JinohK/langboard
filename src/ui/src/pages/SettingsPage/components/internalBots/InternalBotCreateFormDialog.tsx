@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useTranslation } from "react-i18next";
 import { Alert, Box, Button, Dialog, Floating, Form, Select, SubmitButton, Toast } from "@/components/base";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
 import FormErrorMessage from "@/components/FormErrorMessage";
@@ -9,9 +10,12 @@ import { InternalBotModel } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 import { EHttpStatus } from "@langboard/core/enums";
 import useCreateInternalBot from "@/controllers/api/settings/internalBots/useCreateInternalBot";
-import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
 import PasswordInput from "@/components/PasswordInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { getValueType, requirements } from "@/components/BotValueInput/utils";
+import { AVAILABLE_RUNNING_TYPES_BY_PLATFORM, EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
+import BotValueInput from "@/components/BotValueInput";
+import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
 
 export interface IInternalBotCreateFormDialogProps {
     opened: bool;
@@ -27,26 +31,24 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
         displayName: null as HTMLInputElement | null,
         url: null as HTMLInputElement | null,
         apiKey: null as HTMLInputElement | null,
-        value: null as HTMLInputElement | HTMLTextAreaElement | null,
+        value: null as HTMLInputElement | HTMLTextAreaElement | TBotValueDefaultInputRefLike | null,
     });
+    const setInputRef = (key: keyof typeof inputsRef.current) => (el: HTMLElement | TBotValueDefaultInputRefLike | null) => {
+        inputsRef.current[key] = el as any;
+    };
     const [selectedType, setSelectedType] = useState<InternalBotModel.EInternalBotType>(InternalBotModel.EInternalBotType.ProjectChat);
-    const [selectedPlatform, setSelectedPlatform] = useState<InternalBotModel.EInternalBotPlatform>(InternalBotModel.EInternalBotPlatform.Langflow);
-    const [selectedPlatformRunningType, setSelectedPlatformRunningType] = useState<InternalBotModel.EInternalBotPlatformRunningType>(
-        InternalBotModel.EInternalBotPlatformRunningType.FlowJson
+    const [selectedPlatform, setSelectedPlatform] = useState<EBotPlatform>(EBotPlatform.Default);
+    const [selectedPlatformRunningType, setSelectedPlatformRunningType] = useState<EBotPlatformRunningType>(EBotPlatformRunningType.Default);
+    const valueType = useMemo(() => getValueType(selectedPlatform, selectedPlatformRunningType), [selectedPlatform, selectedPlatformRunningType]);
+    const formRequirements = useMemo(
+        () => requirements[selectedPlatform]?.[selectedPlatformRunningType] ?? [],
+        [selectedPlatform, selectedPlatformRunningType]
     );
-    const valueType = useMemo(() => {
-        switch (selectedPlatformRunningType) {
-            case InternalBotModel.EInternalBotPlatformRunningType.FlowJson:
-                return "json";
-            default:
-                return "text";
-        }
-    }, [selectedPlatformRunningType]);
-    const valueRef = useRef<string>("");
+    const valueRef = useRef("");
     const { mutate } = useCreateInternalBot();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const save = () => {
-        if (isValidating || !inputsRef.current.displayName || !inputsRef.current.url || !inputsRef.current.apiKey) {
+        if (isValidating || !inputsRef.current.displayName) {
             return;
         }
 
@@ -55,13 +57,20 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
         const values = {} as Record<keyof typeof inputsRef.current, string>;
         const newErrors = {} as Record<keyof typeof inputsRef.current, string>;
         let focusableInput = null as HTMLInputElement | HTMLTextAreaElement | null;
-        Object.entries(inputsRef.current).forEach(([key, input]) => {
+
+        const shouldValidateInputs: (keyof typeof inputsRef.current)[] = ["displayName", ...formRequirements];
+        shouldValidateInputs.forEach((key) => {
+            const input = inputsRef.current[key] as HTMLInputElement | HTMLTextAreaElement;
+            if (!input) {
+                return;
+            }
+
+            if (input?.type === "default-bot-json") {
+                return;
+            }
+
             const value = input!.value.trim();
             if (!value) {
-                if (key === "apiKey") {
-                    return;
-                }
-
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.missing.internal_bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;
@@ -76,7 +85,16 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
             }
         });
 
-        if (Object.keys(newErrors).length) {
+        let shouldStop = false;
+        const valueInput = inputsRef.current.value;
+        if (shouldValidateInputs.includes("value") && valueInput?.type === "default-bot-json") {
+            const validated = (valueInput as TBotValueDefaultInputRefLike).validate(!focusableInput);
+            if (!validated) {
+                shouldStop = true;
+            }
+        }
+
+        if (Object.keys(newErrors).length || shouldStop) {
             setErrors(newErrors);
             setIsValidating(false);
             focusableInput?.focus();
@@ -131,6 +149,14 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
         setOpened(opened);
     };
 
+    useEffect(() => {
+        if (AVAILABLE_RUNNING_TYPES_BY_PLATFORM[selectedPlatform].includes(selectedPlatformRunningType)) {
+            return;
+        }
+
+        setSelectedPlatformRunningType(AVAILABLE_RUNNING_TYPES_BY_PLATFORM[selectedPlatform][0]);
+    }, [selectedPlatform]);
+
     return (
         <Dialog.Root open={opened} onOpenChange={changeOpenedState}>
             <Dialog.Content className="sm:max-w-md" aria-describedby="">
@@ -151,108 +177,106 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
                             autoFocus
                             autoComplete="off"
                             disabled={isValidating}
-                            ref={(el) => {
-                                inputsRef.current.displayName = el;
-                            }}
+                            required
+                            ref={setInputRef("displayName")}
                         />
                         {errors.displayName && <FormErrorMessage error={errors.displayName} notInForm />}
                     </Box>
                     <Box mt="4">
-                        <Select.Root value={selectedType} onValueChange={setSelectedType as (value: string) => void} disabled={isValidating}>
-                            <Select.Trigger>
-                                <Select.Value placeholder={t("settings.Select a type")} />
-                            </Select.Trigger>
-                            <Select.Content>
-                                {Object.keys(InternalBotModel.EInternalBotType).map((typeKey) => {
-                                    const botType = InternalBotModel.EInternalBotType[typeKey];
-                                    return (
-                                        <Select.Item value={botType} key={`internal-bot-type-select-${botType}`}>
-                                            {t(`internalBot.botTypes.${botType}`)}
-                                        </Select.Item>
-                                    );
-                                })}
-                            </Select.Content>
-                        </Select.Root>
+                        <Floating.LabelSelect
+                            label={t("settings.Select a type")}
+                            value={selectedType}
+                            onValueChange={setSelectedType as (value: string) => void}
+                            disabled={isValidating}
+                            required
+                            options={Object.keys(InternalBotModel.EInternalBotType).map((typeKey) => {
+                                const botType = InternalBotModel.EInternalBotType[typeKey];
+                                return (
+                                    <Select.Item value={botType} key={`internal-bot-type-select-${botType}`}>
+                                        {t(`internalBot.botTypes.${botType}`)}
+                                    </Select.Item>
+                                );
+                            })}
+                        />
                     </Box>
                     <Box mt="4">
-                        <Select.Root value={selectedPlatform} onValueChange={setSelectedPlatform as (value: string) => void} disabled={isValidating}>
-                            <Select.Trigger>
-                                <Select.Value placeholder={t("settings.Select a platform")} />
-                            </Select.Trigger>
-                            <Select.Content>
-                                {Object.keys(InternalBotModel.EInternalBotPlatform).map((typeKey) => {
-                                    const botType = InternalBotModel.EInternalBotPlatform[typeKey];
-                                    return (
-                                        <Select.Item value={botType} key={`internal-bot-platform-select-${botType}`}>
-                                            {t(`internalBot.platforms.${botType}`)}
-                                        </Select.Item>
-                                    );
-                                })}
-                            </Select.Content>
-                        </Select.Root>
+                        <Floating.LabelSelect
+                            label={t("settings.Select a platform")}
+                            value={selectedPlatform}
+                            onValueChange={setSelectedPlatform as (value: string) => void}
+                            disabled={isValidating}
+                            required
+                            options={Object.keys(EBotPlatform).map((typeKey) => {
+                                const botType = EBotPlatform[typeKey];
+                                return (
+                                    <Select.Item value={botType} key={`internal-bot-platform-select-${botType}`}>
+                                        {t(`bot.platforms.${botType}`)}
+                                    </Select.Item>
+                                );
+                            })}
+                        />
                     </Box>
                     <Box mt="4">
-                        <Select.Root
+                        <Floating.LabelSelect
+                            label={t("settings.Select a platform running type")}
                             value={selectedPlatformRunningType}
                             onValueChange={setSelectedPlatformRunningType as (value: string) => void}
                             disabled={isValidating}
-                        >
-                            <Select.Trigger>
-                                <Select.Value placeholder={t("settings.Select a platform running type")} />
-                            </Select.Trigger>
-                            <Select.Content>
-                                {Object.keys(InternalBotModel.EInternalBotPlatformRunningType).map((typeKey) => {
-                                    const botType = InternalBotModel.EInternalBotPlatformRunningType[typeKey];
-                                    return (
-                                        <Select.Item value={botType} key={`internal-bot-platform-running-type-select-${botType}`}>
-                                            {t(`internalBot.platformRunningTypes.${botType}`)}
-                                        </Select.Item>
-                                    );
-                                })}
-                            </Select.Content>
-                        </Select.Root>
-                    </Box>
-                    <Box mt="4">
-                        <Floating.LabelInput
-                            label={t("settings.Internal bot API URL")}
-                            autoComplete="off"
-                            disabled={isValidating}
-                            ref={(el) => {
-                                inputsRef.current.url = el;
-                            }}
+                            required
+                            options={AVAILABLE_RUNNING_TYPES_BY_PLATFORM[selectedPlatform].map((botType) => {
+                                return (
+                                    <Select.Item value={botType} key={`internal-bot-platform-running-type-select-${botType}`}>
+                                        {t(`bot.platformRunningTypes.${botType}`)}
+                                    </Select.Item>
+                                );
+                            })}
                         />
-                        {errors.url && <FormErrorMessage error={errors.url} notInForm />}
                     </Box>
-                    <Box mt="4">
-                        <PasswordInput
-                            label={t("settings.Internal bot API key")}
-                            isValidating={isValidating}
-                            autoComplete="off"
-                            ref={(el) => {
-                                inputsRef.current.apiKey = el;
-                            }}
-                        />
-                        {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
-                    </Box>
-                    <Box mt="4">
-                        {selectedPlatformRunningType === InternalBotModel.EInternalBotPlatformRunningType.FlowJson && (
-                            <Alert variant="warning" icon="alert-triangle" title={t("common.Warning")} className="mb-2">
-                                {t("settings.Flow json is only supported in the internal flows server.")}
-                            </Alert>
-                        )}
-                        <InternalBotValueInput
-                            value=""
-                            valueType={valueType}
-                            newValueRef={valueRef}
-                            isValidating={isValidating}
-                            previewByDialog
-                            ref={(el) => {
-                                inputsRef.current.value = el;
-                            }}
-                        />
+                    {formRequirements.includes("url") && (
+                        <Box mt="4">
+                            <Floating.LabelInput
+                                label={t("settings.Internal bot API URL")}
+                                autoComplete="off"
+                                disabled={isValidating}
+                                required
+                                ref={setInputRef("url")}
+                            />
+                            {errors.url && <FormErrorMessage error={errors.url} notInForm />}
+                        </Box>
+                    )}
+                    {formRequirements.includes("apiKey") && (
+                        <Box mt="4">
+                            <PasswordInput
+                                label={t("settings.Internal bot API key")}
+                                isValidating={isValidating}
+                                autoComplete="off"
+                                required
+                                ref={setInputRef("apiKey")}
+                            />
+                            {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
+                        </Box>
+                    )}
+                    {formRequirements.includes("value") && (
+                        <Box mt="4">
+                            {selectedPlatformRunningType === EBotPlatformRunningType.FlowJson && (
+                                <Alert variant="warning" icon="alert-triangle" title={t("common.Warning")} className="mb-2">
+                                    {t("settings.The internal flows server should be running to use.")}
+                                </Alert>
+                            )}
+                            <BotValueInput
+                                value=""
+                                label={t(`bot.platformRunningTypes.${selectedPlatformRunningType}`)}
+                                valueType={valueType}
+                                newValueRef={valueRef}
+                                isValidating={isValidating}
+                                previewByDialog
+                                required
+                                ref={setInputRef("value")}
+                            />
 
-                        {errors.value && <FormErrorMessage error={errors.value} notInForm />}
-                    </Box>
+                            {errors.value && <FormErrorMessage error={errors.value} notInForm />}
+                        </Box>
+                    )}
                 </Form.Root>
                 <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                     <Dialog.Close asChild>

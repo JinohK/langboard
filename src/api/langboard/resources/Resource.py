@@ -3,7 +3,7 @@ from typing import Literal
 from ..Constants import ROOT_DIR
 
 
-TResourceName = Literal["locales", "flows"]
+TResourceName = Literal["locales"]
 
 
 def get_resource_path(resource_name: TResourceName, path: str | Path | None = None) -> Path:  # type: ignore

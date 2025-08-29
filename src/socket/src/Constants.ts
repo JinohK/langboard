@@ -42,6 +42,7 @@ export const DATA_DIR = IS_EXECUTABLE ? path.join(BASE_DIR, "data") : path.join(
 export const LOGGING_DIR = getEnv<string>({ key: "LOGGING_DIR", defaultValue: path.join(DATA_DIR, "logs", "socket") });
 
 export const PORT = parseInt(getEnv<string>({ key: "SOCKET_PORT", defaultValue: "5690" }));
+export const API_PORT = parseInt(getEnv<string>({ key: "API_PORT", defaultValue: "5381" }));
 export const UI_PORT = parseInt(getEnv<string>({ key: "UI_PORT", defaultValue: "5173" }));
 
 export const BROADCAST_TYPE = getEnv({ key: "BROADCAST_TYPE", defaultValue: "in-memory", availableValues: ["in-memory", "kafka"] });
@@ -54,6 +55,7 @@ if (BROADCAST_TYPE === "kafka" && CACHE_TYPE === "in-memory") {
     throw new Error("Cannot use in-memory cache with Kafka broadcast. Please set CACHE_TYPE to 'redis' or another supported type.");
 }
 
+export const API_URL = getEnv<string>({ key: "API_URL", defaultValue: `http://localhost:${API_PORT}` });
 export const PUBLIC_UI_URL =
     ENVIRONMENT !== "local" ? getEnv<string>({ key: "PUBLIC_UI_URL", defaultValue: `http://localhost:${UI_PORT}` }) : `http://localhost:${UI_PORT}`;
 
@@ -97,3 +99,5 @@ export const MAIL_PASSWORD = getEnv<string>({ key: "MAIL_PASSWORD", defaultValue
 export const MAIL_SERVER = getEnv<string>({ key: "MAIL_SERVER" });
 export const MAIL_PORT = getEnv<string>({ key: "MAIL_PORT" });
 export const MAIL_SSL_TLS = getEnv<string>({ key: "MAIL_SSL_TLS" }) == "true";
+
+export const DEFAULT_FLOWS_URL = getEnv<string>({ key: "DEFAULT_FLOWS_URL", defaultValue: "http://127.0.0.1:5019" });

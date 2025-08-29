@@ -1,26 +1,22 @@
-import { BaseModel, IBaseModel } from "@/core/models/Base";
+import { BaseModel } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
 import useBotUpdatedHandlers from "@/controllers/socket/global/useBotUpdatedHandlers";
 import useBotDeletedHandlers from "@/controllers/socket/global/useBotDeletedHandlers";
 import useBotSettingUpdatedHandlers from "@/controllers/socket/settings/bots/useBotSettingUpdatedHandlers";
-
-export enum EAPIAuthType {
-    Langflow = "langflow",
-}
+import { EBotPlatform, EBotPlatformRunningType, IBaseBotModel } from "@/core/models/bot.related.type";
 
 export const ALLOWED_ALL_IPS = "*";
 
-export interface Interface extends IBaseModel {
+export interface Interface extends IBaseBotModel {
     name: string;
     bot_uname: string;
     avatar?: string;
     api_url: string;
-    api_auth_type: EAPIAuthType;
     api_key: string;
     app_api_token: string;
     ip_whitelist: string[];
-    prompt: string;
+    value: string;
 }
 
 class BotModel extends BaseModel<Interface> {
@@ -45,8 +41,12 @@ class BotModel extends BaseModel<Interface> {
             model.avatar = Utils.String.convertServerFileURL(model.avatar);
         }
 
-        if (Utils.Type.isString(model.api_auth_type)) {
-            model.api_auth_type = Utils.String.convertSafeEnum(EAPIAuthType, model.api_auth_type);
+        if (Utils.Type.isString(model.platform)) {
+            model.platform = Utils.String.convertSafeEnum(EBotPlatform, model.platform);
+        }
+
+        if (Utils.Type.isString(model.platform_running_type)) {
+            model.platform_running_type = Utils.String.convertSafeEnum(EBotPlatformRunningType, model.platform_running_type);
         }
 
         return model;
@@ -73,18 +73,25 @@ class BotModel extends BaseModel<Interface> {
         this.update({ avatar: value });
     }
 
+    public get platform() {
+        return this.getValue("platform");
+    }
+    public set platform(value) {
+        this.update({ platform: value });
+    }
+
+    public get platform_running_type() {
+        return this.getValue("platform_running_type");
+    }
+    public set platform_running_type(value) {
+        this.update({ platform_running_type: value });
+    }
+
     public get api_url() {
         return this.getValue("api_url");
     }
     public set api_url(value) {
         this.update({ api_url: value });
-    }
-
-    public get api_auth_type() {
-        return this.getValue("api_auth_type");
-    }
-    public set api_auth_type(value) {
-        this.update({ api_auth_type: value });
     }
 
     public get api_key() {
@@ -108,11 +115,11 @@ class BotModel extends BaseModel<Interface> {
         this.update({ ip_whitelist: value });
     }
 
-    public get prompt() {
-        return this.getValue("prompt");
+    public get value() {
+        return this.getValue("value");
     }
-    public set prompt(value) {
-        this.update({ prompt: value });
+    public set value(value) {
+        this.update({ value });
     }
 }
 

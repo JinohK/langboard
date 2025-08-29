@@ -3,14 +3,15 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { InternalBotModel } from "@/core/models";
+import { EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
 import { Utils } from "@langboard/core/utils";
 
 export interface ICreateInternalBotForm {
     bot_type: InternalBotModel.EInternalBotType;
     display_name: string;
-    platform: InternalBotModel.EInternalBotPlatform;
-    platform_running_type: InternalBotModel.EInternalBotPlatformRunningType;
-    url: string;
+    platform: EBotPlatform;
+    platform_running_type: EBotPlatformRunningType;
+    url?: string;
     api_key?: string;
     value: string;
     avatar?: File;
@@ -26,7 +27,7 @@ const useCreateInternalBot = (options?: TMutationOptions<ICreateInternalBotForm>
                 return;
             }
 
-            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is File => targetKey === "avatar";
+            const isAvatar = (targetKey: string, _: unknown): _ is File => targetKey === "avatar";
 
             if (isAvatar(key, value)) {
                 if (!value) {

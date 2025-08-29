@@ -52,9 +52,15 @@ const createOptions = (dirname) => [
     },
 ];
 
+const dirnames = [];
+fs.readdirSync("src").forEach((file) => {
+    if (fs.statSync(`src/${file}`).isDirectory()) {
+        dirnames.push(file);
+    }
+});
+
 export default [
-    ...createOptions("utils"),
-    ...createOptions("enums"),
+    ...dirnames.map((dirname) => createOptions(dirname)).flat(),
     {
         input: getDirname("src", "global.d.ts"),
         output: {

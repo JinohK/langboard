@@ -1,14 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { createLangflowRequestModel, parseLangflowResponse } from "@/core/ai/LangflowHelper";
-import langflowStreamResponse from "@/core/ai/LangflowStreamResponse";
-import { ILangflowRequestModel } from "@/core/ai/types";
-import { api } from "@/core/helpers/Api";
-import Logger from "@/core/utils/Logger";
+import { IBotRequestModel } from "@/core/ai/types";
 import { Utils } from "@langboard/core/utils";
-import InternalBot, { EInternalBotPlatform, EInternalBotType } from "@/models/InternalBot";
+import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
-import fs from "fs";
-import { EHttpStatus } from "@langboard/core/enums";
+import { createRequest } from "@/core/ai/requests/utils";
+import { IStreamResponse } from "@/core/ai/requests/types";
 
 abstract class BaseBot {
     public static get BOT_TYPE(): EInternalBotType {
@@ -20,14 +16,10 @@ abstract class BaseBot {
         this.#abortableTasks = new Map();
     }
 
-    public abstract run(internalBot: InternalBot, data: Record<string, any>): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
-    public abstract runAbortable(
-        internalBot: InternalBot,
-        data: Record<string, any>,
-        taskID: string
-    ): Promise<string | ReturnType<typeof langflowStreamResponse> | null>;
+    public abstract run(internalBot: InternalBot, data: Record<string, any>): Promise<string | IStreamResponse | null>;
+    public abstract runAbortable(internalBot: InternalBot, data: Record<string, any>, taskID: string): Promise<string | IStreamResponse | null>;
     public abstract isAvailable(internalBot: InternalBot): Promise<bool>;
-    public abstract uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null>;
+    public abstract upload(internalBot: InternalBot, file: formidable.File): Promise<string | null>;
 
     public async abort(taskID: string): Promise<void> {
         const task = this.#abortableTasks.get(taskID);
@@ -49,166 +41,57 @@ abstract class BaseBot {
         return task.signal.aborted;
     }
 
-    protected async isLangflowAvailable(internalBot: InternalBot): Promise<bool> {
-        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
+    protected async canRequest(internalBot: InternalBot): Promise<bool> {
+        const request = createRequest(internalBot);
+        if (!request) {
             return false;
         }
 
-        const healthCheck = await api.get(`${internalBot.url}/health`, {
-            headers: await this.getBotRequestHeaders(internalBot),
-        });
-
-        return healthCheck.status === 200;
+        return await request.isAvailable();
     }
 
-    protected async runLangflow(
+    protected async request(
         internalBot: InternalBot,
-        requestModel: ILangflowRequestModel,
+        requestModel: IBotRequestModel,
         useStream: bool = false
-    ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
+    ): Promise<string | IStreamResponse | null> {
+        const request = createRequest(internalBot);
+        if (!request) {
             return null;
         }
 
-        const headers = await this.getBotRequestHeaders(internalBot);
-
-        const apiRequestModel = createLangflowRequestModel({
-            internalBot,
-            headers,
-            requestModel,
-            useStream,
-        });
-
-        if (useStream) {
-            return langflowStreamResponse({
-                url: apiRequestModel.url,
-                headers: apiRequestModel.headers,
-                body: apiRequestModel.reqData,
-            });
-        }
-
-        try {
-            const response = await api.post(apiRequestModel.url, apiRequestModel.reqData, {
-                headers: apiRequestModel.headers,
-            });
-
-            if (response.status !== 200) {
-                throw new Error("Langflow request failed");
-            }
-
-            return response.data;
-        } catch {
-            return null;
-        }
+        return request.request(requestModel, useStream);
     }
 
-    protected async runLangflowAbortable(
+    protected async requestAbortable(
         internalBot: InternalBot,
         taskID: string,
-        requestModel: ILangflowRequestModel,
+        requestModel: IBotRequestModel,
         useStream: bool = false
-    ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
-        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
+    ): Promise<string | IStreamResponse | null> {
+        const request = createRequest(internalBot);
+        if (!request) {
             return null;
         }
-
-        const headers = await this.getBotRequestHeaders(internalBot);
-
-        const apiRequestModel = createLangflowRequestModel({
-            internalBot,
-            headers,
-            requestModel,
-            useStream,
-        });
 
         const abortController = new AbortController();
+        const onAbort = () => {
+            this.#abortableTasks.delete(taskID);
+            abortController.signal.removeEventListener("abort", onAbort);
+        };
+        abortController.signal.addEventListener("abort", onAbort);
         this.#abortableTasks.set(taskID, abortController);
 
-        if (useStream) {
-            return langflowStreamResponse({
-                url: apiRequestModel.url,
-                headers: apiRequestModel.headers,
-                body: apiRequestModel.reqData,
-                signal: abortController.signal,
-                onEnd: () => {
-                    this.#abortableTasks.delete(taskID);
-                },
-            });
-        }
-
-        let result;
-        try {
-            const response = await api.post(apiRequestModel.url, apiRequestModel.reqData, {
-                headers: apiRequestModel.headers,
-                timeout: 120000,
-                signal: abortController.signal,
-            });
-
-            if (response.status !== 200) {
-                throw new Error("Langflow request failed");
-            }
-
-            result = parseLangflowResponse(response.data);
-        } catch {
-            result = null;
-        } finally {
-            this.#abortableTasks.delete(taskID);
-        }
-
-        return result;
+        return request.requestAbortable([abortController, onAbort], requestModel, useStream);
     }
 
-    protected async uploadFileToLangflow(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
-        const filename = file.originalFilename || file.newFilename;
-        if (!filename || !file.size) {
+    protected async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+        const request = createRequest(internalBot);
+        if (!request) {
             return null;
         }
 
-        if (internalBot.platform !== EInternalBotPlatform.Langflow) {
-            return null;
-        }
-
-        const headers = {
-            "Content-Type": "multipart/form-data",
-            ...(await this.getBotRequestHeaders(internalBot)),
-        };
-
-        const url = `${internalBot.url}/api/v2/files`;
-
-        const formData = new FormData();
-        const blob = new Blob([fs.readFileSync(file.filepath)], { type: file.mimetype ?? undefined });
-        formData.append("file", blob, filename);
-
-        try {
-            const response = await api.post(url, formData, {
-                headers: {
-                    ...headers,
-                },
-                data: formData,
-            });
-
-            if (![EHttpStatus.HTTP_200_OK, EHttpStatus.HTTP_201_CREATED].includes(response.status)) {
-                throw new Error("Langflow file upload failed");
-            }
-
-            return response.data.path ?? null;
-        } catch (error) {
-            Logger.error(error);
-            return null;
-        }
-    }
-
-    async getBotRequestHeaders(internalBot: InternalBot) {
-        const headers: Record<string, any> = {};
-        switch (internalBot.platform) {
-            case EInternalBotPlatform.Langflow:
-                headers["x-api-key"] = internalBot.api_key;
-                break;
-            default:
-                throw new Error(`Unsupported platform: ${internalBot.platform}`);
-        }
-
-        return headers;
+        return await request.upload(file);
     }
 }
 

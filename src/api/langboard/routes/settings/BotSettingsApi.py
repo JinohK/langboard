@@ -4,6 +4,7 @@ from core.schema import OpenApiSchema
 from core.storage import StorageName
 from fastapi import File, UploadFile, status
 from models import Bot
+from models.BaseBotModel import BotPlatform, BotPlatformRunningType
 from ...core.storage import Storage
 from ...services import Service
 from .Form import CreateBotForm, UpdateBotForm
@@ -41,11 +42,12 @@ async def create_bot(
     bot = await service.bot.create(
         form.bot_name,
         form.bot_uname,
+        form.platform,
+        form.platform_running_type,
         form.api_url,
-        form.api_auth_type,
         form.api_key,
         ip_whitelist,
-        form.prompt,
+        form.value,
         uploaded_avatar,
     )
     if not bot:
@@ -67,6 +69,8 @@ async def create_bot(
                 "name?": "string",
                 "bot_uname?": "string",
                 "avatar?": "string",
+                "platform": f"Literal[{', '.join([platform.value for platform in BotPlatform])}]",
+                "platform_running_type": f"Literal[{', '.join([running_type.value for running_type in BotPlatformRunningType])}]",
                 "api_url?": "string",
                 "api_key?": "string",
                 "deleted_avatar?": "bool",

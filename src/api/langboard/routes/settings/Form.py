@@ -5,8 +5,8 @@ from core.routing.Exception import InvalidError, InvalidException, MissingExcept
 from core.schema import Pagination
 from core.types import SafeDateTime
 from models.AppSetting import AppSettingType
-from models.Bot import BotAPIAuthType
-from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
+from models.BaseBotModel import BotPlatform, BotPlatformRunningType
+from models.InternalBot import InternalBotType
 from pydantic import field_validator
 from ...Constants import EMAIL_REGEX
 
@@ -87,22 +87,24 @@ class DeleteSelectedUsersForm(BaseFormModel):
 class CreateBotForm(BaseFormModel):
     bot_name: str
     bot_uname: str
-    api_url: str
-    api_auth_type: BotAPIAuthType
-    api_key: str
+    platform: BotPlatform
+    platform_running_type: BotPlatformRunningType
+    api_url: str = ""
+    api_key: str = ""
     ip_whitelist: str | None = None
-    prompt: str | None = None
+    value: str | None = None
 
 
 @form_model
 class UpdateBotForm(BaseFormModel):
     bot_name: str | None = None
     bot_uname: str | None = None
+    platform: BotPlatform | None = None
+    platform_running_type: BotPlatformRunningType | None = None
     api_url: str | None = None
-    api_auth_type: BotAPIAuthType | None = None
     api_key: str | None = None
     ip_whitelist: str | None = None
-    prompt: str | None = None
+    value: str | None = None
     delete_avatar: bool = False
 
 
@@ -129,18 +131,18 @@ class DeleteSelectedGlobalRelationshipTypesForm(BaseFormModel):
 class CreateInternalBotForm(BaseFormModel):
     bot_type: InternalBotType
     display_name: str
-    platform: InternalBotPlatform
-    platform_running_type: InternalBotPlatformRunningType
-    url: str
+    platform: BotPlatform
+    platform_running_type: BotPlatformRunningType
+    url: str = ""
     api_key: str = ""
-    value: str
+    value: str = ""
 
 
 @form_model
 class UpdateInternalBotForm(BaseFormModel):
     display_name: str | None = None
-    platform: InternalBotPlatform | None = None
-    platform_running_type: InternalBotPlatformRunningType | None = None
+    platform: BotPlatform | None = None
+    platform_running_type: BotPlatformRunningType | None = None
     url: str | None = None
     api_key: str | None = None
     value: str | None = None

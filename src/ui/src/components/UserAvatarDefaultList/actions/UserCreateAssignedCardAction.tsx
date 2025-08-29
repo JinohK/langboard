@@ -17,7 +17,7 @@ function UserAvatarUserCreateAssignedCardAction({ user, project }: IUserAvatarUs
     const [t] = useTranslation();
     const columns = ProjectColumn.Model.useModels((model) => project.uid === model.project_uid && !model.is_archive, [project]);
     const containerRef = useRef<HTMLDivElement>(null);
-    const columnUidValueRef = useRef<string>("");
+    const columnUidValueRef = useRef("");
     const columnUidButtonRef = useRef<HTMLButtonElement>(null);
     const titleInputRef = useRef<HTMLInputElement>(null);
     const [isOpened, setIsOpened] = useState(false);

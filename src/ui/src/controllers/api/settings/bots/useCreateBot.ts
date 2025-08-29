@@ -3,15 +3,17 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
+import { EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
 
 export interface ICreateBotForm {
     bot_name: string;
     bot_uname: string;
-    api_url: string;
-    api_auth_type: BotModel.EAPIAuthType;
-    api_key: string;
+    platform: EBotPlatform;
+    platform_running_type: EBotPlatformRunningType;
+    api_url?: string;
+    api_key?: string;
     ip_whitelist: string[];
-    prompt: string;
+    value?: string;
     avatar?: File;
 }
 
@@ -29,7 +31,7 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm, ICreateBotRespo
                 return;
             }
 
-            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is File => targetKey === "avatar";
+            const isAvatar = (targetKey: string, _: unknown): _ is File => targetKey === "avatar";
 
             if (isAvatar(key, value)) {
                 if (!value) {

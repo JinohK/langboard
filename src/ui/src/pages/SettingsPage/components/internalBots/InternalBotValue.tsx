@@ -1,36 +1,40 @@
 import { Alert, Box, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { InternalBotModel } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import InternalBotValueInput from "@/pages/SettingsPage/components/internalBots/InternalBotValueInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { EHttpStatus } from "@langboard/core/enums";
+import { getValueType } from "@/components/BotValueInput/utils";
+import { EBotPlatformRunningType } from "@/core/models/bot.related.type";
+import BotValueInput from "@/components/BotValueInput";
+import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
 
 const InternalBotValue = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
     const navigate = usePageNavigateRef();
+    const platform = internalBot.useField("platform");
     const platformRunningType = internalBot.useField("platform_running_type");
     const value = internalBot.useField("value");
-    const valueType = useMemo(() => {
-        switch (platformRunningType) {
-            case InternalBotModel.EInternalBotPlatformRunningType.FlowJson:
-                return "json";
-            default:
-                return "text";
-        }
-    }, [platformRunningType]);
+    const valueType = useMemo(() => getValueType(platform, platformRunningType), [platform, platformRunningType]);
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
     const newValueRef = useRef<string>(value);
+    const inputRef = useRef<HTMLInputElement | HTMLTextAreaElement | TBotValueDefaultInputRefLike | null>(null);
     const [isValidating, setIsValidating] = useState(false);
 
     const change = () => {
-        if (isValidating || !newValueRef.current) {
+        if (isValidating || !newValueRef.current || !inputRef.current) {
             return;
+        }
+
+        if (inputRef.current.type === "default-bot-json") {
+            const validated = (inputRef.current as TBotValueDefaultInputRefLike).validate(true);
+            if (!validated) {
+                return;
+            }
         }
 
         const newValue = newValueRef.current.trim();
@@ -70,12 +74,21 @@ const InternalBotValue = memo(() => {
 
     return (
         <Box w="full">
-            {platformRunningType === InternalBotModel.EInternalBotPlatformRunningType.FlowJson && (
+            {platformRunningType === EBotPlatformRunningType.FlowJson && (
                 <Alert variant="warning" icon="alert-triangle" title={t("common.Warning")} className="mb-2">
-                    {t("settings.Flow json is only supported in the internal flows server.")}
+                    {t("settings.The internal flows server should be running to use.")}
                 </Alert>
             )}
-            <InternalBotValueInput value={value} valueType={valueType} newValueRef={newValueRef} isValidating={isValidating} change={change} />
+            <BotValueInput
+                value={value}
+                label={t(`bot.platformRunningTypes.${platformRunningType}`)}
+                valueType={valueType}
+                newValueRef={newValueRef}
+                isValidating={isValidating}
+                change={change}
+                required
+                ref={inputRef}
+            />
         </Box>
     );
 });

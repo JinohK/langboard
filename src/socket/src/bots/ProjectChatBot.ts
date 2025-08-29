@@ -10,7 +10,7 @@ class ProjectChatBot extends BaseBot {
     }
 
     public async run(internalBot: InternalBot, data: Record<string, any>) {
-        return await this.runLangflow(
+        return await this.request(
             internalBot,
             {
                 message: data.message,
@@ -27,7 +27,7 @@ class ProjectChatBot extends BaseBot {
     }
 
     public async runAbortable(internalBot: InternalBot, data: Record<string, any>, taskID: string) {
-        return await this.runLangflowAbortable(
+        return await this.requestAbortable(
             internalBot,
             taskID,
             {
@@ -45,11 +45,11 @@ class ProjectChatBot extends BaseBot {
     }
 
     public async isAvailable(internalBot: InternalBot) {
-        return await this.isLangflowAvailable(internalBot);
+        return await this.canRequest(internalBot);
     }
 
-    public async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
-        return await this.uploadFileToLangflow(internalBot, file);
+    public async upload(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+        return await this.upload(internalBot, file);
     }
 }
 

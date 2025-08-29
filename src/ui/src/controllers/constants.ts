@@ -215,6 +215,9 @@ export const API_ROUTES = {
             CHANGE_DEFAULT: "/settings/internal-bot/{bot_uid}/default",
             DELETE: "/settings/internal-bot/{bot_uid}",
         },
+        SCHEMAS: {
+            API_LIST: "/schema/api",
+        },
     },
     GLBOAL: {
         INTERNAL_BOTS: {

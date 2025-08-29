@@ -7,7 +7,8 @@ from core.utils.Converter import convert_python_data
 from core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
 from core.utils.String import generate_random_string
 from models import AppSetting, Bot
-from models.Bot import ALLOWED_ALL_IPS, BotAPIAuthType
+from models.BaseBotModel import BotPlatform, BotPlatformRunningType
+from models.Bot import ALLOWED_ALL_IPS
 from ...core.service import ServiceHelper
 from ...publishers import BotPublisher
 from ...tasks.bot import BotDefaultTask
@@ -41,11 +42,12 @@ class BotService(BaseService):
         self,
         name: str,
         bot_uname: str,
+        platform: BotPlatform,
+        platform_running_type: BotPlatformRunningType,
         api_url: str,
-        api_auth_type: BotAPIAuthType,
         api_key: str,
         ip_whitelist: list[str],
-        prompt: str | None = None,
+        value: str | None = None,
         avatar: FileModel | None = None,
     ) -> Bot | None:
         existing_bot = ServiceHelper.get_by(Bot, "bot_uname", bot_uname)
@@ -55,13 +57,14 @@ class BotService(BaseService):
         bot = Bot(
             name=name,
             bot_uname=bot_uname,
+            platform=platform,
+            platform_running_type=platform_running_type,
             avatar=avatar,
             api_url=api_url,
-            api_auth_type=api_auth_type,
             api_key=api_key,
             app_api_token=await self.generate_api_key(),
             ip_whitelist=self.filter_valid_ip_whitelist(ip_whitelist),
-            prompt=prompt or "",
+            value=value or "",
         )
 
         with DbSession.use(readonly=False) as db:
@@ -76,8 +79,17 @@ class BotService(BaseService):
         bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return None
-        mutable_keys = ["name", "bot_uname", "avatar", "api_url", "api_auth_type", "api_key", "prompt"]
-        unpublishable_keys = ["api_url", "api_auth_type", "api_key", "prompt"]
+        mutable_keys = [
+            "name",
+            "bot_uname",
+            "avatar",
+            "api_url",
+            "platform",
+            "platform_running_type",
+            "api_key",
+            "value",
+        ]
+        unpublishable_keys = ["api_url", "platform", "platform_running_type", "api_key", "value"]
 
         old_bot_record = {}
 
@@ -90,6 +102,11 @@ class BotService(BaseService):
                 continue
             old_bot_record[key] = convert_python_data(old_value)
             setattr(bot, key, new_value)
+
+        available_running_types = Bot.AVAILABLE_RUNNING_TYPES_BY_PLATFORM[bot.platform]
+        if bot.platform_running_type not in available_running_types:
+            old_bot_record["platform_running_type"] = convert_python_data(bot.platform_running_type)
+            bot.platform_running_type = available_running_types[0]
 
         if "bot_uname" in form:
             existing_bot = ServiceHelper.get_by(Bot, "bot_uname", form["bot_uname"])
@@ -166,6 +183,9 @@ class BotService(BaseService):
         bot = ServiceHelper.get_by_param(Bot, bot)
         if not bot:
             return False
+
+        with DbSession.use(readonly=False) as db:
+            db.delete(bot)
 
         await BotPublisher.bot_deleted(bot.get_uid())
 

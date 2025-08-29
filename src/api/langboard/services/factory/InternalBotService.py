@@ -1,13 +1,12 @@
 from typing import Any, Literal, overload
 from core.db import DbSession, SqlBuilder
-from core.Env import Env
 from core.service import BaseService
 from core.storage import FileModel
 from models import InternalBot, Project, ProjectAssignedInternalBot
-from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
+from models.BaseBotModel import BotPlatform, BotPlatformRunningType
+from models.InternalBot import InternalBotType
 from ...core.service import ServiceHelper
 from ...publishers import InternalBotPublisher, ProjectPublisher
-from ...resources.Resource import get_resource_path
 from .Types import TInternalBotParam
 
 
@@ -43,10 +42,10 @@ class InternalBotService(BaseService):
         self,
         bot_type: InternalBotType,
         display_name: str,
-        platform: InternalBotPlatform,
-        platform_running_type: InternalBotPlatformRunningType,
-        url: str,
-        value: str,
+        platform: BotPlatform,
+        platform_running_type: BotPlatformRunningType,
+        url: str = "",
+        value: str = "",
         api_key: str = "",
         avatar: FileModel | None = None,
         is_default: bool = False,
@@ -88,6 +87,11 @@ class InternalBotService(BaseService):
                 continue
             setattr(internal_bot, key, new_value)
             updated_keys.append(key)
+
+        available_running_types = InternalBot.AVAILABLE_RUNNING_TYPES_BY_PLATFORM[internal_bot.platform]
+        if internal_bot.platform_running_type not in available_running_types:
+            internal_bot.platform_running_type = available_running_types[0]
+            updated_keys.append("platform_running_type")
 
         if "delete_avatar" in form and form["delete_avatar"]:
             internal_bot.avatar = None
@@ -143,17 +147,12 @@ class InternalBotService(BaseService):
 
         if not default_internal_bot_id:
             display_name = internal_bot.bot_type.value.replace("_", " ").title()
-            flow_json_path = get_resource_path("flows", "default_flow.json")
-            with open(flow_json_path, "r", encoding="utf-8") as f:
-                default_flow_json = f.read()
             new_default_internal_bot = await self.create(
                 bot_type=internal_bot.bot_type,
                 display_name=display_name,
-                platform=InternalBotPlatform.Langflow,
-                platform_running_type=InternalBotPlatformRunningType.FlowJson,
-                url=Env.DEFAULT_LANGFLOW_URL,
+                platform=BotPlatform.Default,
+                platform_running_type=BotPlatformRunningType.Default,
                 is_default=True,
-                value=default_flow_json,
             )
             default_internal_bot_id = new_default_internal_bot.id
 

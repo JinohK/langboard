@@ -124,19 +124,38 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                     <Flex direction="col" gap="4" w="full" mt="4">
                         <Box>
                             <Form.Field name="email">
-                                <Floating.LabelInput label={t("user.Email")} isFormControl autoFocus autoComplete="email" disabled={isValidating} />
+                                <Floating.LabelInput
+                                    label={t("user.Email")}
+                                    isFormControl
+                                    autoFocus
+                                    autoComplete="email"
+                                    disabled={isValidating}
+                                    required
+                                />
                                 {errors.email && <FormErrorMessage error={errors.email} />}
                             </Form.Field>
                         </Box>
                         <Box>
                             <Form.Field name="firstname">
-                                <Floating.LabelInput label={t("user.First Name")} isFormControl autoComplete="firstname" disabled={isValidating} />
+                                <Floating.LabelInput
+                                    label={t("user.First Name")}
+                                    isFormControl
+                                    autoComplete="firstname"
+                                    disabled={isValidating}
+                                    required
+                                />
                                 {errors.firstname && <FormErrorMessage error={errors.firstname} />}
                             </Form.Field>
                         </Box>
                         <Box>
                             <Form.Field name="lastname">
-                                <Floating.LabelInput label={t("user.Last Name")} isFormControl autoComplete="lastname" disabled={isValidating} />
+                                <Floating.LabelInput
+                                    label={t("user.Last Name")}
+                                    isFormControl
+                                    autoComplete="lastname"
+                                    disabled={isValidating}
+                                    required
+                                />
                                 {errors.lastname && <FormErrorMessage error={errors.lastname} />}
                             </Form.Field>
                         </Box>
@@ -147,6 +166,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                                 isFormControl
                                 isValidating={isValidating}
                                 error={errors.password}
+                                required
                             />
                         </Box>
                         <Box>
@@ -156,6 +176,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                                 isFormControl
                                 isValidating={isValidating}
                                 error={errors["password-confirm"]}
+                                required
                             />
                         </Box>
                         <Box>
@@ -167,6 +188,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                                     emptyMessage={industryRef.current ?? ""}
                                     disabled={isValidating}
                                     placeholder={t("user.What industry are you in?")}
+                                    required
                                 />
                                 {errors.industry && <FormErrorMessage error={errors.industry} />}
                             </Form.Field>
@@ -180,6 +202,7 @@ function UserCreateFormDialog({ opened, setOpened }: IUserCreateFormDialogProps)
                                     emptyMessage={purposeRef.current ?? ""}
                                     disabled={isValidating}
                                     placeholder={t("user.What is your purpose for using {app}?")}
+                                    required
                                 />
                                 {errors.purpose && <FormErrorMessage error={errors.purpose} />}
                             </Form.Field>

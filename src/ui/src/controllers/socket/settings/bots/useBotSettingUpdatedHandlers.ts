@@ -3,14 +3,16 @@ import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/So
 import { BotModel } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
+import { EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
 
 export interface IBotSettingUpdatedRawResponse {
     api_url?: string;
-    api_auth_type?: BotModel.EAPIAuthType;
+    platform?: EBotPlatform;
+    platform_running_type?: EBotPlatformRunningType;
     api_key?: string;
     app_api_token?: string;
     ip_whitelist?: string[];
-    prompt: string;
+    value?: string;
 }
 
 export interface IUseBotSettingUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
@@ -28,9 +30,15 @@ const useBotSettingUpdatedHandlers = ({ callback, bot }: IUseBotSettingUpdatedHa
             callback,
             responseConverter: (data) => {
                 Object.entries(data).forEach(([key, value]) => {
-                    if (key === "api_auth_type") {
+                    if (key === "platform") {
                         if (Utils.Type.isString(value)) {
-                            value = BotModel.EAPIAuthType[new Utils.String.Case(value).toPascal() as keyof typeof BotModel.EAPIAuthType];
+                            value = EBotPlatform[new Utils.String.Case(value).toPascal() as keyof typeof EBotPlatform];
+                        }
+                    }
+
+                    if (key === "platform_running_type") {
+                        if (Utils.Type.isString(value)) {
+                            value = EBotPlatformRunningType[new Utils.String.Case(value).toPascal() as keyof typeof EBotPlatformRunningType];
                         }
                     }
 

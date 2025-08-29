@@ -1,7 +1,6 @@
 import { Command as CommandPrimitive } from "cmdk";
 import { useMemo, useRef, useState } from "react";
 import * as Command from "@/components/base/Command";
-import Input from "@/components/base/Input";
 import * as Popover from "@/components/base/Popover";
 import Skeleton from "@/components/base/Skeleton";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -9,6 +8,7 @@ import IconComponent from "@/components/base/IconComponent";
 import Flex from "@/components/base/Flex";
 import Box from "@/components/base/Box";
 import { Utils } from "@langboard/core/utils";
+import { Floating } from "@/components/base";
 
 export interface IAutorCompleteProps {
     selectedValue?: string;
@@ -18,10 +18,21 @@ export interface IAutorCompleteProps {
     emptyMessage: string;
     placeholder: string;
     disabled?: bool;
+    required?: bool;
     className?: string;
 }
 
-function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMessage, placeholder, disabled, className }: IAutorCompleteProps) {
+function AutoComplete({
+    selectedValue,
+    onValueChange,
+    items,
+    isLoading,
+    emptyMessage,
+    placeholder,
+    disabled,
+    required,
+    className,
+}: IAutorCompleteProps) {
     const id = useRef(Utils.String.Token.shortUUID());
     const [open, setOpen] = useState(false);
     const [currentValue, setCurrentValue] = useState(selectedValue);
@@ -52,7 +63,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
         <Flex items="center" className={className}>
             <Popover.Root open={open} onOpenChange={setOpen}>
                 <Command.Root
-                    className="focus-within:ring-2 focus-within:ring-primary focus-within:ring-offset-0"
+                    className="overflow-visible"
                     shouldFilter={false}
                     onKeyDown={(e) => {
                         if (!open) {
@@ -78,7 +89,7 @@ function AutoComplete({ selectedValue, onValueChange, items, isLoading, emptyMes
                                 setOpen(false);
                             }}
                         >
-                            <Input placeholder={placeholder} disabled={disabled} />
+                            <Floating.LabelInput label={placeholder} required={required} autoComplete="off" disabled={disabled} />
                         </CommandPrimitive.Input>
                     </Popover.Trigger>
                     {!open && <Command.List aria-hidden="true" className="hidden" />}

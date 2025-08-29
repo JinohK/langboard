@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TBigIntString } from "@/core/db/BaseModel";
 
-export interface ILangflowRequestModel {
+export interface IBotRequestModel {
     message: string;
     projectUID: string;
     userId: TBigIntString;

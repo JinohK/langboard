@@ -1,19 +1,11 @@
 import BaseModel from "@/core/db/BaseModel";
+import { EBotPlatform, EBotPlatformRunningType } from "@/models/bot.related.types";
 import { Entity, Column } from "typeorm";
 
 export enum EInternalBotType {
     ProjectChat = "project_chat",
     EditorChat = "editor_chat",
     EditorCopilot = "editor_copilot",
-}
-
-export enum EInternalBotPlatform {
-    Langflow = "langflow",
-}
-
-export enum EInternalBotPlatformRunningType {
-    FlowId = "flow_id",
-    FlowJson = "flow_json",
 }
 
 @Entity({ name: "internal_bot" })
@@ -24,11 +16,11 @@ class InternalBot extends BaseModel {
     @Column({ type: "varchar" })
     public display_name!: string;
 
-    @Column({ type: "varchar", enum: EInternalBotPlatform })
-    public platform!: EInternalBotPlatform;
+    @Column({ type: "varchar", enum: EBotPlatform })
+    public platform!: EBotPlatform;
 
-    @Column({ type: "varchar", enum: EInternalBotPlatformRunningType })
-    public platform_running_type!: EInternalBotPlatformRunningType;
+    @Column({ type: "varchar", enum: EBotPlatformRunningType })
+    public platform_running_type!: EBotPlatformRunningType;
 
     @Column({ type: "varchar" })
     public url!: string;
@@ -61,7 +53,7 @@ class InternalBot extends BaseModel {
             `${prefix}platform_running_type as platform_running_type`,
             `${prefix}url as url`,
             `${prefix}api_key as api_key`,
-            `CASE WHEN ${prefix}platform_running_type = '${EInternalBotPlatformRunningType.FlowJson}' THEN NULL ELSE ${prefix}value END as value`,
+            `CASE WHEN ${prefix}platform_running_type = '${EBotPlatformRunningType.FlowJson}' THEN NULL ELSE ${prefix}value END as value`,
             `${prefix}avatar as avatar`,
             `${prefix}created_at as created_at`,
             `${prefix}updated_at as updated_at`,

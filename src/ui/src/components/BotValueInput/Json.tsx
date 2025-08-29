@@ -1,4 +1,4 @@
-import { Box, Button, Dialog, Flex, Floating, IconComponent, Input, Popover, Textarea, Toast } from "@/components/base";
+import { Box, Button, Dialog, Flex, IconComponent, Input, Popover, Textarea, Toast } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import JsonView from "@uiw/react-json-view";
@@ -6,60 +6,9 @@ import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { vscodeTheme } from "@uiw/react-json-view/vscode";
 import { composeRefs } from "@/core/utils/ComponentUtils";
+import { TSharedBotValueInputProps } from "@/components/BotValueInput/types";
 
-interface IInternalBotValueInputProps {
-    value: string;
-    valueType: "text" | "json";
-    newValueRef: React.RefObject<string>;
-    isValidating: bool;
-    previewByDialog?: bool;
-    change?: () => void;
-    ref?: React.Ref<HTMLInputElement | HTMLTextAreaElement>;
-}
-
-function InternalBotValueInput({ valueType, ...props }: IInternalBotValueInputProps) {
-    switch (valueType) {
-        case "json":
-            return <InternalBotValueJsonInput {...props} />;
-        default:
-            return <InternalBotValueTextInput {...props} />;
-    }
-}
-
-function InternalBotValueTextInput({ value, newValueRef, change, ref }: Omit<IInternalBotValueInputProps, "valueType">) {
-    const [t] = useTranslation();
-    const handleKeyEvent = (e: React.KeyboardEvent<HTMLInputElement>) => {
-        if (e.key === "Enter") {
-            e.preventDefault();
-            e.stopPropagation();
-            change?.();
-            return;
-        }
-
-        newValueRef.current = e.currentTarget.value;
-    };
-
-    return (
-        <Floating.LabelInput
-            label={t("settings.Internal bot value")}
-            autoComplete="off"
-            defaultValue={value}
-            onBlur={change}
-            onKeyDown={handleKeyEvent}
-            onKeyUp={handleKeyEvent}
-            ref={ref as React.RefObject<HTMLInputElement>}
-        />
-    );
-}
-
-function InternalBotValueJsonInput({
-    value,
-    newValueRef,
-    previewByDialog,
-    isValidating,
-    change,
-    ref,
-}: Omit<IInternalBotValueInputProps, "valueType">) {
+function BotValueJsonInput({ value, newValueRef, previewByDialog, isValidating, change, required, ref }: TSharedBotValueInputProps) {
     const [t] = useTranslation();
     const [currentObject, setCurrentObject] = useState(Utils.String.isJsonString(value) ? JSON.parse(value) : {});
     const [currentJSON, setCurrentJSON] = useState(Utils.String.isJsonString(value) ? JSON.stringify(currentObject, undefined, "    ") : value);
@@ -173,6 +122,7 @@ function InternalBotValueJsonInput({
             onChange={onValueCHange}
             onBlur={save}
             disabled={isValidating}
+            required={required}
             ref={composeRefs(textareaRef, ref as React.RefObject<HTMLTextAreaElement>)}
         />
     );
@@ -219,7 +169,7 @@ function InternalBotValueJsonInput({
                                 disabled={isValidating}
                             >
                                 <IconComponent icon="braces" size="4" />
-                                {t("settings.Upload JSON")}
+                                {t("common.Upload JSON")}
                             </Button>
                             <Dialog.Root open={isDialogOpened} onOpenChange={setIsDialogOpened}>
                                 <Dialog.Trigger asChild>
@@ -270,7 +220,7 @@ function InternalBotValueJsonInput({
                         disabled={isValidating}
                     >
                         <IconComponent icon="braces" size="4" />
-                        {t("settings.Upload JSON")}
+                        {t("common.Upload JSON")}
                     </Button>
                 </Box>
             </Box>
@@ -279,4 +229,4 @@ function InternalBotValueJsonInput({
     );
 }
 
-export default InternalBotValueInput;
+export default BotValueJsonInput;

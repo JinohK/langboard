@@ -78,7 +78,7 @@ function DateTimePicker({ renderTrigger, onChange, ...props }: IDateTimePickerPr
                     </Dialog.Content>
                 </Dialog.Root>
             ) : (
-                <Popover.Root open={open} onOpenChange={setOpen}>
+                <Popover.Root modal open={open} onOpenChange={setOpen}>
                     <Popover.Trigger asChild ref={triggerRef}>
                         {renderTrigger({ open, timezone, disabled, use12HourFormat, setOpen })}
                     </Popover.Trigger>

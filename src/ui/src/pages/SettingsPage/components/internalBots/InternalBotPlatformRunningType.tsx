@@ -1,8 +1,8 @@
-import { Box, Select, Toast } from "@/components/base";
+import { Box, Floating, Select, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { InternalBotModel } from "@/core/models";
+import { AVAILABLE_RUNNING_TYPES_BY_PLATFORM, EBotPlatformRunningType } from "@/core/models/bot.related.type";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { EHttpStatus } from "@langboard/core/enums";
@@ -13,11 +13,12 @@ const InternalBotPlatformRunningType = memo(() => {
     const [t] = useTranslation();
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
     const navigate = usePageNavigateRef();
+    const platform = internalBot.useField("platform");
     const platformRunningType = internalBot.useField("platform_running_type");
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
 
-    const changeAPIAuthType = async (value: InternalBotModel.EInternalBotPlatformRunningType) => {
+    const changePlatformRunningType = async (value: EBotPlatformRunningType) => {
         if (isValidating) {
             return;
         }
@@ -55,24 +56,21 @@ const InternalBotPlatformRunningType = memo(() => {
 
     return (
         <Box>
-            <Select.Root value={platformRunningType} onValueChange={changeAPIAuthType} disabled={isValidating}>
-                <Select.Trigger defaultValue={platformRunningType.toString()}>
-                    <Select.Value placeholder={t("settings.Select a platform running type")} />
-                </Select.Trigger>
-                <Select.Content>
-                    {Object.keys(InternalBotModel.EInternalBotPlatformRunningType).map((platformRunningTypeKey) => {
-                        const targetPlatformRunningType = InternalBotModel.EInternalBotPlatformRunningType[platformRunningTypeKey];
-                        return (
-                            <Select.Item
-                                value={targetPlatformRunningType.toString()}
-                                key={`internalBot-platform-running-type-select-${targetPlatformRunningType}`}
-                            >
-                                {t(`internalBot.platformRunningTypes.${targetPlatformRunningType}`)}
-                            </Select.Item>
-                        );
-                    })}
-                </Select.Content>
-            </Select.Root>
+            <Floating.LabelSelect
+                label={t("settings.Select a platform running type")}
+                value={platformRunningType}
+                defaultValue={platformRunningType.toString()}
+                onValueChange={changePlatformRunningType}
+                disabled={isValidating}
+                options={AVAILABLE_RUNNING_TYPES_BY_PLATFORM[platform].map((targetPlatformRunningType) => (
+                    <Select.Item
+                        value={targetPlatformRunningType.toString()}
+                        key={`internalBot-platform-running-type-select-${targetPlatformRunningType}`}
+                    >
+                        {t(`bot.platformRunningTypes.${targetPlatformRunningType}`)}
+                    </Select.Item>
+                ))}
+            />
         </Box>
     );
 });

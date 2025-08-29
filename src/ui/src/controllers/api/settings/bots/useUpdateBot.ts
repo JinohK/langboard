@@ -3,16 +3,18 @@ import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
+import { EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
 import { Utils } from "@langboard/core/utils";
 
 export interface IUpdateBotForm {
     bot_name?: string;
     bot_uname?: string;
+    platform?: EBotPlatform;
+    platform_running_type?: EBotPlatformRunningType;
     api_url?: string;
-    api_auth_type?: BotModel.EAPIAuthType;
     api_key?: string;
     ip_whitelist?: string[];
-    prompt?: string;
+    value?: string;
     avatar?: File;
     delete_avatar?: bool;
 }
@@ -28,7 +30,7 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
                 return;
             }
 
-            const isAvatar = (targetKey: string, targetValue: unknown): targetValue is File => targetKey === "avatar";
+            const isAvatar = (targetKey: string, _: unknown): _ is File => targetKey === "avatar";
 
             if (isAvatar(key, value)) {
                 if (!value) {

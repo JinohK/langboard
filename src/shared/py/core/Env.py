@@ -36,8 +36,16 @@ class Env:
         return self.__get_from_cache("PROJECT_SHORT_NAME", self.PROJECT_NAME)
 
     @property
+    def API_PORT(self) -> int:
+        return int(self.__get_from_cache("API_PORT", "5381"))
+
+    @property
     def UI_PORT(self) -> int:
         return int(self.__get_from_cache("UI_PORT", "5173"))
+
+    @property
+    def API_URL(self) -> str:
+        return self.__get_from_cache("API_URL", f"http://localhost:{self.API_PORT}")
 
     @property
     def PUBLIC_UI_URL(self) -> str:
@@ -185,10 +193,8 @@ class Env:
         return int(self.__get_from_cache("FLOWS_PORT", "5019"))
 
     @property
-    def DEFAULT_LANGFLOW_URL(self) -> str:
-        host = "127.0.0.1" if self.ENVIRONMENT == "local" else f"{self.PROJECT_NAME}_flows"
-        port = self.FLOWS_PORT
-        return f"http://{host}:{port}"
+    def DEFAULT_FLOWS_URL(self) -> str:
+        return self.__get_from_cache("DEFAULT_FLOWS_URL", "http://127.0.0.1:5019")
 
     def __init__(self):
         self.__envs = {}

@@ -1,8 +1,8 @@
-import { Box, Select, Toast } from "@/components/base";
+import { Box, Floating, Select, Toast } from "@/components/base";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { InternalBotModel } from "@/core/models";
+import { EBotPlatform } from "@/core/models/bot.related.type";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { ROUTES } from "@/core/routing/constants";
 import { EHttpStatus } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const InternalBotPlatform = memo(() => {
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
 
-    const changeAPIAuthType = async (value: InternalBotModel.EInternalBotPlatform) => {
+    const changePlatform = async (value: EBotPlatform) => {
         if (isValidating) {
             return;
         }
@@ -55,21 +55,21 @@ const InternalBotPlatform = memo(() => {
 
     return (
         <Box>
-            <Select.Root value={platform} onValueChange={changeAPIAuthType} disabled={isValidating}>
-                <Select.Trigger defaultValue={platform.toString()}>
-                    <Select.Value placeholder={t("settings.Select a platform")} />
-                </Select.Trigger>
-                <Select.Content>
-                    {Object.keys(InternalBotModel.EInternalBotPlatform).map((platformKey) => {
-                        const targetPlatform = InternalBotModel.EInternalBotPlatform[platformKey];
-                        return (
-                            <Select.Item value={targetPlatform.toString()} key={`internalBot-platform-select-${targetPlatform}`}>
-                                {t(`internalBot.platforms.${targetPlatform}`)}
-                            </Select.Item>
-                        );
-                    })}
-                </Select.Content>
-            </Select.Root>
+            <Floating.LabelSelect
+                label={t("settings.Select a platform")}
+                value={platform}
+                defaultValue={platform.toString()}
+                onValueChange={changePlatform}
+                disabled={isValidating}
+                options={Object.keys(EBotPlatform).map((platformKey) => {
+                    const targetPlatform = EBotPlatform[platformKey];
+                    return (
+                        <Select.Item value={targetPlatform.toString()} key={`internalBot-platform-select-${targetPlatform}`}>
+                            {t(`bot.platforms.${targetPlatform}`)}
+                        </Select.Item>
+                    );
+                })}
+            />
         </Box>
     );
 });

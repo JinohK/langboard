@@ -20,16 +20,6 @@ NC := \033[0m
 COMPOSE_ARGS := $(COMPOSE_ARGS)
 WITH_DOCS ?= false
 WITH_UI_WATCHER ?= false
-WITH_FLOWS ?= true
-ifeq ($(WITH_DOCS), true)
-	COMPOSE_ARGS += $(DOCS_COMPOSE_ARGS)
-endif
-ifeq ($(WITH_UI_WATCHER), true)
-	COMPOSE_ARGS += $(UI_WATCHER_COMPOSE_ARGS)
-endif
-ifeq ($(WITH_FLOWS), true)
-	COMPOSE_ARGS += $(FLOWS_COMPOSE_ARGS)
-endif
 
 check_tools:
 	@command -v poetry >/dev/null 2>&1 || { echo >&2 "$(RED)Poetry is not installed. Aborting.$(NC)"; exit 1; }
@@ -52,10 +42,10 @@ help: ## show this help message
 
 clean_python_cache: ## clean Python cache
 	@echo "Cleaning Python cache..."
-	find . -type d -name '__pycache__' -exec rm -r {} +
-	find . -type f -name '*.py[cod]' -exec rm -f {} +
-	find . -type f -name '*~' -exec rm -f {} +
-	find . -type f -name '.*~' -exec rm -f {} +
+	find . -not -path "*/.venv/*" -type d -name '__pycache__' -exec rm -r {} +
+	find . -not -path "*/.venv/*" -type f -name '*.py[cod]' -exec rm -f {} +
+	find . -not -path "*/.venv/*" -type f -name '*~' -exec rm -f {} +
+	find . -not -path "*/.venv/*" -type f -name '.*~' -exec rm -f {} +
 	@printf "$(GREEN)Python cache cleaned.$(NC)"
 
 clean_ts_core_cache: ## clean Yarn cache

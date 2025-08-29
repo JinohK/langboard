@@ -1,4 +1,4 @@
-import { Select, Toast } from "@/components/base";
+import { Floating, Select, Toast } from "@/components/base";
 import MoreMenu from "@/components/MoreMenu";
 import { useMoreMenu } from "@/components/MoreMenu/Provider";
 import useCardifyCardCheckitem from "@/controllers/api/card/checkitem/useCardifyCardCheckitem";
@@ -62,18 +62,17 @@ function BoardCardCheckitemMoreMenuCardify(): JSX.Element {
             onOpenChange={onOpenChange}
         >
             {allColumns.length > 0 && (
-                <Select.Root value={selectedColumnUID} onValueChange={setSelectedColumnUID} disabled={isValidating}>
-                    <Select.Trigger>
-                        <Select.Value placeholder={t("card.Select column")} />
-                    </Select.Trigger>
-                    <Select.Content>
-                        {allColumns.map((column) => (
-                            <Select.Item value={column.uid} key={`board-card-checkitem-column-${column.uid}`}>
-                                {column.name}
-                            </Select.Item>
-                        ))}
-                    </Select.Content>
-                </Select.Root>
+                <Floating.LabelSelect
+                    label={t("card.Select column")}
+                    value={selectedColumnUID}
+                    onValueChange={setSelectedColumnUID}
+                    disabled={isValidating}
+                    options={allColumns.map((column) => (
+                        <Select.Item value={column.uid} key={`board-card-checkitem-column-${column.uid}`}>
+                            {column.name}
+                        </Select.Item>
+                    ))}
+                />
             )}
         </MoreMenu.PopoverItem>
     );

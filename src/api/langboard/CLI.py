@@ -3,7 +3,7 @@ from core.Env import Env
 from core.FastAPIAppConfig import FastAPIAppConfig
 from .commands.DbUpgradeCommand import DbUpgradeCommand, DbUpgradeCommandOptions
 from .commands.RunCommand import RunCommandOptions
-from .Constants import APP_CONFIG_FILE, HOST, PORT
+from .Constants import APP_CONFIG_FILE, HOST
 from .core.broadcast import ensure_initialized
 from .Loader import ModuleLoader
 from .ServerRunner import run as run_server
@@ -39,7 +39,7 @@ def _run_app(options: RunCommandOptions):
     app_config = FastAPIAppConfig(APP_CONFIG_FILE)
     app_config.create(
         host=HOST,
-        port=PORT,
+        port=Env.API_PORT,
         uds=options.uds,
         lifespan=options.lifespan,
         ssl_options=ssl_options,
@@ -56,8 +56,8 @@ def _run_app(options: RunCommandOptions):
 def _init_internal_bots():
     from core.db import DbSession, SqlBuilder
     from models import InternalBot
-    from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
-    from .resources.Resource import get_resource_path
+    from models.BaseBotModel import BotPlatform, BotPlatformRunningType
+    from models.InternalBot import InternalBotType
 
     settings = []
     with DbSession.use(readonly=True) as db:
@@ -74,10 +74,6 @@ def _init_internal_bots():
     if len(settings) == 3:
         return
 
-    flow_json_path = get_resource_path("flows", "default_flow.json")
-    with open(flow_json_path, "r", encoding="utf-8") as f:
-        default_flow_json = f.read()
-
     with DbSession.use(readonly=False) as db:
         for bot_type in [InternalBotType.ProjectChat, InternalBotType.EditorChat, InternalBotType.EditorCopilot]:
             if bot_type in settings:
@@ -87,10 +83,8 @@ def _init_internal_bots():
             setting = InternalBot(
                 bot_type=bot_type,
                 display_name=display_name,
-                platform=InternalBotPlatform.Langflow,
-                platform_running_type=InternalBotPlatformRunningType.FlowJson,
-                url=Env.DEFAULT_LANGFLOW_URL,
+                platform=BotPlatform.Default,
+                platform_running_type=BotPlatformRunningType.Default,
                 is_default=True,
-                value=default_flow_json,
             )
             db.insert(setting)

@@ -1,4 +1,4 @@
-import { Button, DateTimePicker, Flex, IconComponent, Select } from "@/components/base";
+import { Button, DateTimePicker, Flex, Floating, IconComponent, Select } from "@/components/base";
 import { IBotScheduleFormMap } from "@/components/BotScheduleList/Provider";
 import Cron from "@/components/Cron";
 import { BaseBotScheduleModel } from "@/core/models";
@@ -102,21 +102,21 @@ function BotScheduleListItemForm({ initialValuesMap, valuesMapRef, triggersMapRe
 
     return (
         <Flex direction="col" gap="2">
-            <Select.Root value={runningType} onValueChange={onChangeRunningType} disabled={disabled}>
-                <Select.Trigger className="w-full">
-                    <Select.Value placeholder={t("bot.schedules.Select running type")} />
-                </Select.Trigger>
-                <Select.Content>
-                    {Object.keys(BaseBotScheduleModel.ERunningType).map((type) => {
-                        const runningType = BaseBotScheduleModel.ERunningType[type];
-                        return (
-                            <Select.Item key={runningType} value={runningType}>
-                                {t(`bot.schedules.cronRunningTypes.${runningType}`)}
-                            </Select.Item>
-                        );
-                    })}
-                </Select.Content>
-            </Select.Root>
+            <Floating.LabelSelect
+                label={t("bot.Select running type")}
+                value={runningType}
+                onValueChange={onChangeRunningType}
+                disabled={disabled}
+                className="w-full"
+                options={Object.keys(BaseBotScheduleModel.ERunningType).map((type) => {
+                    const runningType = BaseBotScheduleModel.ERunningType[type];
+                    return (
+                        <Select.Item key={runningType} value={runningType}>
+                            {t(`bot.schedules.cronRunningTypes.${runningType}`)}
+                        </Select.Item>
+                    );
+                })}
+            />
             {BaseBotScheduleModel.RUNNING_TYPES_WITH_START_AT.includes(runningType) && (
                 <DateTimePicker
                     value={startAt}

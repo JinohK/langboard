@@ -87,6 +87,7 @@ class FlowRunner:
                     and (self.input_request.output_type == "any" or self.input_request.output_type in vertex.id.lower())  # type: ignore[operator]
                 )
             ]
+
         task_result, session_id = await self.__run_graph_internal(
             inputs=inputs,
             outputs=outputs,

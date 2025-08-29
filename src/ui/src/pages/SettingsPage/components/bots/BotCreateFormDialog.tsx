@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useTranslation } from "react-i18next";
-import { Box, Button, Checkbox, Dialog, Flex, Floating, Form, Label, Select, SubmitButton, Toast } from "@/components/base";
-import { useRef, useState } from "react";
+import { Alert, Box, Button, Checkbox, Dialog, Flex, Floating, Form, Label, Select, SubmitButton, Toast } from "@/components/base";
+import { useMemo, useRef, useState } from "react";
 import useCreateBot from "@/controllers/api/settings/bots/useCreateBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ROUTES } from "@/core/routing/constants";
@@ -13,6 +14,10 @@ import CopyInput from "@/components/CopyInput";
 import MultiSelect from "@/components/MultiSelect";
 import PasswordInput from "@/components/PasswordInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { AVAILABLE_RUNNING_TYPES_BY_PLATFORM, EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
+import { getValueType, requirements } from "@/components/BotValueInput/utils";
+import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
+import BotValueInput from "@/components/BotValueInput";
 
 export interface IBotCreateFormDialogProps {
     opened: bool;
@@ -28,17 +33,27 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
     const inputsRef = useRef({
         name: null as HTMLInputElement | null,
         uname: null as HTMLInputElement | null,
-        apiURL: null as HTMLInputElement | null,
+        url: null as HTMLInputElement | null,
         apiKey: null as HTMLInputElement | null,
-        prompt: null as HTMLTextAreaElement | null,
+        value: null as HTMLInputElement | HTMLTextAreaElement | TBotValueDefaultInputRefLike | null,
     });
-    const [selectedAPIAuthType, setSelectedAPIAuthType] = useState<BotModel.EAPIAuthType>(BotModel.EAPIAuthType.Langflow);
+    const setInputRef = (key: keyof typeof inputsRef.current) => (el: HTMLElement | TBotValueDefaultInputRefLike | null) => {
+        inputsRef.current[key] = el as any;
+    };
+    const [selectedPlatform, setSelectedPlatform] = useState<EBotPlatform>(EBotPlatform.Default);
+    const [selectedPlatformRunningType, setSelectedPlatformRunningType] = useState<EBotPlatformRunningType>(EBotPlatformRunningType.Default);
+    const formRequirements = useMemo(
+        () => requirements[selectedPlatform]?.[selectedPlatformRunningType] ?? [],
+        [selectedPlatform, selectedPlatformRunningType]
+    );
+    const valueType = useMemo(() => getValueType(selectedPlatform, selectedPlatformRunningType), [selectedPlatform, selectedPlatformRunningType]);
+    const valueRef = useRef("");
     const [isAllAllowedIP, setIsAllAllowedIP] = useState(false);
     const { mutate } = useCreateBot();
     const [errors, setErrors] = useState<Record<string, string>>({});
     const ipWhitelistRef = useRef<string[]>([]);
     const save = () => {
-        if (isValidating || !inputsRef.current.name || !inputsRef.current.uname || !inputsRef.current.apiURL || !inputsRef.current.apiKey) {
+        if (isValidating || !inputsRef.current.name || !inputsRef.current.uname) {
             return;
         }
 
@@ -47,18 +62,25 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
         const values = {} as Record<keyof typeof inputsRef.current, string>;
         const newErrors = {} as Record<keyof typeof inputsRef.current, string>;
         let focusableInput = null as HTMLInputElement | HTMLTextAreaElement | null;
-        Object.entries(inputsRef.current).forEach(([key, input]) => {
+
+        const shouldValidateInputs: (keyof typeof inputsRef.current)[] = ["name", "uname", ...formRequirements];
+        shouldValidateInputs.forEach((key) => {
+            const input = inputsRef.current[key] as HTMLInputElement | HTMLTextAreaElement;
+            if (!input) {
+                return;
+            }
+
+            if (input?.type === "default-bot-json") {
+                return;
+            }
+
             const value = input!.value.trim();
             if (!value) {
-                if (key === "prompt") {
-                    return;
-                }
-
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.missing.bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;
                 }
-            } else if (key === "apiURL" && !Utils.String.isValidURL(value)) {
+            } else if (key === "url" && !Utils.String.isValidURL(value)) {
                 newErrors[key as keyof typeof inputsRef.current] = t(`settings.errors.invalid.bot_${key}`);
                 if (!focusableInput) {
                     focusableInput = input;
@@ -68,7 +90,16 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
             }
         });
 
-        if (Object.keys(newErrors).length) {
+        let shouldStop = false;
+        const valueInput = inputsRef.current.value;
+        if (shouldValidateInputs.includes("value") && valueInput?.type === "default-bot-json") {
+            const validated = (valueInput as TBotValueDefaultInputRefLike).validate(!focusableInput);
+            if (!validated) {
+                shouldStop = true;
+            }
+        }
+
+        if (Object.keys(newErrors).length || shouldStop) {
             setErrors(newErrors);
             setIsValidating(false);
             focusableInput?.focus();
@@ -80,11 +111,12 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                 avatar: dataTransferRef.current.files[0],
                 bot_name: values.name,
                 bot_uname: values.uname,
-                api_url: values.apiURL,
-                api_auth_type: selectedAPIAuthType,
+                platform: selectedPlatform,
+                platform_running_type: selectedPlatformRunningType,
+                api_url: values.url,
                 api_key: values.apiKey,
+                value: valueRef.current,
                 ip_whitelist: ipWhitelistRef.current,
-                prompt: values.prompt,
             },
             {
                 onSuccess: (data) => {
@@ -152,6 +184,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 label={t("settings.Bot name")}
                                 autoFocus
                                 autoComplete="off"
+                                required
                                 disabled={isValidating}
                                 onInput={(e) => {
                                     const replacableValue = e.currentTarget.value.replace(/\s+/g, "-").toLowerCase();
@@ -163,9 +196,7 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                         inputsRef.current.uname.value = replacableValue;
                                     }
                                 }}
-                                ref={(el) => {
-                                    inputsRef.current.name = el;
-                                }}
+                                ref={setInputRef("name")}
                             />
                             {errors.name && <FormErrorMessage error={errors.name} notInForm />}
                         </Box>
@@ -178,57 +209,91 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                     label={t("settings.Bot Unique Name")}
                                     autoComplete="off"
                                     className="pl-10"
+                                    required
                                     disabled={isValidating}
-                                    ref={(el) => {
-                                        inputsRef.current.uname = el;
-                                    }}
+                                    ref={setInputRef("uname")}
                                 />
                             </Box>
                             {errors.uname && <FormErrorMessage error={errors.uname} notInForm />}
                         </Box>
                         <Box mt="4">
-                            <Floating.LabelInput
-                                label={t("settings.Bot API URL")}
-                                autoComplete="off"
+                            <Floating.LabelSelect
+                                label={t("settings.Select a platform")}
+                                value={selectedPlatform}
+                                onValueChange={setSelectedPlatform as (value: string) => void}
                                 disabled={isValidating}
-                                ref={(el) => {
-                                    inputsRef.current.apiURL = el;
-                                }}
+                                required
+                                options={Object.keys(EBotPlatform).map((typeKey) => {
+                                    const botType = EBotPlatform[typeKey];
+                                    return (
+                                        <Select.Item value={botType} key={`bot-platform-select-${botType}`}>
+                                            {t(`bot.platforms.${botType}`)}
+                                        </Select.Item>
+                                    );
+                                })}
                             />
-                            {errors.apiURL && <FormErrorMessage error={errors.apiURL} notInForm />}
                         </Box>
                         <Box mt="4">
-                            <Select.Root
-                                value={selectedAPIAuthType}
-                                onValueChange={setSelectedAPIAuthType as (value: string) => void}
+                            <Floating.LabelSelect
+                                label={t("settings.Select a platform running type")}
+                                value={selectedPlatformRunningType}
+                                onValueChange={setSelectedPlatformRunningType as (value: string) => void}
                                 disabled={isValidating}
-                            >
-                                <Select.Trigger>
-                                    <Select.Value placeholder={t("settings.Select an api auth type")} />
-                                </Select.Trigger>
-                                <Select.Content>
-                                    {Object.keys(BotModel.EAPIAuthType).map((authTypeKey) => {
-                                        const authType = BotModel.EAPIAuthType[authTypeKey];
-                                        return (
-                                            <Select.Item value={authType} key={`bot-auth-type-select-${authType}`}>
-                                                {t(`settings.authTypes.${authType}`)}
-                                            </Select.Item>
-                                        );
-                                    })}
-                                </Select.Content>
-                            </Select.Root>
-                        </Box>
-                        <Box mt="4">
-                            <PasswordInput
-                                label={t("settings.Bot API key")}
-                                isValidating={isValidating}
-                                autoComplete="off"
-                                ref={(el) => {
-                                    inputsRef.current.apiKey = el;
-                                }}
+                                required
+                                options={AVAILABLE_RUNNING_TYPES_BY_PLATFORM[selectedPlatform].map((botType) => {
+                                    return (
+                                        <Select.Item value={botType} key={`bot-platform-running-type-select-${botType}`}>
+                                            {t(`bot.platformRunningTypes.${botType}`)}
+                                        </Select.Item>
+                                    );
+                                })}
                             />
-                            {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
                         </Box>
+                        {formRequirements.includes("url") && (
+                            <Box mt="4">
+                                <Floating.LabelInput
+                                    label={t("settings.Bot API URL")}
+                                    autoComplete="off"
+                                    disabled={isValidating}
+                                    required
+                                    ref={setInputRef("url")}
+                                />
+                                {errors.url && <FormErrorMessage error={errors.url} notInForm />}
+                            </Box>
+                        )}
+                        {formRequirements.includes("apiKey") && (
+                            <Box mt="4">
+                                <PasswordInput
+                                    label={t("settings.Bot API key")}
+                                    isValidating={isValidating}
+                                    autoComplete="off"
+                                    required
+                                    ref={setInputRef("apiKey")}
+                                />
+                                {errors.apiKey && <FormErrorMessage error={errors.apiKey} notInForm />}
+                            </Box>
+                        )}
+                        {formRequirements.includes("value") && (
+                            <Box mt="4">
+                                {selectedPlatformRunningType === EBotPlatformRunningType.FlowJson && (
+                                    <Alert variant="warning" icon="alert-triangle" title={t("common.Warning")} className="mb-2">
+                                        {t("settings.The internal flows server should be running to use.")}
+                                    </Alert>
+                                )}
+                                <BotValueInput
+                                    value=""
+                                    label={t(`bot.platformRunningTypes.${selectedPlatformRunningType}`)}
+                                    valueType={valueType}
+                                    newValueRef={valueRef}
+                                    isValidating={isValidating}
+                                    previewByDialog
+                                    required
+                                    ref={setInputRef("value")}
+                                />
+
+                                {errors.value && <FormErrorMessage error={errors.value} notInForm />}
+                            </Box>
+                        )}
                         <Flex mt="4" items="center" gap="2">
                             <MultiSelect
                                 selections={[]}
@@ -277,16 +342,6 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 {t("settings.Allow all")}
                             </Label>
                         </Flex>
-                        <Box mt="4">
-                            <Floating.LabelTextarea
-                                label={t("settings.Bot prompt")}
-                                disabled={isValidating}
-                                ref={(el) => {
-                                    inputsRef.current.prompt = el;
-                                }}
-                            />
-                            {errors.prompt && <FormErrorMessage error={errors.prompt} notInForm />}
-                        </Box>
                     </Form.Root>
                 )}
                 {revealedToken && <CopyInput value={revealedToken} className="mt-4" />}

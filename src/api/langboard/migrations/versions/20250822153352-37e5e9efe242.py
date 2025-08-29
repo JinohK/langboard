@@ -1,8 +1,8 @@
 """empty message
 
-Revision ID: de563ac88f46
+Revision ID: 37e5e9efe242
 Revises:
-Create Date: 2025-07-17 11:42:47.167367
+Create Date: 2025-08-22 15:33:52.783688
 
 """
 
@@ -22,10 +22,10 @@ from core.db.ColumnTypes import (
 from core.db.Models import ChatContentModel, EditorContentModel
 from core.storage.FileModel import FileModel
 from models.AppSetting import AppSettingType
-from models.Bot import BotAPIAuthType
+from models.BaseBotModel import BotPlatform, BotPlatformRunningType
 from models.BotLog import BotLogMessage, BotLogType
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
-from models.InternalBot import InternalBotPlatform, InternalBotPlatformRunningType, InternalBotType
+from models.InternalBot import InternalBotType
 from models.ProjectActivity import ProjectActivityType
 from models.ProjectWikiActivity import ProjectWikiActivityType
 from models.UserActivity import UserActivityType
@@ -34,7 +34,7 @@ from models.UserNotificationUnsubscription import NotificationChannel, Notificat
 
 
 # revision identifiers, used by Alembic.
-revision: str = "de563ac88f46"
+revision: str = "37e5e9efe242"
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -60,15 +60,16 @@ def upgrade() -> None:
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("platform", EnumLikeType(BotPlatform), nullable=False),
+        sa.Column("platform_running_type", EnumLikeType(BotPlatformRunningType), nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("bot_uname", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("avatar", ModelColumnType(FileModel), nullable=True),
         sa.Column("api_url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("api_auth_type", EnumLikeType(BotAPIAuthType), nullable=False),
         sa.Column("api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("app_api_token", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("ip_whitelist", CSVType, nullable=False),
-        sa.Column("prompt", sa.TEXT(), nullable=False),
+        sa.Column("value", sa.TEXT(), nullable=False),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_table(
@@ -97,10 +98,11 @@ def upgrade() -> None:
         sa.Column("id", SnowflakeIDType, nullable=True),
         sa.Column("created_at", sa.DateTime(timezone=True), nullable=False),
         sa.Column("updated_at", sa.DateTime(timezone=True), nullable=False),
+        sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("platform", EnumLikeType(BotPlatform), nullable=False),
+        sa.Column("platform_running_type", EnumLikeType(BotPlatformRunningType), nullable=False),
         sa.Column("bot_type", EnumLikeType(InternalBotType), nullable=False),
         sa.Column("display_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
-        sa.Column("platform", EnumLikeType(InternalBotPlatform), nullable=False),
-        sa.Column("platform_running_type", EnumLikeType(InternalBotPlatformRunningType), nullable=False),
         sa.Column("url", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("api_key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("value", sa.Text(), nullable=False),

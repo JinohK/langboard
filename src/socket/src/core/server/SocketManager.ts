@@ -78,10 +78,10 @@ class SocketManager {
                     await client.unsubscribe(topic, topic_id);
                     break;
                 case "hocus:start":
-                    await client.startHocus(data.documentName);
+                    client.startHocus(data.documentName);
                     break;
                 case "hocus:end":
-                    await client.endHocus(data.documentName);
+                    client.endHocus(data.documentName);
                     break;
                 default:
                     await EventManager.emit(topic, event, {
