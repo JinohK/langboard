@@ -11,10 +11,10 @@ import MultiSelect from "@/components/MultiSelect";
 
 function BotValueDefaultInput({ value, newValueRef, isValidating, required, change, ref }: TSharedBotValueInputProps) {
     const [t] = useTranslation();
-    const values = useRef<Record<string, any>>(Utils.String.isJsonString(value) ? JSON.parse(value) : {});
+    const valuesRef = useRef<Record<string, any>>(Utils.String.isJsonString(value) ? JSON.parse(value) : {});
     const { mutateAsync: getApiListMutateAsync } = useGetApiList({ interceptToast: true });
-    const [selectedAgentModel, setSelectedAgentModel] = useState<TAgentModelName>((values.current["agent_llm"] as TAgentModelName) ?? "OpenAI");
-    const [selectedApis, setSelectedApis] = useState<string[]>((values.current["api_names"] as string[]) ?? []);
+    const [selectedAgentModel, setSelectedAgentModel] = useState<TAgentModelName>((valuesRef.current["agent_llm"] as TAgentModelName) ?? "OpenAI");
+    const [selectedApis, setSelectedApis] = useState<string[]>((valuesRef.current["api_names"] as string[]) ?? []);
     const [inputs, setInputs] = useState<TAgentFormInput[]>([]);
     const inputsRef = useRef<Record<string, HTMLElement | null>>({});
     const [errors, setErrors] = useState<Record<string, string>>({});
@@ -22,8 +22,8 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
         inputsRef.current[name] = element;
     };
     const setValue = (name: string) => (value: any) => {
-        values.current[name] = value;
-        newValueRef.current = JSON.stringify(values.current);
+        valuesRef.current[name] = value;
+        newValueRef.current = JSON.stringify(valuesRef.current);
     };
     const [apiList, setApiList] = useState<Record<string, string>>({});
     const getRef = () => ({
@@ -37,7 +37,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
             let focusable: HTMLElement | null = null;
             const newErrors: Record<string, string> = {};
 
-            if (!values.current["agent_llm"]) {
+            if (!valuesRef.current["agent_llm"]) {
                 newErrors["agent_llm"] = t("bot.agent.errors.missing.agent_llm");
                 if (!focusable) {
                     focusable = inputsRef.current.agent_llm;
@@ -45,7 +45,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
             }
 
             inputs.forEach((input) => {
-                const value = values.current[input.name];
+                const value = valuesRef.current[input.name];
                 if (!value) {
                     newErrors[input.name] = t(`bot.agent.errors.missing.${input.name}`);
                     if (!focusable) {
@@ -77,7 +77,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
             const input = inputs[i];
 
             if (input.options) {
-                delete values.current[input.name];
+                delete valuesRef.current[input.name];
             }
         }
 
@@ -139,7 +139,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
             <Box mt="4">
                 <Floating.LabelTextarea
                     label={t("bot.agent.System prompt")}
-                    defaultValue={values.current["system_prompt"] ?? ""}
+                    defaultValue={valuesRef.current["system_prompt"] ?? ""}
                     resize="none"
                     className="h-36"
                     disabled={isValidating}
@@ -153,14 +153,14 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
 
                 let inputComp;
                 if (!isSelection) {
-                    setValue(input.name)(values.current[input.name] ?? input.defaultValue);
+                    setValue(input.name)(valuesRef.current[input.name] ?? input.defaultValue);
                     inputComp = (
                         <Floating.LabelInput
                             type="password"
                             name={input.name}
                             label={input.label}
                             autoComplete="off"
-                            defaultValue={values.current[input.name] ?? input.defaultValue}
+                            defaultValue={valuesRef.current[input.name] ?? input.defaultValue}
                             onInput={(e) => setValue(input.name)(e.currentTarget.value)}
                             required={required && !input.nullable}
                             disabled={isValidating}
@@ -168,21 +168,17 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
                         />
                     );
                 } else {
-                    setValue(input.name)(values.current[input.name] ?? input.defaultValue ?? options[0]);
+                    setValue(input.name)(valuesRef.current[input.name] ?? input.defaultValue ?? options[0]);
                     inputComp = (
-                        <Floating.LabelSelect
-                            id={`default-bot-json-input-${selectedAgentModel}-${input.name}`}
-                            label={input.label}
-                            value={values.current[input.name] ?? input.defaultValue ?? options[0]}
-                            onValueChange={setValue(input.name)}
-                            required={required && !input.nullable}
-                            disabled={isValidating}
-                            options={options.map((option) => (
-                                <Select.Item value={option} key={`default-bot-json-input-${selectedAgentModel}-${input.name}-${option}`}>
-                                    {option}
-                                </Select.Item>
-                            ))}
-                            ref={setInputRef(input.name)}
+                        <BotValueDefaultInputSelect
+                            selectedAgentModel={selectedAgentModel}
+                            input={input}
+                            options={options}
+                            valuesRef={valuesRef}
+                            setValue={setValue}
+                            setInputRef={setInputRef}
+                            required={required}
+                            isValidating={isValidating}
                         />
                     );
                 }
@@ -203,6 +199,51 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
                 </Box>
             )}
         </Box>
+    );
+}
+
+interface IBotValueDefaultInputSelect {
+    selectedAgentModel: string;
+    input: TAgentFormInput;
+    options: string[];
+    valuesRef: React.RefObject<Record<string, any>>;
+    setValue: (name: string) => (value: any) => void;
+    setInputRef: (name: string) => (element: HTMLElement | null) => void;
+    required?: bool;
+    isValidating: bool;
+}
+
+function BotValueDefaultInputSelect({
+    selectedAgentModel,
+    input,
+    options,
+    valuesRef,
+    setValue,
+    setInputRef,
+    required,
+    isValidating,
+}: IBotValueDefaultInputSelect) {
+    const [currentValue, setCurrentValue] = useState(valuesRef.current[input.name] ?? input.defaultValue ?? options[0]);
+
+    useEffect(() => {
+        setValue(input.name)(currentValue);
+    }, [currentValue]);
+
+    return (
+        <Floating.LabelSelect
+            id={`default-bot-json-input-${selectedAgentModel}-${input.name}`}
+            label={input.label}
+            value={currentValue}
+            onValueChange={setCurrentValue}
+            required={required && !input.nullable}
+            disabled={isValidating}
+            options={options.map((option) => (
+                <Select.Item value={option} key={`default-bot-json-input-${selectedAgentModel}-${input.name}-${option}`}>
+                    {option}
+                </Select.Item>
+            ))}
+            ref={setInputRef(input.name)}
+        />
     );
 }
 
