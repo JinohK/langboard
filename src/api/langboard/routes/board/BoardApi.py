@@ -127,6 +127,23 @@ async def get_project_columns(project_uid: str, service: Service = Service.scope
 
 @AppRouter.schema()
 @AppRouter.api.get(
+    "/board/{project_uid}/labels",
+    tags=["Board"],
+    description="Get project labels.",
+    responses=(OpenApiSchema().suc({"labels": [ProjectLabel]}).auth().forbidden().err(404, ApiErrorCode.NF2001).get()),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
+@AuthFilter.add()
+async def get_project_labels(project_uid: str, service: Service = Service.scope()) -> JsonResponse:
+    project = await service.project.get_by_uid(project_uid)
+    if project is None:
+        return JsonResponse(content=ApiErrorCode.NF2001, status_code=status.HTTP_404_NOT_FOUND)
+    labels = await service.project_label.get_all(project.id, as_api=True)
+    return JsonResponse(content={"labels": labels})
+
+
+@AppRouter.schema()
+@AppRouter.api.get(
     "/board/{project_uid}/cards",
     tags=["Board"],
     description="Get project cards.",

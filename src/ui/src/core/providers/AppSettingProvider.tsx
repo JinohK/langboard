@@ -12,7 +12,7 @@ export interface IAppSettingContext {
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-interface IAppSettingProps {
+interface IAppSettingProviderProps {
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
@@ -25,7 +25,7 @@ const initialContext = {
 
 const AppSettingContext = createContext<IAppSettingContext>(initialContext);
 
-export const AppSettingProvider = ({ currentUser, children }: IAppSettingProps): React.ReactNode => {
+export const AppSettingProvider = ({ currentUser, children }: IAppSettingProviderProps): React.ReactNode => {
     const socket = useSocket();
     const [isValidating, setIsValidating] = useState(false);
     const appSettingCreatedHandlers = useAppSettingCreatedHandlers({});

@@ -49,7 +49,7 @@ class ProjectChatBot extends BaseBot {
     }
 
     public async upload(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
-        return await this.upload(internalBot, file);
+        return await this.uploadFile(internalBot, file);
     }
 }
 

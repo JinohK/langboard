@@ -1,9 +1,8 @@
 import { Card } from "@/components/base";
 import { ProjectColumn } from "@/core/models";
-import { cn } from "@/core/utils/ComponentUtils";
 import BoardColumnMoreMenu from "@/pages/BoardPage/components/board/BoardColumnMoreMenu";
 import BoardColumnTitle from "@/pages/BoardPage/components/board/BoardColumnTitle";
-import { memo, useState } from "react";
+import { memo } from "react";
 
 export interface IBoardColumnHeaderProps {
     isDragging: bool;
@@ -12,16 +11,10 @@ export interface IBoardColumnHeaderProps {
 }
 
 const BoardColumnHeader = memo(({ isDragging, column, headerProps }: IBoardColumnHeaderProps) => {
-    const isEditingState = useState(false);
-    const [isEditing] = isEditingState;
-
     return (
-        <Card.Header
-            className={cn("flex flex-row items-start justify-between space-y-0 pb-1 pt-4 text-left font-semibold", !isEditing && "pr-3")}
-            {...headerProps}
-        >
-            <BoardColumnTitle isDragging={isDragging} column={column} isEditingState={isEditingState} />
-            <BoardColumnMoreMenu column={column} isEditingState={isEditingState} />
+        <Card.Header className="flex flex-row items-start justify-between space-y-0 pb-1 pr-3 pt-4 text-left font-semibold" {...headerProps}>
+            <BoardColumnTitle isDragging={isDragging} column={column} />
+            <BoardColumnMoreMenu column={column} />
         </Card.Header>
     );
 });

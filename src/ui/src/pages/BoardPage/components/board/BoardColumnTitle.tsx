@@ -13,15 +13,15 @@ import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 export interface IBoardColumnTitleProps {
     isDragging: bool;
     column: ProjectColumn.TModel;
-    isEditingState: [bool, React.Dispatch<React.SetStateAction<bool>>];
 }
 
-const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardColumnTitleProps) => {
+const BoardColumnTitle = memo(({ isDragging, column }: IBoardColumnTitleProps) => {
     const { selectCardViewType } = useBoardRelationshipController();
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const columnName = column.useField("name");
+    const editorName = `${column.uid}-column-title`;
     const isArchiveColumn = column.useField("is_archive");
     const { mutateAsync: changeProjectColumnNameMutateAsync } = useChangeProjectColumnName({ interceptToast: true });
     const canEdit = hasRoleAction(Project.ERoleAction.Update) && !isArchiveColumn;
@@ -29,7 +29,7 @@ const BoardColumnTitle = memo(({ isDragging, column, isEditingState }: IBoardCol
         canEdit: () => canEdit && !isDragging && !selectCardViewType,
         valueType: "input",
         disableNewLine: true,
-        isEditingState,
+        editorName,
         save: (value, endCallback) => {
             if (isArchiveColumn) {
                 return;

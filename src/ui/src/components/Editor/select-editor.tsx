@@ -49,7 +49,7 @@ const useSelectEditorContext = () => {
     return context;
 };
 
-export interface ISelectEditorProps {
+export interface ISelectEditorProviderProps {
     children: React.ReactNode;
     defaultValue?: TSelectItem[];
     items?: TSelectItem[];
@@ -71,7 +71,7 @@ export function SelectEditor({
     canAddNew = false,
     validateNewItem,
     createNewItemLabel,
-}: ISelectEditorProps) {
+}: ISelectEditorProviderProps) {
     const [open, setOpen] = React.useState(false);
     const [internalValue] = React.useState(defaultValue);
 

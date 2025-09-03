@@ -5,7 +5,6 @@ from urllib.parse import urlparse
 from core.caching import Cache
 from core.db import DbSession, SqlBuilder
 from core.Env import UI_QUERY_NAMES, Env
-from core.schema import Pagination
 from core.service import BaseService
 from core.storage import FileModel
 from core.types import SafeDateTime, SnowflakeID
@@ -33,16 +32,14 @@ class UserService(BaseService):
         return ServiceHelper.get_by_param(User, user_id)
 
     @overload
-    async def get_list(
-        self, pagination: Pagination, refer_time: SafeDateTime
-    ) -> tuple[list[tuple[User, UserProfile]], int]: ...
+    async def get_list(self, refer_time: SafeDateTime) -> tuple[list[tuple[User, UserProfile]], int]: ...
     @overload
-    async def get_list(self, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]) -> int: ...
+    async def get_list(self, refer_time: SafeDateTime, only_count: Literal[True]) -> int: ...
     @overload
     async def get_list(
-        self, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[False]
+        self, refer_time: SafeDateTime, only_count: Literal[False]
     ) -> tuple[list[tuple[User, UserProfile]], int]: ...
-    async def get_list(self, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False):
+    async def get_list(self, refer_time: SafeDateTime, only_count: bool = False):
         outdated_query = SqlBuilder.select.count(User, User.column("id")).where(
             (User.column("created_at") > refer_time) & (User.column("deleted_at") == None)  # noqa
         )
@@ -59,8 +56,6 @@ class UserService(BaseService):
             .where(User.column("created_at") <= refer_time)
             .order_by(User.column("created_at").desc(), User.column("id").desc())
         )
-
-        query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
 
         records = []
         with DbSession.use(readonly=True) as db:

@@ -18,6 +18,7 @@ import BotValue from "@/pages/SettingsPage/components/bots/BotValue";
 import { requirements } from "@/components/BotValueInput/utils";
 import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
+import { ALLOWED_ALL_IPS_BY_PLATFORMS } from "@/core/models/bot.related.type";
 
 export interface IBotDetailsProps {
     bot: BotModel.TModel;
@@ -77,7 +78,7 @@ const BotDetails = memo(({ bot }: IBotDetailsProps) => {
                         {formRequirements.includes("url") && <BotApiURL />}
                         {formRequirements.includes("apiKey") && <BotApiKey />}
                         <BotAppApiToken />
-                        <BotIpWhitelist />
+                        {ALLOWED_ALL_IPS_BY_PLATFORMS[platform].includes(runningType) && <BotIpWhitelist />}
                     </Flex>
                 </Flex>
                 {formRequirements.includes("value") && (

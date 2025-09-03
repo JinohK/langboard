@@ -2,16 +2,15 @@ from re import match
 from typing import Any
 from core.routing import BaseFormModel, form_model
 from core.routing.Exception import InvalidError, InvalidException, MissingException
-from core.schema import Pagination
 from core.types import SafeDateTime
 from models.AppSetting import AppSettingType
 from models.BaseBotModel import BotPlatform, BotPlatformRunningType
 from models.InternalBot import InternalBotType
-from pydantic import field_validator
+from pydantic import BaseModel, field_validator
 from ...Constants import EMAIL_REGEX
 
 
-class UsersPagination(Pagination):
+class UsersPagination(BaseModel):
     refer_time: SafeDateTime = SafeDateTime.now()
     only_count: bool = False
 

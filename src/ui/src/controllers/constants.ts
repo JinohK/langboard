@@ -384,7 +384,6 @@ export const SOCKET_SERVER_EVENTS = {
         DELETED: "settings:deleted:{uid}",
         SELECTIONS_DELETED: "settings:deleted",
         USERS: {
-            CREATED: "user:created",
             SELECTION_DELETED: "user:deleted",
         },
         BOTS: {

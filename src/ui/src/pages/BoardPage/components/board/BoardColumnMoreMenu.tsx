@@ -6,7 +6,6 @@ import useDeleteProjectColumn from "@/controllers/api/board/useDeleteProjectColu
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn } from "@/core/models";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { cn } from "@/core/utils/ComponentUtils";
 import BoardColumnMoreMenuBotList from "@/pages/BoardPage/components/board/BoardColumnMoreMenuBotList";
 import BoardColumnMoreMenuBotScope from "@/pages/BoardPage/components/board/BoardColumnMoreMenuBotScope";
 import { memo } from "react";
@@ -14,17 +13,15 @@ import { useTranslation } from "react-i18next";
 
 export interface IBoardColumnMoreMenuProps {
     column: ProjectColumn.TModel;
-    isEditingState: [bool, React.Dispatch<React.SetStateAction<bool>>];
 }
 
-const BoardColumnMoreMenu = memo(({ column, isEditingState }: IBoardColumnMoreMenuProps) => {
+const BoardColumnMoreMenu = memo(({ column }: IBoardColumnMoreMenuProps) => {
     const { project, currentUser, hasRoleAction } = useBoard();
     const canEdit = hasRoleAction(Project.ERoleAction.Update);
-    const [isEditing] = isEditingState;
 
     return (
         <MoreMenu.Root
-            triggerProps={{ className: cn("size-7", isEditing && "hidden"), ...{ [DISABLE_DRAGGING_ATTR]: "" } }}
+            triggerProps={{ className: "size-7", ...{ [DISABLE_DRAGGING_ATTR]: "" } }}
             contentProps={{ className: "w-min p-0", ...{ [DISABLE_DRAGGING_ATTR]: "" } }}
         >
             <NotificationSetting.SpecificScopedPopover
@@ -55,7 +52,7 @@ const BoardColumnMoreMenu = memo(({ column, isEditingState }: IBoardColumnMoreMe
 });
 BoardColumnMoreMenu.displayName = "Board.ColumnMore";
 
-const BoardColumnMoreMenuDelete = memo(({ column }: Omit<IBoardColumnMoreMenuProps, "isEditingState">) => {
+const BoardColumnMoreMenuDelete = memo(({ column }: IBoardColumnMoreMenuProps) => {
     const [t] = useTranslation();
     const { project } = useBoard();
     const { mutateAsync } = useDeleteProjectColumn({ interceptToast: true });

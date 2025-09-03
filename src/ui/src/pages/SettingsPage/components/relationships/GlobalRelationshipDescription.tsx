@@ -14,12 +14,14 @@ function GlobalRelationshipDescription() {
     const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const navigate = usePageNavigateRef();
     const description = globalRelationship.useField("description");
+    const editorName = `${globalRelationship.uid}-global-relationship-description`;
     const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
         canEmpty: true,
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 description: value,

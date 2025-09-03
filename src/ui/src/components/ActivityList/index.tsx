@@ -3,7 +3,7 @@ import InfiniteScroller from "@/components/InfiniteScroller";
 import { TGetActivitiesForm } from "@/controllers/api/shared/types";
 import useCreateActivityTimeline from "@/core/hooks/activity/useCreateActivityTimeline";
 import { ActivityModel, AuthUser } from "@/core/models";
-import { RefreshableListProvider, useRefreshableList } from "@/core/providers/RefreshableListProvider";
+import { InfiniteRefreshableListProvider, useInfiniteRefreshableList } from "@/core/providers/InfiniteRefreshableListProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import React, { useMemo } from "react";
@@ -47,7 +47,7 @@ function ActivityList({ form, ...props }: IActivityListProps) {
     const activities = ActivityModel.Model.useModels(activityFilter, [activityFilter]);
 
     return (
-        <RefreshableListProvider
+        <InfiniteRefreshableListProvider
             models={activities}
             form={form}
             limit={PAGE_LIMIT}
@@ -61,12 +61,12 @@ function ActivityList({ form, ...props }: IActivityListProps) {
                 }
             }}
         >
-            <ActivityListInner {...props} />
-        </RefreshableListProvider>
+            <ActivityListDisplay {...props} />
+        </InfiniteRefreshableListProvider>
     );
 }
 
-function ActivityListInner({ as, currentUser, outerClassName, outerStyle, isUserView = false }: Omit<IActivityListProps, "form">): JSX.Element {
+function ActivityListDisplay({ as, currentUser, outerClassName, outerStyle, isUserView = false }: Omit<IActivityListProps, "form">): JSX.Element {
     const [t] = useTranslation();
     const {
         models: activities,
@@ -77,7 +77,7 @@ function ActivityListInner({ as, currentUser, outerClassName, outerStyle, isUser
         nextPage,
         refreshList,
         checkOutdatedOnScroll,
-    } = useRefreshableList<"ActivityModel">();
+    } = useInfiniteRefreshableList<"ActivityModel">();
     const { SkeletonActivity, ActivityTimeline } = useCreateActivityTimeline(currentUser, isUserView);
 
     return (

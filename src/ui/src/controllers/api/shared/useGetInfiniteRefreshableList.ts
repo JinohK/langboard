@@ -7,7 +7,7 @@ import { BaseModel } from "@/core/models/Base";
 import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistry";
 import { useCallback, useRef, useState } from "react";
 
-export interface IUseGetRefreshableListProps<TModelName extends TCreatedAtModelName> {
+export interface IUseGetInfiniteRefreshableListProps<TModelName extends TCreatedAtModelName> {
     form: TGetListForm<TModelName>;
     limit: number;
     isLastPage: bool;
@@ -15,17 +15,17 @@ export interface IUseGetRefreshableListProps<TModelName extends TCreatedAtModelN
     setPage: React.Dispatch<React.SetStateAction<number>>;
     lastCurrentDateRef: React.RefObject<Date>;
     prepareData?: (
-        list: Omit<TCreatedAtModel<IUseGetRefreshableListProps<TModelName>["form"]["listType"]>, keyof Omit<BaseModel<any>, "uid">>[],
+        records: Omit<TCreatedAtModel<IUseGetInfiniteRefreshableListProps<TModelName>["form"]["listType"]>, keyof Omit<BaseModel<any>, "uid">>[],
         data: any
     ) => void;
 }
 
-export interface IGetRefreshableListParams {
+export interface IGetInfiniteRefreshableListParams {
     page: number;
 }
 
-const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
-    { form, limit, setPage, lastCurrentDateRef, isLastPage, setIsLastPage, prepareData }: IUseGetRefreshableListProps<TModelName>,
+const useGetInfiniteRefreshableList = <TModelName extends TCreatedAtModelName>(
+    { form, limit, setPage, lastCurrentDateRef, isLastPage, setIsLastPage, prepareData }: IUseGetInfiniteRefreshableListProps<TModelName>,
     options?: TMutationOptions
 ) => {
     const { mutate } = useQueryMutation();
@@ -36,7 +36,7 @@ const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
     const [model, url] = getListRequestData(form);
 
     const getRefreshableList = useCallback(
-        async (params: IGetRefreshableListParams) => {
+        async (params: IGetInfiniteRefreshableListParams) => {
             if ((isLastPage && params.page) || isFetchingRef.current) {
                 return {};
             }
@@ -56,13 +56,13 @@ const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
                 } as any,
             });
 
-            if (res.data.list) {
-                prepareData?.(res.data.list, res.data);
+            if (res.data.records) {
+                prepareData?.(res.data.records, res.data);
             }
 
-            model.fromArray(res.data.list, true);
+            model.fromArray(res.data.records, true);
 
-            setIsLastPage(res.data.list.length < limitRef.current);
+            setIsLastPage(res.data.records.length < limitRef.current);
             if (res.data.count_new_records) {
                 setCountNewRecords(res.data.count_new_records);
             }
@@ -117,7 +117,7 @@ const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
         [countNewRecords, setCountNewRecords]
     );
 
-    const result = mutate([`get-refreshable-list-${url.replace(/\//g, "-")}`], getRefreshableList, {
+    const result = mutate([`get-infinite-refreshable-list-${url.replace(/\//g, "-")}`], getRefreshableList, {
         ...options,
         retry: 0,
     });
@@ -125,4 +125,4 @@ const useGetRefreshableList = <TModelName extends TCreatedAtModelName>(
     return { ...result, isLastPage, countNewRecords, refresh, checkOutdated };
 };
 
-export default useGetRefreshableList;
+export default useGetInfiniteRefreshableList;

@@ -11,6 +11,7 @@ import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTempla
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import mimeTypes from "react-native-mime-types";
+import { MAX_FILE_SIZE_MB } from "@/constants";
 
 export interface IChatInputProps {
     height: number;
@@ -73,7 +74,9 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                     abortController: abortControllerRef.current,
                 });
             } catch {
-                Toast.Add.error(t("errors.Failed to upload attachment. File size may be too large."));
+                Toast.Add.error(
+                    t("errors.Failed to upload attachment. File size may be too large (Max size is {size}MB).", { size: MAX_FILE_SIZE_MB })
+                );
                 setIsUploading(false);
                 setIsSending(false);
                 return;

@@ -52,6 +52,9 @@ class AppRouter:
                 routes=app.routes,
             )
 
+        openapi_schema["info"]["title"] = Env.PROJECT_NAME.capitalize()
+        openapi_schema["info"]["version"] = Env.PROJECT_VERSION
+
         if "components" not in openapi_schema:
             openapi_schema["components"] = {}
 

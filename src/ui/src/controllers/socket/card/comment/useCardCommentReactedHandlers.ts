@@ -1,4 +1,4 @@
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
+import { TReactionEmoji } from "@/components/ReactionCounter";
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment } from "@/core/models";
@@ -8,7 +8,7 @@ export interface ICardCommentReactedRawResponse {
     comment_uid: string;
     user_uid?: string;
     bot_uid?: string;
-    reaction: TEmoji;
+    reaction: TReactionEmoji;
     is_reacted: bool;
 }
 

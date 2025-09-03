@@ -7,6 +7,7 @@ import IconComponent from "@/components/base/IconComponent";
 import { cn } from "@/core/utils/ComponentUtils";
 import * as ScrollArea from "@/components/base/ScrollArea";
 import { motion } from "framer-motion";
+import { getEditorStore } from "@/core/stores/EditorStore";
 
 const Root = DialogPrimitive.Root;
 
@@ -69,6 +70,7 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
         },
         ref
     ) => {
+        const motionRef = React.useRef<HTMLDivElement | null>(null);
         const onOverlayClick = (
             event:
                 | React.PointerEvent<HTMLDivElement>
@@ -85,6 +87,14 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
             ) {
                 event.preventDefault();
                 event.stopPropagation();
+            }
+
+            if (getEditorStore().isInCurrentEditor()) {
+                if (target === motionRef.current) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    getEditorStore().setCurrentEditor(null);
+                }
             }
         };
 
@@ -104,6 +114,7 @@ const Content = React.forwardRef<React.ComponentRef<typeof DialogPrimitive.Conte
                             exit={{ opacity: 0, scale: 0.95 }}
                             transition={{ duration: 0.2 }}
                             className="z-50 flex size-full items-center justify-center shadow-lg"
+                            ref={motionRef}
                         >
                             <DialogPrimitive.Content
                                 ref={ref}

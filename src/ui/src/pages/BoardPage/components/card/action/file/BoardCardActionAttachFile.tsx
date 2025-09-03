@@ -7,6 +7,7 @@ import { IAttachedFile, ISharedBoardCardActionProps } from "@/pages/BoardPage/co
 import { memo, useMemo, useReducer, useRef, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useTranslation } from "react-i18next";
+import { MAX_FILE_SIZE_MB } from "@/constants";
 
 export interface IBoardCardActionAttachFileProps extends ISharedBoardCardActionProps {}
 
@@ -70,7 +71,12 @@ const BoardCardActionAttachFile = memo(({ buttonClassName }: IBoardCardActionAtt
                 })
         ).finally(() => {
             if (errorCount > 0) {
-                Toast.Add.error(t("errors.{num} files could not be uploaded. File size may be too large.", { num: errorCount }));
+                Toast.Add.error(
+                    t("errors.{num} files could not be uploaded. File size may be too large (Max size is {size}MB).", {
+                        num: errorCount,
+                        size: MAX_FILE_SIZE_MB,
+                    })
+                );
                 setIsValidating(false);
                 for (let i = 0; i < successFiles.length; ++i) {
                     delete attachedFileMap.current[successFiles[i]];

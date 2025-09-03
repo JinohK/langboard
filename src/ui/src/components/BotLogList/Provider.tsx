@@ -1,6 +1,6 @@
 import { TBotLogRelatedParams } from "@/controllers/api/shared/botLogs/types";
-import { BotModel, BotLogModel, ProjectCard, ProjectColumn } from "@/core/models";
-import { createContext, useContext, useEffect, useState } from "react";
+import { BotModel, ProjectCard, ProjectColumn } from "@/core/models";
+import { createContext, useContext } from "react";
 
 export interface IBotLogListContext {
     bot: BotModel.TModel;
@@ -8,7 +8,7 @@ export interface IBotLogListContext {
     target: ProjectColumn.TModel | ProjectCard.TModel;
 }
 
-interface IBotLogListProps {
+interface IBotLogListProviderProps {
     bot: BotModel.TModel;
     params: TBotLogRelatedParams;
     target: ProjectColumn.TModel | ProjectCard.TModel;
@@ -23,7 +23,7 @@ const initialContext = {
 
 const BotLogListContext = createContext<IBotLogListContext>(initialContext);
 
-export const BotLogListProvider = ({ bot, params, target, children }: IBotLogListProps): React.ReactNode => {
+export const BotLogListProvider = ({ bot, params, target, children }: IBotLogListProviderProps): React.ReactNode => {
     return (
         <BotLogListContext.Provider
             value={{

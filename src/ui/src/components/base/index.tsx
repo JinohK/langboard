@@ -15,6 +15,7 @@ export * as Collapsible from "@/components/base/Collapsible";
 export { default as ColorPicker } from "@/components/base/ColorPicker";
 export * as Command from "@/components/base/Command";
 export * as ContextMenu from "@/components/base/ContextMenu";
+export { default as DataTable } from "@/components/base/DataTable";
 export { default as DateTimePicker } from "@/components/base/DateTimePicker";
 export * as Dialog from "@/components/base/Dialog";
 export * as Dock from "@/components/base/Dock";

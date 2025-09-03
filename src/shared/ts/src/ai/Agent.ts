@@ -75,13 +75,33 @@ export type TAgentInput =
     | IGoogleGenerativeAiAgentInput
     | ISambaNovaAgentInput;
 
-export type TAgentFormInput = {
+interface IBaseAgentFormInput {
+    type: "text" | "password" | "select" | "integer";
     name: string;
     label: string;
-    defaultValue?: string;
-    options?: string[];
+    defaultValue?: string | number;
     nullable?: bool;
-};
+}
+
+export interface IStringAgentFormInput extends IBaseAgentFormInput {
+    type: "text" | "password";
+    defaultValue?: string;
+}
+
+export interface ISelectAgentFormInput extends IBaseAgentFormInput {
+    type: "select";
+    defaultValue?: string;
+    options: string[];
+}
+
+export interface IIntegerAgentFormInput extends IBaseAgentFormInput {
+    type: "integer";
+    defaultValue?: number;
+    min: number;
+    max: number;
+}
+
+export type TAgentFormInput = IStringAgentFormInput | ISelectAgentFormInput | IIntegerAgentFormInput;
 
 const AGENT_MODELS = ["OpenAI", "Azure OpenAI", "Groq", "Anthropic", "NVIDIA", "Amazon Bedrock", "Google Generative AI", "SambaNova"] as const;
 
@@ -359,59 +379,71 @@ const SAMBA_NOVA_MODELS = [
 ] as const;
 
 const getInputForm = (model: TAgentModelName): TAgentFormInput[] => {
+    const form: TAgentFormInput[] = [];
     switch (model) {
         case "Azure OpenAI":
-            return [
-                { name: "api_key", label: "API Key" },
+            form.push(
+                { type: "password", name: "api_key", label: "API Key" },
                 {
+                    type: "select",
                     name: "api_version",
                     label: "API Version",
                     options: AZURE_OPEN_AI_API_VERSIONS as unknown as string[],
                 },
-                { name: "azure_endpoint", label: "Endpoint" },
-                { name: "azure_deployment", label: "Deployment Name" },
-            ];
+                { type: "text", name: "azure_endpoint", label: "Endpoint" },
+                { type: "text", name: "azure_deployment", label: "Deployment Name" }
+            );
+            break;
         case "Amazon Bedrock":
-            return [
-                { name: "aws_access_key_id", label: "Access Key ID" },
-                { name: "aws_secret_access_key", label: "Secret Access Key" },
-                { name: "aws_session_token", label: "Session Token", nullable: true },
-                { name: "model_id", label: "Model", options: AMAZON_BEDROCK_MODELS as unknown as string[] },
-                { name: "region_name", label: "Region", options: AMAZON_BEDROCK_REGIONS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "aws_access_key_id", label: "Access Key ID" },
+                { type: "password", name: "aws_secret_access_key", label: "Secret Access Key" },
+                { type: "password", name: "aws_session_token", label: "Session Token", nullable: true },
+                { type: "select", name: "model_id", label: "Model", options: AMAZON_BEDROCK_MODELS as unknown as string[] },
+                { type: "select", name: "region_name", label: "Region", options: AMAZON_BEDROCK_REGIONS as unknown as string[] }
+            );
+            break;
         case "Anthropic":
-            return [
-                { name: "api_key", label: "API Key", nullable: true },
-                { name: "model_name", label: "Model", options: ANTHROPIC_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key", nullable: true },
+                { type: "select", name: "model_name", label: "Model", options: ANTHROPIC_MODELS as unknown as string[] }
+            );
+            break;
         case "Google Generative AI":
-            return [
-                { name: "api_key", label: "API Key" },
-                { name: "model_name", label: "Model", options: GOOGLE_GENERATIVE_AI_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key" },
+                { type: "select", name: "model_name", label: "Model", options: GOOGLE_GENERATIVE_AI_MODELS as unknown as string[] }
+            );
+            break;
         case "Groq":
-            return [
-                { name: "api_key", label: "API Key", nullable: true },
-                { name: "model_name", label: "Model", options: GROQ_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key", nullable: true },
+                { type: "select", name: "model_name", label: "Model", options: GROQ_MODELS as unknown as string[] }
+            );
+            break;
         case "NVIDIA":
-            return [
-                { name: "api_key", label: "API Key", nullable: true },
-                { name: "model_name", label: "Model", options: NVIDIA_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key", nullable: true },
+                { type: "select", name: "model_name", label: "Model", options: NVIDIA_MODELS as unknown as string[] }
+            );
+            break;
         case "OpenAI":
-            return [
-                { name: "api_key", label: "API Key" },
-                { name: "model_name", label: "Model", options: OPEN_AI_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key" },
+                { type: "select", name: "model_name", label: "Model", options: OPEN_AI_MODELS as unknown as string[] }
+            );
+            break;
         case "SambaNova":
-            return [
-                { name: "api_key", label: "API Key" },
-                { name: "model_name", label: "Model", options: SAMBA_NOVA_MODELS as unknown as string[] },
-            ];
+            form.push(
+                { type: "password", name: "api_key", label: "API Key" },
+                { type: "select", name: "model_name", label: "Model", options: SAMBA_NOVA_MODELS as unknown as string[] }
+            );
+            break;
         default:
             return [];
     }
+
+    return form;
 };
 
 export const Agent = {

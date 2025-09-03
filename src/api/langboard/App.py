@@ -1,3 +1,4 @@
+from json import loads as json_loads
 from core.Env import Env
 from core.FastAPIAppConfig import FastAPIAppConfig
 from core.routing import AppExceptionHandlingRoute, AppRouter, BaseMiddleware
@@ -25,6 +26,8 @@ class App:
         AuthSecurity.set_openapi_schema(self.api)
         AppRouter.create_schema_file(self.api, SCHEMA_DIR / "openapi.json")
         AppRouter.set_app(self.api)
+
+        self.api.openapi = self._openapi_json
 
     def create(self):
         AppRouter.set_app(self.api)
@@ -72,3 +75,8 @@ class App:
         self.api.router.route_class = AppExceptionHandlingRoute
         ModuleLoader.load("routes", "Api", log=not self.config.is_restarting)
         self.api.include_router(AppRouter.api)
+
+    def _openapi_json(self):
+        with open(SCHEMA_DIR / "openapi.json", "r") as f:
+            content = f.read()
+        return json_loads(content)

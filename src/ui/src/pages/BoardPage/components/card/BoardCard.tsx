@@ -160,7 +160,7 @@ function BoardCardResult(): JSX.Element {
 
     useEffect(() => {
         return () => {
-            getEditorStore().setCurrentEditor("");
+            getEditorStore().setCurrentEditor(null);
         };
     }, []);
 

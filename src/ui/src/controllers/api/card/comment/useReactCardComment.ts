@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
+import { TReactionEmoji } from "@/components/ReactionCounter";
 import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -9,7 +9,7 @@ export interface IReactCardCommentForm {
     project_uid: string;
     card_uid: string;
     comment_uid: string;
-    reaction: TEmoji;
+    reaction: TReactionEmoji;
 }
 
 const useReactCardComment = (options?: TMutationOptions<IReactCardCommentForm>) => {

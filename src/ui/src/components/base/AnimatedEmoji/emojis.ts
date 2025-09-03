@@ -1,3 +1,4 @@
+import AiLoadingEmoji from "@/assets/lotties/ai-loading.json";
 import CheckMarkEmoji from "@/assets/lotties/check-mark.json";
 import ConfusingEmoji from "@/assets/lotties/confusing.json";
 import EyesEmoji from "@/assets/lotties/eyes.json";
@@ -8,9 +9,8 @@ import RocketEmoji from "@/assets/lotties/rocket.json";
 import ThumbsDownEmoji from "@/assets/lotties/thumbs-down.json";
 import ThumbsUpEmoji from "@/assets/lotties/thumbs-up.json";
 
-export type TEmoji = "check-mark" | "confusing" | "eyes" | "heart" | "laughing" | "party-popper" | "rocket" | "thumbs-down" | "thumbs-up";
-
-const emojis: Record<TEmoji, unknown> = {
+const emojis = {
+    "ai-loading": AiLoadingEmoji,
     "check-mark": CheckMarkEmoji,
     confusing: ConfusingEmoji,
     eyes: EyesEmoji,
@@ -21,5 +21,7 @@ const emojis: Record<TEmoji, unknown> = {
     "thumbs-down": ThumbsDownEmoji,
     "thumbs-up": ThumbsUpEmoji,
 };
+
+export type TEmoji = keyof typeof emojis;
 
 export default emojis;

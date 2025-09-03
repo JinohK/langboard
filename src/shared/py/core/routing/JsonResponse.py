@@ -1,6 +1,7 @@
 from json import dumps as json_dumps
 from typing import Any, Mapping
 from fastapi.responses import Response
+from pydantic import BaseModel
 from starlette.background import BackgroundTask
 from ..utils.Converter import json_default
 from .ApiErrorCode import ApiErrorCode
@@ -28,6 +29,9 @@ class JsonResponse(Response):
         super().__init__(content, status_code, headers, media_type, background)
 
     def render(self, content: Any) -> bytes:
+        if isinstance(content, BaseModel):
+            content = content.model_dump()
+
         return json_dumps(
             content,
             ensure_ascii=False,

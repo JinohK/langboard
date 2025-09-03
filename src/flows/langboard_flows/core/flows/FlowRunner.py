@@ -116,16 +116,22 @@ class FlowRunner:
 
         fallback_to_env_vars = get_settings_service().settings.fallback_to_env_var
         self.graph.session_id = self.input_request.session_id
-        run_outputs = await self.graph.arun(
-            inputs=inputs_list,
-            inputs_components=components,
-            types=types,
-            outputs=outputs or [],
-            stream=self.stream,
-            session_id=self.graph.session_id,
-            fallback_to_env_vars=fallback_to_env_vars,
-            event_manager=event_manager,
-        )
+
+        run_outputs = []
+        try:
+            run_outputs = await self.graph.arun(
+                inputs=inputs_list,
+                inputs_components=components,
+                types=types,
+                outputs=outputs or [],
+                stream=self.stream,
+                session_id=self.graph.session_id,
+                fallback_to_env_vars=fallback_to_env_vars,
+                event_manager=event_manager,
+            )
+        except Exception as e:
+            Logger.main.exception(e)
+
         return run_outputs, self.graph.session_id
 
     def __validate_input_and_tweaks(self, input_request: FlowRequestModel) -> None:

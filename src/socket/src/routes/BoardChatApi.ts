@@ -1,3 +1,4 @@
+import { MAX_FILE_SIZE_MB } from "@/Constants";
 import BotRunner from "@/core/ai/BotRunner";
 import { ApiErrorResponse, JsonResponse } from "@/core/server/ApiResponse";
 import Routes from "@/core/server/Routes";
@@ -26,6 +27,7 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
     const form = new IncomingForm({
         keepExtensions: true,
         multiples: false,
+        maxFileSize: MAX_FILE_SIZE_MB * 1024 * 1024,
     });
 
     try {

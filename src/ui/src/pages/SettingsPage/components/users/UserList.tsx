@@ -1,173 +1,132 @@
-import { Box, Button, Checkbox, Flex, IconComponent, Loading } from "@/components/base";
-import InfiniteScroller from "@/components/InfiniteScroller";
-import useSelectedUsersDeletedHandlers from "@/controllers/socket/settings/users/useSelectedUsersDeletedHandlers";
-import useUserCreatedHandlers from "@/controllers/socket/settings/users/useUserCreatedHandlers";
-import useScrollToTop from "@/core/hooks/useScrollToTop";
-import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
+import { Checkbox } from "@/components/base";
 import { User } from "@/core/models";
 import { useAppSetting } from "@/core/providers/AppSettingProvider";
-import { useAuth } from "@/core/providers/AuthProvider";
-import { RefreshableListProvider, useRefreshableList } from "@/core/providers/RefreshableListProvider";
-import { useSocket } from "@/core/providers/SocketProvider";
-import { cn } from "@/core/utils/ComponentUtils";
-import { Utils } from "@langboard/core/utils";
-import UserRow from "@/pages/SettingsPage/components/users/UserRow";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
+import PaginatedTable from "@/components/PaginatedTable";
+import UserFirstname from "@/pages/SettingsPage/components/users/UserFirstname";
+import UserLastname from "@/pages/SettingsPage/components/users/UserLastname";
+import UserActivation from "@/pages/SettingsPage/components/users/UserActivation";
+import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
+import UserAdmin from "@/pages/SettingsPage/components/users/UserAdmin";
+import UserMoreMenu from "@/pages/SettingsPage/components/users/UserMoreMenu";
 
 export interface IUserListProps {
     selectedUsers: string[];
     setSelectedUsers: React.Dispatch<React.SetStateAction<string[]>>;
 }
 
-const PAGE_LIMIT = 30;
-
-function UserList(props: IUserListProps) {
+function UserList({ selectedUsers, setSelectedUsers }: IUserListProps) {
+    const [t] = useTranslation();
     const { currentUser } = useAppSetting();
-    const allUsers = User.Model.useModels(
-        (model) => model.isValidUser() && !model.isDeletedUser() && !!model.created_at && model.uid !== currentUser?.uid
-    );
 
     return (
-        <RefreshableListProvider models={allUsers} form={{ listType: "User" }} limit={PAGE_LIMIT}>
-            <UserListInner {...props} />
-        </RefreshableListProvider>
+        <PaginatedTable
+            form={{ listType: "User" }}
+            modelFilter={(model) => model.isValidUser() && !model.isDeletedUser() && !!model.created_at && model.uid !== currentUser?.uid}
+            columns={[
+                {
+                    key: "uid",
+                    header: (users) => (
+                        <Checkbox
+                            checked={!!users.length && users.length === selectedUsers.length}
+                            onClick={() => {
+                                setSelectedUsers((prev) => {
+                                    if (prev.length === users.length) {
+                                        return [];
+                                    } else {
+                                        return users.map((user) => user.uid);
+                                    }
+                                });
+                            }}
+                        />
+                    ),
+                    align: "center",
+                    width: "w-12",
+                    render: ({ value: uid }) => (
+                        <Checkbox
+                            checked={selectedUsers.some((value) => value === uid)}
+                            onClick={() => {
+                                setSelectedUsers((prev) => {
+                                    if (prev.some((value) => value === uid)) {
+                                        return prev.filter((value) => value !== uid);
+                                    } else {
+                                        return [...prev, uid];
+                                    }
+                                });
+                            }}
+                        />
+                    ),
+                },
+                {
+                    key: "email",
+                    header: t("user.Email"),
+                    align: "center",
+                    width: "w-[calc(calc(100%_/_12_*_3)_-_theme(spacing.12))]",
+                    sortable: true,
+                    filterable: true,
+                    render: ({ row }) => <UserListItemEmail user={row} />,
+                },
+                {
+                    key: "firstname",
+                    header: t("user.First Name"),
+                    align: "center",
+                    width: "w-1/6 truncate",
+                    sortable: true,
+                    filterable: true,
+                    render: ({ row }) => <UserFirstname user={row} />,
+                },
+                {
+                    key: "lastname",
+                    header: t("user.Last Name"),
+                    align: "center",
+                    width: "w-1/6 truncate",
+                    sortable: true,
+                    filterable: true,
+                    render: ({ row }) => <UserLastname user={row} />,
+                },
+                {
+                    key: "activated_at",
+                    header: t("settings.Activation"),
+                    align: "center",
+                    width: "w-1/12",
+                    render: ({ row }) => <UserActivation user={row} />,
+                },
+                {
+                    key: "is_admin",
+                    header: t("settings.Admin"),
+                    align: "center",
+                    width: "w-1/12",
+                    render: ({ row }) => <UserAdmin user={row} />,
+                },
+                {
+                    key: "created_at",
+                    header: t("settings.Created"),
+                    align: "center",
+                    width: "w-1/6",
+                    sortable: true,
+                    render: ({ row }) => <UserListItemCreatedAt user={row} />,
+                },
+                {
+                    key: "type",
+                    header: t("common.More"),
+                    align: "center",
+                    width: "w-1/12",
+                    render: ({ row }) => <UserMoreMenu user={row} />,
+                },
+            ]}
+        />
     );
 }
 
-function UserListInner({ selectedUsers, setSelectedUsers }: IUserListProps) {
-    const [t] = useTranslation();
-    const socket = useSocket();
-    const { signOut } = useAuth();
-    const { currentUser } = useAppSetting();
-    const { scrollableRef, isAtTop, scrollToTop } = useScrollToTop({});
-    const {
-        models: users,
-        listIdRef,
-        isLastPage,
-        countNewRecords,
-        isRefreshing,
-        nextPage,
-        refreshList,
-        checkOutdated,
-        checkOutdatedOnScroll,
-    } = useRefreshableList<"User">();
-    const virtualizerRef = useRef<ReturnType<typeof useVirtualizer>>(undefined);
-    const userCreatedHandlers = useMemo(
-        () =>
-            useUserCreatedHandlers({
-                callback: () => {
-                    checkOutdated().finally(() => {
-                        virtualizerRef.current?.measure();
-                    });
-                },
-            }),
-        [checkOutdated]
-    );
-    const selectedUsersDeletedHandlers = useMemo(
-        () =>
-            useSelectedUsersDeletedHandlers({
-                currentUser,
-                signOut,
-                callback: () => {
-                    virtualizerRef.current?.measure();
-                },
-            }),
-        [currentUser, signOut]
-    );
-    useSwitchSocketHandlers({
-        socket,
-        handlers: [userCreatedHandlers, selectedUsersDeletedHandlers],
-        dependencies: [userCreatedHandlers, selectedUsersDeletedHandlers],
-    });
-    const selectAll = () => {
-        setSelectedUsers((prev) => {
-            if (prev.length === users.length) {
-                return [];
-            } else {
-                return users.map((user) => user.uid);
-            }
-        });
-    };
+function UserListItemEmail({ user }: { user: User.TModel }) {
+    const email = user.useField("email");
+    return <>{email}</>;
+}
 
-    return (
-        <Box position="relative" h="full">
-            {countNewRecords > 0 && !isRefreshing && (
-                <Box position="sticky" w="full" className="-top-8 z-50">
-                    <Button onClick={refreshList} size="sm" className="absolute left-1/2 top-14 -translate-x-1/2">
-                        {t("settings.{count} New Users", { count: countNewRecords })}
-                    </Button>
-                </Box>
-            )}
-            <Box
-                id={listIdRef.current}
-                className={cn(
-                    "max-h-[calc(100vh_-_theme(spacing.40))]",
-                    "md:max-h-[calc(100vh_-_theme(spacing.44))]",
-                    "lg:max-h-[calc(100vh_-_theme(spacing.48))]",
-                    "overflow-y-auto"
-                )}
-                onScroll={checkOutdatedOnScroll}
-                ref={scrollableRef}
-            >
-                {isRefreshing && <Loading variant="secondary" size="4" my="2" />}
-                <InfiniteScroller.Table.Default
-                    columns={[
-                        {
-                            name: <Checkbox checked={!!users.length && users.length === selectedUsers.length} onClick={selectAll} />,
-                            className: "w-12 text-center",
-                        },
-                        { name: t("user.Email"), className: "w-[calc(calc(100%_/_12_*_3)_-_theme(spacing.12))] text-center" },
-                        { name: t("user.First Name"), className: "w-1/6 text-center" },
-                        { name: t("user.Last Name"), className: "w-1/6 text-center" },
-                        { name: t("settings.Activation"), className: "w-1/12 text-center" },
-                        { name: t("settings.Admin"), className: "w-1/12 text-center" },
-                        { name: t("settings.Created"), className: "w-1/6 text-center" },
-                        { name: t("common.More"), className: "w-1/12 text-center" },
-                    ]}
-                    headerClassName="sticky top-0 z-50 bg-background"
-                    scrollable={() => scrollableRef.current}
-                    loadMore={nextPage}
-                    hasMore={!isLastPage}
-                    totalCount={users.length}
-                    loader={
-                        <Flex justify="center" py="6" key={Utils.String.Token.shortUUID()}>
-                            <Loading variant="secondary" />
-                        </Flex>
-                    }
-                    virtualizerRef={virtualizerRef}
-                >
-                    {users.map((user) =>
-                        user.isDeletedUser() ? null : (
-                            <UserRow
-                                key={user.uid}
-                                user={user}
-                                selectedUsers={selectedUsers}
-                                virtualizerRef={virtualizerRef}
-                                setSelectedUsers={setSelectedUsers}
-                            />
-                        )
-                    )}
-                </InfiniteScroller.Table.Default>
-                {!users.length && (
-                    <Flex justify="center" items="center" h="full" mt="2">
-                        {t("settings.No users")}
-                    </Flex>
-                )}
-                {!isAtTop && (
-                    <Button
-                        onClick={scrollToTop}
-                        size="icon"
-                        variant="outline"
-                        className="absolute bottom-2 left-1/2 inline-flex -translate-x-1/2 transform rounded-full shadow-md"
-                    >
-                        <IconComponent icon="arrow-up" size="4" />
-                    </Button>
-                )}
-            </Box>
-        </Box>
-    );
+function UserListItemCreatedAt({ user }: { user: User.TModel }) {
+    const rawCreatedAt = user.useField("created_at");
+    const createdAt = useUpdateDateDistance(rawCreatedAt);
+    return <>{createdAt}</>;
 }
 
 export default UserList;

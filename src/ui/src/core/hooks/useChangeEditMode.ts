@@ -29,20 +29,17 @@ interface IBaseUseChangeEditModeProps<TValue extends TValueType> {
     disableNewLine?: bool;
     canEmpty?: bool;
     onStopEditing?: () => void;
+    editorName: string;
 }
 
 interface IEditorUseChangeEditModeProps extends IBaseUseChangeEditModeProps<"editor"> {
     save: (value: IEditorContent, endCallback: () => void) => void;
     originalValue?: IEditorContent;
-    isEditingState?: never;
-    editorName: string;
 }
 
 interface IOtherUseChangeEditModeProps<TValue extends TValueType> extends IBaseUseChangeEditModeProps<TValue> {
     save: (value: string, endCallback: () => void) => void;
     originalValue?: string;
-    isEditingState?: [bool, React.Dispatch<React.SetStateAction<bool>>];
-    editorName?: never;
 }
 
 export type TUseChangeEditModeProps<TValue extends TValueType> = TValue extends "editor"
@@ -90,13 +87,12 @@ const useChangeEditMode = <
     disableNewLine,
     valueType,
     canEmpty = false,
-    isEditingState,
     editorName,
     onStopEditing,
 }: TUseChangeEditModeProps<TValue>): IUseChangeEditMode<TValue> => {
     const valueRef = useRef<TRef>((valueType === "editor" ? originalValue : undefined) as unknown as TRef);
     const [height, setHeight] = useState(0);
-    const [isEditing, setIsEditing] = valueType === "editor" ? useEditorState(editorName) : (isEditingState ?? useState(false));
+    const [isEditing, setIsEditing] = useEditorState(editorName);
 
     const trimValue = <T extends string | undefined, TReturn extends T extends string ? string : undefined>(value: T): TReturn => {
         if (!value) {
@@ -118,6 +114,7 @@ const useChangeEditMode = <
 
             if (mode === "edit") {
                 if (customStartEditing) {
+                    setIsEditing(() => true);
                     customStartEditing();
                     return;
                 }

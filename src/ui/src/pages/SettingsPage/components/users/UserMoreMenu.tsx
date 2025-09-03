@@ -3,25 +3,22 @@ import MoreMenu from "@/components/MoreMenu";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useDeleteUserInSettings from "@/controllers/api/settings/users/useDeleteUserInSettings";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { ISettingsUserContext } from "@/pages/SettingsPage/components/users/types";
+import { User } from "@/core/models";
 import { memo } from "react";
 import { useTranslation } from "react-i18next";
 
-const UserMoreMenu = memo(() => {
+const UserMoreMenu = memo(({ user }: { user: User.TModel }) => {
     return (
         <MoreMenu.Root
             triggerProps={{ className: "size-7", titleSide: "bottom", ...{ [DISABLE_DRAGGING_ATTR]: "" } }}
             contentProps={{ className: "w-min p-0", ...{ [DISABLE_DRAGGING_ATTR]: "" } }}
         >
-            <UserMoreMenuDelete />
+            <UserMoreMenuDelete user={user} />
         </MoreMenu.Root>
     );
 });
 
-const UserMoreMenuDelete = memo(() => {
-    const { model: user, params } = ModelRegistry.User.useContext<ISettingsUserContext>();
-    const { virtualizerRef } = params;
+const UserMoreMenuDelete = memo(({ user }: { user: User.TModel }) => {
     const [t] = useTranslation();
     const { mutateAsync } = useDeleteUserInSettings(user, { interceptToast: true });
 
@@ -41,7 +38,6 @@ const UserMoreMenuDelete = memo(() => {
                 return t("successes.User deleted successfully.");
             },
             finally: () => {
-                virtualizerRef.current?.measure();
                 endCallback(true);
             },
         });

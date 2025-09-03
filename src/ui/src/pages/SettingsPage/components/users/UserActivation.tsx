@@ -1,17 +1,16 @@
-import { Checkbox, Flex, Table, Toast, Tooltip } from "@/components/base";
+import { Checkbox, Flex, Toast, Tooltip } from "@/components/base";
 import useUpdateUserInSettings from "@/controllers/api/settings/users/useUpdateUserInSettings";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import useUpdateDateDistance from "@/core/hooks/useUpdateDateDistance";
-import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { EHttpStatus } from "@langboard/core/enums";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-function UserActivation() {
+function UserActivation({ user }: { user: User.TModel }) {
     const [t] = useTranslation();
-    const { model: user } = ModelRegistry.User.useContext();
     const navigate = usePageNavigateRef();
     const rawActivatedAt = user.useField("activated_at");
     const activtedAt = useUpdateDateDistance(rawActivatedAt);
@@ -57,18 +56,16 @@ function UserActivation() {
     };
 
     return (
-        <Table.FlexCell className="w-1/12 justify-center truncate">
-            <Tooltip.Root>
-                <Tooltip.Trigger asChild>
-                    <Flex justify="center" w="full">
-                        <Checkbox checked={!!rawActivatedAt} onClick={toggle} />
-                    </Flex>
-                </Tooltip.Trigger>
-                <Tooltip.Content side="bottom" align="center">
-                    {rawActivatedAt ? activtedAt : t("settings.Activate")}
-                </Tooltip.Content>
-            </Tooltip.Root>
-        </Table.FlexCell>
+        <Tooltip.Root>
+            <Tooltip.Trigger asChild>
+                <Flex justify="center" w="full">
+                    <Checkbox checked={!!rawActivatedAt} onClick={toggle} />
+                </Flex>
+            </Tooltip.Trigger>
+            <Tooltip.Content side="bottom" align="center">
+                {rawActivatedAt ? activtedAt : t("settings.Activate")}
+            </Tooltip.Content>
+        </Tooltip.Root>
     );
 }
 

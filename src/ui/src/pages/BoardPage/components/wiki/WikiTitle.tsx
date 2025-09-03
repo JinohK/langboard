@@ -22,10 +22,12 @@ const WikiTitle = memo(({ wiki }: IWikiTitleProps) => {
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("title", { interceptToast: true });
     const title = wiki.useField("title");
     const forbidden = wiki.useField("forbidden");
+    const editorName = `${wiki.uid}-wiki-title`;
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => !forbidden,
         valueType: "textarea",
         disableNewLine: true,
+        editorName,
         save: (value, endCallback) => {
             const promise = changeWikiDetailsMutateAsync({
                 project_uid: projectUID,

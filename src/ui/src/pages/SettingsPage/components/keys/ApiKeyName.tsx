@@ -18,11 +18,13 @@ const ApiKeyName = memo(({ apiKey }: IApiKeyNameProps) => {
     const [t] = useTranslation();
     const navigate = usePageNavigateRef();
     const name = apiKey.useField("setting_name");
+    const editorName = `${apiKey.uid}-api-key-name`;
     const { mutateAsync } = useUpdateSetting(apiKey, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 setting_name: value,

@@ -1,4 +1,4 @@
-const MarkdownDateBlock = ({ children }: { children: string[] }) => {
+const MarkdownDateBlock = ({ children = [] }: { children?: string[] }) => {
     if (children.length === 0) {
         return <span className="w-fit rounded-sm bg-border px-1 text-muted-foreground">Invalid date</span>;
     }

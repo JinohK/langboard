@@ -20,6 +20,10 @@ class BaseBotModel(SoftDeleteModel):
         BotPlatform.Default: [BotPlatformRunningType.Default],
         BotPlatform.Langflow: [BotPlatformRunningType.Endpoint, BotPlatformRunningType.FlowJson],
     }
+    ALLOWED_ALL_IPS_BY_PLATFORMS: ClassVar[dict[BotPlatform, list[BotPlatformRunningType]]] = {
+        BotPlatform.Default: [BotPlatformRunningType.Default],
+        BotPlatform.Langflow: [BotPlatformRunningType.FlowJson],
+    }
     platform: BotPlatform = Field(nullable=False, sa_type=EnumLikeType(BotPlatform))
     platform_running_type: BotPlatformRunningType = Field(nullable=False, sa_type=EnumLikeType(BotPlatformRunningType))
 

@@ -26,12 +26,14 @@ function BoardCardTitle(): JSX.Element {
     const title = card.useField("title");
     const canEdit = hasRoleAction(Project.ERoleAction.CardUpdate);
     const titleSpanRef = useRef<HTMLSpanElement>(null);
+    const editorName = `${card.uid}-card-title`;
     const [isOpened, setIsOpened] = useState(false);
     const [showCollapse, setShowCollapse] = useState(false);
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => canEdit,
         valueType: "textarea",
         disableNewLine: true,
+        editorName,
         save: (value, endCallback) => {
             const promise = changeCardDetailsMutateAsync({
                 project_uid: projectUID,

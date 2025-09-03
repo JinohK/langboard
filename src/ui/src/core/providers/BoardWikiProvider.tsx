@@ -26,7 +26,7 @@ export interface IBoardWikiContext {
     changeTab: (uid: string) => void;
 }
 
-interface IBoardWikiProps {
+interface IBoardWikiProviderProps {
     projectUID: string;
     projectMembers: User.TModel[];
     currentUser: AuthUser.TModel;
@@ -48,7 +48,12 @@ const initialContext = {
 
 const BoardWikiContext = createContext<IBoardWikiContext>(initialContext);
 
-export const BoardWikiProvider = ({ projectUID, projectMembers: flatProjectMembers, currentUser, children }: IBoardWikiProps): React.ReactNode => {
+export const BoardWikiProvider = ({
+    projectUID,
+    projectMembers: flatProjectMembers,
+    currentUser,
+    children,
+}: IBoardWikiProviderProps): React.ReactNode => {
     const socket = useSocket();
     const navigate = usePageNavigateRef();
     const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);

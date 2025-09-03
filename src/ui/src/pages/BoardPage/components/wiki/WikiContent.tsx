@@ -56,7 +56,6 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         customStartEditing: () => {
-            setIsEditing(true);
             setTimeout(() => {
                 editorRef.current?.tf.focus();
             }, 0);

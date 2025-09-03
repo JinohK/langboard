@@ -79,6 +79,9 @@ class OpenApiSchema:
         if isinstance(value, type) and issubclass(value, BaseSqlModel):
             return self.__make_schema_recursive(value.api_schema())
 
+        if hasattr(value, "api_schema"):
+            return self.__make_schema_recursive(value.api_schema())
+
         if isinstance(value, dict):
             new_dict: dict[str, Any] = {}
             for key, dict_value in value.items():
@@ -91,8 +94,7 @@ class OpenApiSchema:
         if (
             isinstance(value, tuple)
             and len(value) == 2
-            and isinstance(value[0], type)
-            and issubclass(value[0], BaseSqlModel)
+            and ((isinstance(value[0], type) and issubclass(value[0], BaseSqlModel)) or hasattr(value[0], "api_schema"))
         ):
             if isinstance(value[1], tuple):
                 return self.__make_schema_recursive(value[0].api_schema(*value[1]))

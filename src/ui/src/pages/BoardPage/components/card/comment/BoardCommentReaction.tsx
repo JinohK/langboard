@@ -1,5 +1,4 @@
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
-import ReactionCounter from "@/components/ReactionCounter";
+import ReactionCounter, { TReactionEmoji } from "@/components/ReactionCounter";
 import useReactCardComment from "@/controllers/api/card/comment/useReactCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ProjectCardComment } from "@/core/models";
@@ -16,7 +15,7 @@ const BoardCommentReaction = ({ comment }: IBoardCommentReactionProps): JSX.Elem
     const { mutate: reactCardCommentMutate } = useReactCardComment();
     const [isValidating, setIsValidating] = useState(false);
 
-    const submitToggleReaction = (reaction: TEmoji) => {
+    const submitToggleReaction = (reaction: TReactionEmoji) => {
         if (isValidating) {
             return;
         }

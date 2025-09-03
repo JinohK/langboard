@@ -35,13 +35,12 @@ const BoardCardDescription = memo((): JSX.Element => {
     const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const description = card.useField("description");
-    const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
+    const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
         valueType: "editor",
         canEmpty: true,
         editorName,
         customStartEditing: () => {
-            setIsEditing(true);
             setTimeout(() => {
                 editorRef.current?.tf.focus();
             }, 0);

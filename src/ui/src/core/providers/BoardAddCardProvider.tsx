@@ -18,7 +18,7 @@ export interface IBoardAddCardContext {
     canWrite: bool;
 }
 
-interface IBoardAddCardProps {
+interface IBoardAddCardProviderProps {
     column: ProjectColumn.TModel;
     viewportRef: React.RefObject<HTMLDivElement | null>;
     toLastPage: () => void;
@@ -38,17 +38,19 @@ const initialContext = {
 
 const BoardAddCardContext = createContext<IBoardAddCardContext>(initialContext);
 
-export const BoardAddCardProvider = ({ column, viewportRef, toLastPage, children }: IBoardAddCardProps): React.ReactNode => {
+export const BoardAddCardProvider = ({ column, viewportRef, toLastPage, children }: IBoardAddCardProviderProps): React.ReactNode => {
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const disableChangeModeAttr = "data-disable-change-mode";
     const canWrite = hasRoleAction(Project.ERoleAction.CardWrite) && !column.is_archive;
     const { mutateAsync: createCardMutateAsync } = useCreateCard({ interceptToast: true });
+    const editorName = `${column.uid}-add-card`;
     const { valueRef, isEditing, setIsEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "textarea",
         disableNewLine: true,
+        editorName,
         customStartEditing: () => {
             const pointerDownEvent = (e: PointerEvent) => {
                 const target = e.target;
@@ -63,7 +65,6 @@ export const BoardAddCardProvider = ({ column, viewportRef, toLastPage, children
             window.addEventListener("pointerdown", pointerDownEvent);
 
             toLastPage();
-            setIsEditing(() => true);
 
             setTimeout(() => {
                 if (valueRef.current) {

@@ -1,16 +1,15 @@
-import { Checkbox, Flex, Table, Toast } from "@/components/base";
+import { Checkbox, Flex, Toast } from "@/components/base";
 import useUpdateUserInSettings from "@/controllers/api/settings/users/useUpdateUserInSettings";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { EHttpStatus } from "@langboard/core/enums";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-function UserAdmin() {
+function UserAdmin({ user }: { user: User.TModel }) {
     const [t] = useTranslation();
-    const { model: user } = ModelRegistry.User.useContext();
     const navigate = usePageNavigateRef();
     const isAdmin = user.useField("is_admin");
     const { mutateAsync } = useUpdateUserInSettings(user, { interceptToast: true });
@@ -53,11 +52,9 @@ function UserAdmin() {
     };
 
     return (
-        <Table.FlexCell className="w-1/12 justify-center truncate">
-            <Flex justify="center" w="full">
-                <Checkbox checked={!!isAdmin} onClick={toggle} />
-            </Flex>
-        </Table.FlexCell>
+        <Flex justify="center" w="full">
+            <Checkbox checked={!!isAdmin} onClick={toggle} />
+        </Flex>
     );
 }
 

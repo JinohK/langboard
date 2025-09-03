@@ -14,11 +14,13 @@ export interface IAccountUserGroupNameProps {
 const AccountUserGroupName = memo(({ group }: IAccountUserGroupNameProps) => {
     const [t] = useTranslation();
     const groupName = group.useField("name");
+    const editorName = `${group.uid}-group-name`;
     const { mutateAsync } = useChangeUserGroupName(group, { interceptToast: true });
 
     const { valueRef, height, isEditing, updateHeight, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "textarea",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 name: value,

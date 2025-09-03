@@ -14,10 +14,12 @@ const BoardColumnAdd = memo(() => {
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
     const { mutateAsync: createProjectColumnMutateAsync } = useCreateProjectColumn({ interceptToast: true });
+    const editorName = `${project.uid}-add-column`;
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.Update),
         valueType: "input",
         disableNewLine: true,
+        editorName,
         save: (value, endCallback) => {
             setIsValidating(true);
 

@@ -8,6 +8,7 @@ from core.utils.IpAddress import is_ipv4_in_range, is_valid_ipv4_address_or_rang
 from fastapi import Depends, Request, status
 from jwt import ExpiredSignatureError, InvalidTokenError
 from models import Bot, User
+from models.BaseBotModel import BaseBotModel, BotPlatform
 from models.Bot import ALLOWED_ALL_IPS
 from starlette.datastructures import Headers
 from starlette.requests import cookie_parser
@@ -223,6 +224,10 @@ class Auth:
             return status.HTTP_401_UNAUTHORIZED
 
         if Env.ENVIRONMENT == "local":
+            return bot
+
+        allowed_all_ips = BaseBotModel.ALLOWED_ALL_IPS_BY_PLATFORMS.get(BotPlatform(bot.platform), [])
+        if bot.platform_running_type in allowed_all_ips:
             return bot
 
         ip = cast(str, ip)

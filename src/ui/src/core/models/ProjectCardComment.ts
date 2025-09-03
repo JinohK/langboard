@@ -1,9 +1,9 @@
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import * as BotModel from "@/core/models/BotModel";
 import * as User from "@/core/models/User";
 import { BaseModel, IBaseModel, IEditorContent } from "@/core/models/Base";
 import { registerModel } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
+import { TReactionEmoji } from "@/components/ReactionCounter";
 
 export interface Interface extends IBaseModel {
     card_uid: string;
@@ -15,7 +15,7 @@ export interface Interface extends IBaseModel {
 export interface IStore extends Interface {
     user?: User.Interface;
     bot?: BotModel.Interface;
-    reactions: Partial<Record<TEmoji, string[]>>;
+    reactions: Partial<Record<TReactionEmoji, string[]>>;
 }
 
 class ProjectCardComment extends BaseModel<IStore> {

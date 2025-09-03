@@ -1,11 +1,10 @@
 from typing import cast
 from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse
-from core.schema import OpenApiSchema
+from core.schema import OpenApiSchema, PaginatedList
 from core.types import SafeDateTime
 from fastapi import Depends, status
 from models import User, UserProfile
-from ...publishers import AppSettingPublisher
 from ...security import Auth
 from ...services import Service
 from .Form import CreateUserForm, DeleteSelectedUsersForm, UpdateUserForm, UsersPagination
@@ -17,22 +16,19 @@ from .Form import CreateUserForm, DeleteSelectedUsersForm, UpdateUserForm, Users
     responses=(
         OpenApiSchema()
         .suc(
-            {
-                "list": [
-                    (
-                        User,
-                        {
-                            "schema": {
-                                "created_at": "string",
-                                "activated_at": "string?",
-                                **UserProfile.api_schema(),
-                                "is_admin": "bool",
-                            }
-                        },
-                    )
-                ],
-                "count_new_records": "integer",
-            }
+            PaginatedList.api_schema(
+                (
+                    User,
+                    {
+                        "schema": {
+                            "created_at": "string",
+                            "activated_at": "string?",
+                            **UserProfile.api_schema(),
+                            "is_admin": "bool",
+                        }
+                    },
+                )
+            )
         )
         .auth()
         .forbidden()
@@ -43,9 +39,10 @@ from .Form import CreateUserForm, DeleteSelectedUsersForm, UpdateUserForm, Users
 async def get_users_in_settings(
     pagination: UsersPagination = Depends(), service: Service = Service.scope()
 ) -> JsonResponse:
-    result = await service.user.get_list(pagination, refer_time=pagination.refer_time, only_count=pagination.only_count)
+    result = await service.user.get_list(refer_time=pagination.refer_time, only_count=pagination.only_count)
     if pagination.only_count:
-        return JsonResponse(content={"count_new_records": result})
+        count_new_records = cast(int, result)
+        return JsonResponse(content=PaginatedList(count_new_records=count_new_records))
     users, count_new_records = cast(tuple[list[tuple[User, UserProfile]], int], result)
 
     api_users = []
@@ -58,10 +55,10 @@ async def get_users_in_settings(
         api_users.append(api_user)
 
     return JsonResponse(
-        content={
-            "list": api_users,
-            "count_new_records": count_new_records,
-        }
+        content=PaginatedList(
+            records=api_users,
+            count_new_records=count_new_records,
+        )
     )
 
 
@@ -80,8 +77,6 @@ async def create_user_in_settings(form: CreateUserForm, service: Service = Servi
         form_dict["activated_at"] = now
 
     user, profile = await service.user.create(form_dict)
-
-    await AppSettingPublisher.user_created(user, profile)
 
     return JsonResponse(status_code=201, content={})
 

@@ -1,0 +1,12 @@
+{
+  "{count} New Records": "{{count}} New Records",
+  "Showing {start} to {end} of {total} results": "Showing {{start}} to {{end}} of {{total}} results",
+  "Search...": "Search...",
+  "Active filters": "Active filters",
+  "Next Page": "Next Page",
+  "Previous Page": "Previous Page",
+  "More Pages": "More Pages",
+  "Page {page}": "Page {{page}}",
+  "No data available": "No data available",
+  "Try adjusting your search or filter criteria": "Try adjusting your search or filter criteria"
+}

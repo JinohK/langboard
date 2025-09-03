@@ -7,7 +7,7 @@ export interface IPageHeaderContext {
     locationPopped: number;
 }
 
-interface IPageHeaderProps {
+interface IPageHeaderProviderProps {
     children: React.ReactNode;
 }
 
@@ -18,7 +18,7 @@ const initialContext = {
 
 const PageHeaderContext = createContext<IPageHeaderContext>(initialContext);
 
-export const PageHeaderProvider = ({ children }: IPageHeaderProps): React.ReactNode => {
+export const PageHeaderProvider = ({ children }: IPageHeaderProviderProps): React.ReactNode => {
     const [locationPopped, forceUpdate] = useReducer((x) => x + 1, 0);
     const pageAliasMap = useRef<Record<string, string[]>>({});
 

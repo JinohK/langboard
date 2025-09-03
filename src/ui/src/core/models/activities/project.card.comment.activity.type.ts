@@ -2,7 +2,7 @@ import { IBaseProjectCardActivity, IProjectCardActivityHistory } from "@/core/mo
 import { EProjectActivityType } from "@/core/models/activities/enum.type";
 import { IBotInActivityHistory, IChangesInActivityHistory, IUserInActivityHistory } from "@/core/models/activities/base.type";
 import { IEditorContent } from "@/core/models/Base";
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
+import { TReactionEmoji } from "@/components/ReactionCounter";
 
 interface ICommentInActivityHistory {
     content: IEditorContent;
@@ -22,11 +22,12 @@ export interface IProjectCardCommentUpdatedActivity extends IBaseProjectCardActi
 export interface IProjectCardCommentDeletedActivity extends IBaseProjectCardActivity<IProjectCardCommentActivityHistory> {
     activity_type: EProjectActivityType.CardCommentDeleted;
 }
-export interface IProjectCardCommentReactedActivity extends IBaseProjectCardActivity<IProjectCardCommentActivityHistory & { reaction_type: TEmoji }> {
+export interface IProjectCardCommentReactedActivity
+    extends IBaseProjectCardActivity<IProjectCardCommentActivityHistory & { reaction_type: TReactionEmoji }> {
     activity_type: EProjectActivityType.CardCommentReacted;
 }
 export interface IProjectCardCommentUnreactedActivity
-    extends IBaseProjectCardActivity<IProjectCardCommentActivityHistory & { reaction_type: TEmoji }> {
+    extends IBaseProjectCardActivity<IProjectCardCommentActivityHistory & { reaction_type: TReactionEmoji }> {
     activity_type: EProjectActivityType.CardCommentUnreacted;
 }
 

@@ -9,7 +9,7 @@ export interface IDashboardContext {
     socket: ISocketContext;
 }
 
-interface IDashboardProps {
+interface IDashboardProviderProps {
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
@@ -21,7 +21,7 @@ const initialContext = {
 
 const DashboardContext = createContext<IDashboardContext>(initialContext);
 
-export const DashboardProvider = ({ currentUser, children }: IDashboardProps): React.ReactNode => {
+export const DashboardProvider = ({ currentUser, children }: IDashboardProviderProps): React.ReactNode => {
     const socket = useSocket();
     const projects = Project.Model.useModels(() => true);
 

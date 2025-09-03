@@ -9,7 +9,7 @@ export interface IBoardSettingsContext {
     currentUser: AuthUser.TModel;
 }
 
-interface IBoardSettingsProps {
+interface IBoardSettingsProviderProps {
     project: Project.TModel;
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
@@ -24,7 +24,7 @@ const initialContext = {
 
 const BoardSettingsContext = createContext<IBoardSettingsContext>(initialContext);
 
-export const BoardSettingsProvider = ({ project, currentUser, children }: IBoardSettingsProps): React.ReactNode => {
+export const BoardSettingsProvider = ({ project, currentUser, children }: IBoardSettingsProviderProps): React.ReactNode => {
     const socket = useSocket();
     const allBots = BotModel.Model.useModels(() => true);
 

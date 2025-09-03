@@ -11,7 +11,7 @@ export interface IBotTriggerConditionListContext {
     botScope?: TBotScopeModel<TBotScopeModelName>;
 }
 
-interface IBotTriggerConditionListProps {
+interface IBotTriggerConditionListProviderProps {
     params: TBotScopeRelatedParams;
     botUID: string;
     botScope?: TBotScopeModel<TBotScopeModelName>;
@@ -27,7 +27,7 @@ const initialContext = {
 
 const BotTriggerConditionListContext = createContext<IBotTriggerConditionListContext>(initialContext);
 
-export const BotTriggerConditionListProvider = ({ params, botUID, botScope, children }: IBotTriggerConditionListProps): React.ReactNode => {
+export const BotTriggerConditionListProvider = ({ params, botUID, botScope, children }: IBotTriggerConditionListProviderProps): React.ReactNode => {
     let categories;
     switch (params.target_table) {
         case "project_column":

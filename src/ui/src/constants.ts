@@ -16,6 +16,8 @@ export const EMAIL_REGEX = /^\S+@\S+\.\S+$/;
 
 export const DISABLE_DRAGGING_ATTR = "data-drag-disabled";
 
+export const MAX_FILE_SIZE_MB = parseInt(process.env.MAX_FILE_SIZE_MB || "50");
+
 export const QUERY_NAMES = {
     REDIRECT: "continue",
     SUB_EMAIL_VERIFY_TOKEN: "bEvt",

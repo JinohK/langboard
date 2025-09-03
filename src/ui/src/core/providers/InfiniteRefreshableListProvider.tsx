@@ -1,10 +1,10 @@
 import { TGetListForm } from "@/controllers/api/shared/types";
-import useGetRefreshableList, { IUseGetRefreshableListProps } from "@/controllers/api/shared/useGetRefreshableList";
+import useGetInfiniteRefreshableList, { IUseGetInfiniteRefreshableListProps } from "@/controllers/api/shared/useGetInfiniteRefreshableList";
 import { TCreatedAtModel, TCreatedAtModelName } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 
-export interface IRefreshableListContext<TModelName extends TCreatedAtModelName> {
+export interface IInfiniteRefreshableListContext<TModelName extends TCreatedAtModelName> {
     models: TCreatedAtModel<TModelName>[];
     listIdRef: React.RefObject<string>;
     isFetchingRef: React.RefObject<bool>;
@@ -19,11 +19,11 @@ export interface IRefreshableListContext<TModelName extends TCreatedAtModelName>
     checkOutdatedOnScroll: (e: React.UIEvent<HTMLDivElement>) => Promise<void>;
 }
 
-interface IRefreshableListProps<TModelName extends TCreatedAtModelName> {
+interface IInfiniteRefreshableListProviderProps<TModelName extends TCreatedAtModelName> {
     models: TCreatedAtModel<TModelName>[];
     form: TGetListForm<TModelName>;
     limit: number;
-    prepareData?: IUseGetRefreshableListProps<TModelName>["prepareData"];
+    prepareData?: IUseGetInfiniteRefreshableListProps<TModelName>["prepareData"];
     children: React.ReactNode;
 }
 
@@ -42,15 +42,15 @@ const initialContext = {
     checkOutdatedOnScroll: async () => {},
 };
 
-const RefreshableListContext = createContext<IRefreshableListContext<TCreatedAtModelName>>(initialContext);
+const InfiniteRefreshableListContext = createContext<IInfiniteRefreshableListContext<TCreatedAtModelName>>(initialContext);
 
-export function RefreshableListProvider<TModelName extends TCreatedAtModelName>({
+export function InfiniteRefreshableListProvider<TModelName extends TCreatedAtModelName>({
     models: flatModels,
     form,
     limit,
     prepareData,
     children,
-}: IRefreshableListProps<TModelName>): React.ReactNode {
+}: IInfiniteRefreshableListProviderProps<TModelName>): React.ReactNode {
     const [page, setPage] = useState(0);
     const [isLastPage, setIsLastPage] = useState(!flatModels.length);
     const [isRefreshing, setIsRefreshing] = useState(false);
@@ -64,7 +64,7 @@ export function RefreshableListProvider<TModelName extends TCreatedAtModelName>(
         refresh,
         checkOutdated: originalCheckOutdated,
         countNewRecords,
-    } = useGetRefreshableList({ form, limit, setPage, isLastPage, setIsLastPage, lastCurrentDateRef, prepareData });
+    } = useGetInfiniteRefreshableList({ form, limit, setPage, isLastPage, setIsLastPage, lastCurrentDateRef, prepareData });
     const isDelayingCheckOutdated = useRef(false);
     const isFetchingRef = useRef(false);
     const listIdRef = useRef(Utils.String.Token.shortUUID());
@@ -168,7 +168,7 @@ export function RefreshableListProvider<TModelName extends TCreatedAtModelName>(
     }, []);
 
     return (
-        <RefreshableListContext.Provider
+        <InfiniteRefreshableListContext.Provider
             value={{
                 isFetchingRef,
                 isDelayingCheckOutdated,
@@ -185,14 +185,14 @@ export function RefreshableListProvider<TModelName extends TCreatedAtModelName>(
             }}
         >
             {children}
-        </RefreshableListContext.Provider>
+        </InfiniteRefreshableListContext.Provider>
     );
 }
 
-export function useRefreshableList<TModelName extends TCreatedAtModelName>(): IRefreshableListContext<TModelName> {
-    const context = useContext(RefreshableListContext);
+export function useInfiniteRefreshableList<TModelName extends TCreatedAtModelName>(): IInfiniteRefreshableListContext<TModelName> {
+    const context = useContext(InfiniteRefreshableListContext);
     if (!context) {
-        throw new Error("useRefreshableList must be used within an RefreshableListProvider");
+        throw new Error("useInfiniteRefreshableList must be used within an InfiniteRefreshableListProvider");
     }
-    return context as IRefreshableListContext<TModelName>;
+    return context as IInfiniteRefreshableListContext<TModelName>;
 }

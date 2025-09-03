@@ -14,11 +14,13 @@ function WebhookName() {
     const { model: url } = ModelRegistry.AppSettingModel.useContext();
     const navigate = usePageNavigateRef();
     const name = url.useField("setting_name");
+    const editorName = `${url.uid}-webhook-name`;
     const { mutateAsync } = useUpdateSetting(url, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 setting_name: value,

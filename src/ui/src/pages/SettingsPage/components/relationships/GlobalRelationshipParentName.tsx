@@ -14,11 +14,13 @@ function GlobalRelationshipParentName() {
     const navigate = usePageNavigateRef();
     const { model: globalRelationship } = ModelRegistry.GlobalRelationshipType.useContext();
     const parentName = globalRelationship.useField("parent_name");
+    const editorName = `${globalRelationship.uid}-global-relationship-parent-name`;
     const { mutateAsync } = useUpdateGlobalRelationship(globalRelationship, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 parent_name: value,

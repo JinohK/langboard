@@ -9,7 +9,7 @@ export interface IAccountSettingContext {
     setIsValidating: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-interface IAccountSettingProps {
+interface IAccountSettingProviderProps {
     currentUser: AuthUser.TModel;
     children: React.ReactNode;
 }
@@ -23,7 +23,7 @@ const initialContext = {
 
 const AccountSettingContext = createContext<IAccountSettingContext>(initialContext);
 
-export const AccountSettingProvider = ({ currentUser, children }: IAccountSettingProps): React.ReactNode => {
+export const AccountSettingProvider = ({ currentUser, children }: IAccountSettingProviderProps): React.ReactNode => {
     const { updatedUser } = useAuth();
     const [isValidating, setIsValidating] = useState(false);
 

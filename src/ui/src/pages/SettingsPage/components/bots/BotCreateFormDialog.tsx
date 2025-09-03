@@ -14,7 +14,12 @@ import CopyInput from "@/components/CopyInput";
 import MultiSelect from "@/components/MultiSelect";
 import PasswordInput from "@/components/PasswordInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { AVAILABLE_RUNNING_TYPES_BY_PLATFORM, EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
+import {
+    ALLOWED_ALL_IPS_BY_PLATFORMS,
+    AVAILABLE_RUNNING_TYPES_BY_PLATFORM,
+    EBotPlatform,
+    EBotPlatformRunningType,
+} from "@/core/models/bot.related.type";
 import { getValueType, requirements } from "@/components/BotValueInput/utils";
 import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
 import BotValueInput from "@/components/BotValueInput";
@@ -294,54 +299,56 @@ function BotCreateFormDialog({ opened, setOpened }: IBotCreateFormDialogProps): 
                                 {errors.value && <FormErrorMessage error={errors.value} notInForm />}
                             </Box>
                         )}
-                        <Flex mt="4" items="center" gap="2">
-                            <MultiSelect
-                                selections={[]}
-                                placeholder={t("settings.Add a new IP address or range (e.g. 192.0.0.1 or 192.0.0.0/24)...")}
-                                selectedValue={[]}
-                                onValueChange={(values) => {
-                                    ipWhitelistRef.current = values;
-                                }}
-                                className="w-[calc(100%_-_theme(spacing.24))]"
-                                inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
-                                canCreateNew
-                                validateCreatedNewValue={Utils.String.isValidIpv4OrRnage}
-                                createNewCommandItemLabel={(value) => {
-                                    const newIPs: string[] = [];
-
-                                    if (value.includes("/24")) {
-                                        newIPs.push(value, value.replace("/24", ""));
-                                    } else {
-                                        newIPs.push(value, `${value}/24`);
-                                    }
-
-                                    return newIPs.map((ip) => ({
-                                        label: ip,
-                                        value: ip,
-                                    }));
-                                }}
-                                isNewCommandItemMultiple
-                                disabled={isValidating || isAllAllowedIP}
-                            />
-                            <Label display="flex" items="center" gap="1.5" w="20" mb="2" cursor="pointer">
-                                <Checkbox
-                                    onCheckedChange={(checked) => {
-                                        if (Utils.Type.isString(checked)) {
-                                            return;
-                                        }
-
-                                        if (checked) {
-                                            ipWhitelistRef.current = [BotModel.ALLOWED_ALL_IPS];
-                                        } else {
-                                            ipWhitelistRef.current = [];
-                                        }
-
-                                        setIsAllAllowedIP(checked);
+                        {ALLOWED_ALL_IPS_BY_PLATFORMS[selectedPlatform].includes(selectedPlatformRunningType) && (
+                            <Flex mt="4" items="center" gap="2">
+                                <MultiSelect
+                                    selections={[]}
+                                    placeholder={t("settings.Add a new IP address or range (e.g. 192.0.0.1 or 192.0.0.0/24)...")}
+                                    selectedValue={[]}
+                                    onValueChange={(values) => {
+                                        ipWhitelistRef.current = values;
                                     }}
+                                    className="w-[calc(100%_-_theme(spacing.24))]"
+                                    inputClassName="ml-1 placeholder:text-gray-500 placeholder:font-medium"
+                                    canCreateNew
+                                    validateCreatedNewValue={Utils.String.isValidIpv4OrRnage}
+                                    createNewCommandItemLabel={(value) => {
+                                        const newIPs: string[] = [];
+
+                                        if (value.includes("/24")) {
+                                            newIPs.push(value, value.replace("/24", ""));
+                                        } else {
+                                            newIPs.push(value, `${value}/24`);
+                                        }
+
+                                        return newIPs.map((ip) => ({
+                                            label: ip,
+                                            value: ip,
+                                        }));
+                                    }}
+                                    isNewCommandItemMultiple
+                                    disabled={isValidating || isAllAllowedIP}
                                 />
-                                {t("settings.Allow all")}
-                            </Label>
-                        </Flex>
+                                <Label display="flex" items="center" gap="1.5" w="20" mb="2" cursor="pointer">
+                                    <Checkbox
+                                        onCheckedChange={(checked) => {
+                                            if (Utils.Type.isString(checked)) {
+                                                return;
+                                            }
+
+                                            if (checked) {
+                                                ipWhitelistRef.current = [BotModel.ALLOWED_ALL_IPS];
+                                            } else {
+                                                ipWhitelistRef.current = [];
+                                            }
+
+                                            setIsAllAllowedIP(checked);
+                                        }}
+                                    />
+                                    {t("settings.Allow all")}
+                                </Label>
+                            </Flex>
+                        )}
                     </Form.Root>
                 )}
                 {revealedToken && <CopyInput value={revealedToken} className="mt-4" />}

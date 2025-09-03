@@ -1,7 +1,7 @@
 from typing import Any
 from core.routing import GLOBAL_TOPIC_ID, SocketTopic
 from core.utils.decorators import staticclass
-from models import AppSetting, User, UserProfile
+from models import AppSetting
 from ..core.publisher import BaseSocketPublisher, SocketPublishModel
 
 
@@ -48,26 +48,6 @@ class AppSettingPublisher(BaseSocketPublisher):
             topic_id=GLOBAL_TOPIC_ID,
             event="settings:deleted",
             data_keys=list(model.keys()),
-        )
-
-        await AppSettingPublisher.put_dispather(model, publish_model)
-
-    @staticmethod
-    async def user_created(user: User, profile: UserProfile):
-        model = {
-            "user": {
-                **user.api_response(),
-                **profile.api_response(),
-                "created_at": user.created_at,
-                "activated_at": user.activated_at,
-                "is_admin": user.is_admin,
-            }
-        }
-        publish_model = SocketPublishModel(
-            topic=SocketTopic.AppSettings,
-            topic_id=GLOBAL_TOPIC_ID,
-            event="user:created",
-            data_keys="user",
         )
 
         await AppSettingPublisher.put_dispather(model, publish_model)

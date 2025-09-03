@@ -15,11 +15,13 @@ const BotName = memo(() => {
     const { model: bot } = ModelRegistry.BotModel.useContext();
     const navigate = usePageNavigateRef();
     const name = bot.useField("name");
+    const editorName = `${bot.uid}-bot-name`;
     const { mutateAsync } = useUpdateBot(bot, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 bot_name: value,

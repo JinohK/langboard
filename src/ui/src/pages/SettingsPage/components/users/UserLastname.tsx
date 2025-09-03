@@ -1,24 +1,25 @@
-import { Box, Flex, IconComponent, Input, Table, Toast } from "@/components/base";
+import { Box, Flex, IconComponent, Input, Toast } from "@/components/base";
 import useUpdateUserInSettings from "@/controllers/api/settings/users/useUpdateUserInSettings";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { ModelRegistry } from "@/core/models/ModelRegistry";
+import { User } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { EHttpStatus } from "@langboard/core/enums";
 import { useTranslation } from "react-i18next";
 
-function UserLastname() {
+function UserLastname({ user }: { user: User.TModel }) {
     const [t] = useTranslation();
-    const { model: user } = ModelRegistry.User.useContext();
     const navigate = usePageNavigateRef();
     const lastname = user.useField("lastname");
+    const editorName = `${user.uid}-user-lastname`;
     const { mutateAsync } = useUpdateUserInSettings(user, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 lastname: value,
@@ -52,7 +53,7 @@ function UserLastname() {
     });
 
     return (
-        <Table.FlexCell className={cn("w-1/6 truncate text-center", isEditing && "pb-2.5 pt-[calc(theme(spacing.4)_-_2px)]")}>
+        <Box className={cn("truncate text-center", isEditing && "pb-2.5 pt-[calc(theme(spacing.4)_-_2px)]")}>
             {!isEditing ? (
                 <Flex cursor="pointer" justify="center" items="center" gap="1" position="relative" onClick={() => changeMode("edit")}>
                     <Box as="span" className="max-w-[calc(100%_-_theme(spacing.6))] truncate">
@@ -87,7 +88,7 @@ function UserLastname() {
                     }}
                 />
             )}
-        </Table.FlexCell>
+        </Box>
     );
 }
 

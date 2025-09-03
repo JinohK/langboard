@@ -15,11 +15,13 @@ const InternalBotDisplayName = memo(() => {
     const { model: internalBot } = ModelRegistry.InternalBotModel.useContext();
     const navigate = usePageNavigateRef();
     const displayName = internalBot.useField("display_name");
+    const editorName = `${internalBot.uid}-internal-bot-display-name`;
     const { mutateAsync } = useUpdateInternalBot(internalBot, { interceptToast: true });
 
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => true,
         valueType: "input",
+        editorName,
         save: (value, endCallback) => {
             const promise = mutateAsync({
                 display_name: value,

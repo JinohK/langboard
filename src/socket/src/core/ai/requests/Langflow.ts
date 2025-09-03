@@ -108,7 +108,7 @@ class LangflowRequest extends BaseRequest {
             return null;
         }
 
-        if (this.internalBot.platform !== EBotPlatform.Langflow) {
+        if (![EBotPlatform.Default, EBotPlatform.Langflow].includes(this.internalBot.platform)) {
             return null;
         }
 
@@ -147,7 +147,7 @@ class LangflowRequest extends BaseRequest {
             headers: this.getBotRequestHeaders(),
         });
 
-        return healthCheck.status === 200;
+        return healthCheck.status === EHttpStatus.HTTP_200_OK;
     }
 
     #createLangflowRequestModel({ headers, requestModel, useStream }: ICreateLangflowRequestModelParams) {

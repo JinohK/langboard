@@ -19,7 +19,7 @@ export interface IBotScheduleListContext {
     setIsAddMode: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-interface IBotScheduleListProps {
+interface IBotScheduleListProviderProps {
     bot: BotModel.TModel;
     params: TBotScheduleRelatedParams;
     target: ProjectColumn.TModel | ProjectCard.TModel;
@@ -38,7 +38,7 @@ const initialContext = {
 
 const BotScheduleListContext = createContext<IBotScheduleListContext>(initialContext);
 
-export const BotScheduleListProvider = ({ bot, params, target, children }: IBotScheduleListProps): React.ReactNode => {
+export const BotScheduleListProvider = ({ bot, params, target, children }: IBotScheduleListProviderProps): React.ReactNode => {
     const [copiedForm, setCopiedForm] = useState<IBotScheduleFormMap | undefined>(undefined);
     const [isAddMode, setIsAddMode] = useState(false);
 

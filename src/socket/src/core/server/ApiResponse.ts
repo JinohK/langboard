@@ -12,8 +12,10 @@ export const JsonResponse = (content: any, statusCode: EHttpStatus = EHttpStatus
 export const ApiErrorResponse = (errorCode: EApiErrorCode, statusCode: EHttpStatus) => {
     let code;
     let message;
-    if (errorCode.includes(" ")) {
-        code = EApiErrorCode[errorCode as unknown as keyof typeof EApiErrorCode];
+    const errorCodes = Object.keys(EApiErrorCode);
+    const errorValues = Object.values(EApiErrorCode);
+    if (errorValues.includes(errorCode)) {
+        code = errorCodes[errorValues.indexOf(errorCode)];
         message = errorCode;
     } else {
         code = errorCode;

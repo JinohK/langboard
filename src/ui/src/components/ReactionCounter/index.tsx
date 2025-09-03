@@ -1,24 +1,35 @@
 import { Button, Dock, Flex, IconComponent, Popover, AnimatedEmoji } from "@/components/base";
-import { TEmoji } from "@/components/base/AnimatedEmoji/emojis";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import { LottieRefCurrentProps } from "lottie-react";
 import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+export type TReactionEmoji = "check-mark" | "thumbs-up" | "thumbs-down" | "laughing" | "party-popper" | "confusing" | "heart" | "rocket" | "eyes";
+
 export interface IReactionCounterProps<TReactionData = unknown> {
-    reactions: Partial<Record<TEmoji, TReactionData[]>>;
-    toggleCallback: (reaction: TEmoji) => void;
-    isActiveReaction?: (reaction: TEmoji, data: TReactionData[]) => bool;
+    reactions: Partial<Record<TReactionEmoji, TReactionData[]>>;
+    toggleCallback: (reaction: TReactionEmoji) => void;
+    isActiveReaction?: (reaction: TReactionEmoji, data: TReactionData[]) => bool;
     disabled?: bool;
 }
 
 function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled }: IReactionCounterProps): JSX.Element {
     const [t] = useTranslation();
-    const reactionOrders: TEmoji[] = ["check-mark", "thumbs-up", "thumbs-down", "laughing", "party-popper", "confusing", "heart", "rocket", "eyes"];
+    const reactionOrders: TReactionEmoji[] = [
+        "check-mark",
+        "thumbs-up",
+        "thumbs-down",
+        "laughing",
+        "party-popper",
+        "confusing",
+        "heart",
+        "rocket",
+        "eyes",
+    ];
     const [isOpened, setIsOpened] = useState(false);
 
-    const toggle = (emoji: TEmoji) => {
+    const toggle = (emoji: TReactionEmoji) => {
         setIsOpened(false);
         toggleCallback(emoji);
     };
@@ -27,7 +38,7 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled
         <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
             <Flex wrap gap="1">
                 {reactionOrders.map((reaction) => {
-                    if (!reactions[reaction] || reactions[reaction].length === 0) {
+                    if (!reactions[reaction] || !reactions[reaction].length) {
                         return null;
                     }
 
@@ -64,11 +75,11 @@ function ReactionCounter({ reactions, toggleCallback, isActiveReaction, disabled
 }
 
 interface IBaseReactionCounterButtonProps<TReactionData = unknown> {
-    reaction: TEmoji;
+    reaction: TReactionEmoji;
     reactionData?: TReactionData[];
     isDock?: bool;
-    toggleCallback: (emoji: TEmoji) => void;
-    isActiveReaction?: (emoji: TEmoji, data: TReactionData[]) => bool;
+    toggleCallback: (emoji: TReactionEmoji) => void;
+    isActiveReaction?: (emoji: TReactionEmoji, data: TReactionData[]) => bool;
     disabled?: bool;
 }
 
