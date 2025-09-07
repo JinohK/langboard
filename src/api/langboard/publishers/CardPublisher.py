@@ -127,7 +127,7 @@ class CardPublisher(BaseSocketPublisher):
                     topic_id=topic_id,
                     event=f"board:card:order:changed:{old_column_uid}",
                     data_keys=["uid", "order"],
-                    custom_data={"move_type": "in_column"},
+                    custom_data={"move_type": "in_column", "column_uid": old_column_uid},
                 )
             )
 

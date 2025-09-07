@@ -192,21 +192,17 @@ interface IBoardCardCheckitemListProps {
 const BoardCardCheckitemList = memo(({ checklist, checkitemsMap }: IBoardCardCheckitemListProps) => {
     const { card, socket } = useBoardCard();
     const updater = useReducer((x) => x + 1, 0);
-    const [updated] = updater;
-    const groupCheckitems = ProjectCheckitem.Model.useModels(
-        (model) => {
+    const { rows: checkitems } = useRowReordered({
+        type: "ProjectCheckitem",
+        topicId: card.uid,
+        eventNameParams: { uid: checklist.uid },
+        rowFilter: (model) => {
             if (!checkitemsMap[model.uid]) {
                 checkitemsMap[model.uid] = model;
             }
             return model.checklist_uid === checklist.uid;
         },
-        [updated, checklist]
-    );
-    const { rows: checkitems } = useRowReordered({
-        type: "ProjectCheckitem",
-        topicId: card.uid,
-        eventNameParams: { uid: checklist.uid },
-        rows: groupCheckitems,
+        rowDependencies: [checklist],
         columnUID: checklist.uid,
         socket,
         updater,

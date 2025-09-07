@@ -130,7 +130,11 @@ class BotScheduleHelper:
         try:
             job = CronItem()
             job.setall(interval_str)
-            return str(job.slices)
+            interval_str = str(job.slices)
+            special = SPECIALS.get(interval_str.replace("@", ""), None)
+            if special:
+                return special
+            return interval_str
         except Exception:
             return ""
 

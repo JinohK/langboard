@@ -1,6 +1,7 @@
 import useRowOrderChangedHandlers, { IUseRowOrderChangedHandlersProps } from "@/controllers/socket/shared/useRowOrderChangedHandlers";
+import useSocketHandler from "@/core/helpers/SocketHandler";
 import useSwitchSocketHandlers, { TSocketHandler } from "@/core/hooks/useSwitchSocketHandlers";
-import { TPickedModel } from "@/core/models/ModelRegistry";
+import { ModelRegistry, TPickedModel, TPickedModelClass } from "@/core/models/ModelRegistry";
 import { ISocketContext } from "@/core/providers/SocketProvider";
 import { useMemo } from "react";
 
@@ -13,25 +14,37 @@ export interface IUseRowReorderedProps<TRowModelName extends IUseRowOrderChanged
     type: TRowModelName;
     eventNameParams?: IUseRowOrderChangedHandlersProps["params"];
     topicId: string;
-    rows: TPickedModel<TRowModelName>[];
+    rowFilter: (model: TPickedModel<TRowModelName>) => bool;
+    rowDependencies?: React.DependencyList;
     columnUID: string;
     socket: ISocketContext;
     updater: [unknown, React.DispatchWithoutAction];
     otherHandlers?: TSocketHandler[];
 }
 
+export interface IUseRowReorderedReturn<TRowModelName extends IUseRowOrderChangedHandlersProps["type"]> {
+    rows: TPickedModel<TRowModelName>[];
+    sendRowOrderChanged: ReturnType<typeof useSocketHandler>["send"];
+}
+
 function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps["type"]>({
     type,
     eventNameParams,
     topicId,
-    rows: flatRows,
+    rowFilter,
+    rowDependencies,
     columnUID,
     socket,
     updater,
     otherHandlers,
-}: IUseRowReorderedProps<TRowModelName>) {
+}: IUseRowReorderedProps<TRowModelName>): IUseRowReorderedReturn<TRowModelName> {
     const [updated, forceUpdate] = updater;
-    const rows = useMemo(() => flatRows.sort((a, b) => a.order - b.order), [updated, flatRows]);
+    const flatRows = (ModelRegistry[type].Model as TPickedModelClass<TRowModelName>).useModels(rowFilter, [
+        updated,
+        columnUID,
+        ...(rowDependencies ?? []),
+    ]);
+    const rows = useMemo(() => flatRows.sort((a, b) => a.order - b.order), [flatRows]);
     const handlers = useMemo(
         () =>
             useRowOrderChangedHandlers({
@@ -45,12 +58,12 @@ function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps[
                                 return;
                             }
                             break;
-                        case "in_column":
+                        case "to_column":
                             if (data.column_uid !== columnUID) {
                                 return;
                             }
                             break;
-                        case "to_column":
+                        case "in_column":
                             if (data.column_uid !== columnUID) {
                                 return;
                             }
@@ -60,7 +73,7 @@ function useRowReordered<TRowModelName extends IUseRowOrderChangedHandlersProps[
                     forceUpdate();
                 },
             }),
-        [type, topicId, eventNameParams, columnUID, forceUpdate]
+        [type, topicId, eventNameParams, columnUID, updated, forceUpdate]
     );
     useSwitchSocketHandlers({
         socket,

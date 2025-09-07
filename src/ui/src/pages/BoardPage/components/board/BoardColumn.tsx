@@ -4,7 +4,7 @@ import { memo, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import invariant from "tiny-invariant";
 import BoardColumnCard, { BoardColumnCardShadow, SkeletonBoardColumnCard } from "@/pages/BoardPage/components/board/BoardColumnCard";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { Project, ProjectCard, ProjectColumn } from "@/core/models";
+import { Project, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
 import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
 import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
@@ -136,19 +136,7 @@ function BoardColumn({ column, updateBoard }: IBoardColumnProps) {
 const BoardColumnCardList = memo(({ column, updateBoard }: IBoardColumnProps) => {
     const { project, socket, filters, filterCard, filterCardMember, filterCardLabels, filterCardRelationships } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
-    const [updated, forceUpdate] = updater;
-    const cards = ProjectCard.Model.useModels(
-        (model) => {
-            return (
-                model.column_uid === column.uid &&
-                filterCard(model) &&
-                filterCardMember(model) &&
-                filterCardLabels(model) &&
-                filterCardRelationships(model)
-            );
-        },
-        [column, updated, filters]
-    );
+    const [_, forceUpdate] = updater;
     const cardCreatedHandlers = useMemo(
         () =>
             useBoardCardCreatedHandlers({
@@ -179,7 +167,16 @@ const BoardColumnCardList = memo(({ column, updateBoard }: IBoardColumnProps) =>
         type: "ProjectCard",
         eventNameParams: { uid: column.uid },
         topicId: project.uid,
-        rows: cards,
+        rowFilter: (model) => {
+            return (
+                model.column_uid === column.uid &&
+                filterCard(model) &&
+                filterCardMember(model) &&
+                filterCardLabels(model) &&
+                filterCardRelationships(model)
+            );
+        },
+        rowDependencies: [filters],
         columnUID: column.uid,
         socket,
         updater,

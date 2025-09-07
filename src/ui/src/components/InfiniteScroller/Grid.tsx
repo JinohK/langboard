@@ -148,7 +148,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                             }}
                             ref={virtualizer.measureElement}
                         >
-                            {rowItems.map((item, colIndex) =>
+                            {Array.from(rowItems).map((item, colIndex) =>
                                 isValidElement(item)
                                     ? cloneElement(item, {
                                           key: item.key ?? `${virtualRow.index}-${colIndex}`,

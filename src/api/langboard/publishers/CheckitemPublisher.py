@@ -97,13 +97,14 @@ class CheckitemPublisher(BaseSocketPublisher):
                 ]
             )
         else:
+            column_uid = checkitem.checklist_id.to_short_code()
             publish_models.append(
                 SocketPublishModel(
                     topic=SocketTopic.BoardCard,
                     topic_id=topic_id,
-                    event=f"board:card:checkitem:order:changed:{checkitem.checklist_id.to_short_code()}",
+                    event=f"board:card:checkitem:order:changed:{column_uid}",
                     data_keys=["uid", "order"],
-                    custom_data={"move_type": "in_column"},
+                    custom_data={"move_type": "in_column", "column_uid": column_uid},
                 )
             )
 
