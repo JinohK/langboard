@@ -1,0 +1,71 @@
+name: Lint TS
+
+on:
+  push:
+    paths: &ts_paths
+      - "**/*.ts"
+      - "**/*.tsx"
+      - "**/*.js"
+      - "**/*.cjs"
+      - "**/package.json"
+      - "**/tsconfig.json"
+      - "**/tsconfig.*.json"
+      - "**/yarn.lock"
+      - ".github/workflows/lint-ts.yaml"
+  pull_request:
+    paths: *ts_paths
+
+env:
+  NODE_VERSION: "22"
+
+jobs:
+  run-linters:
+    name: Run Linters
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Cache Core cache
+        uses: actions/cache@v4
+        with:
+          path: src/shared/ts/.yarn/cache
+          key: ${{ runner.os }}-yarncache-core-${{ hashFiles('src/shared/ts/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarncache-core-
+      - name: Cache Socket cache
+        uses: actions/cache@v4
+        with:
+          path: src/socket/.yarn/cache
+          key: ${{ runner.os }}-yarncache-socket-${{ hashFiles('src/socket/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarncache-socket-
+      - name: Cache UI cache
+        uses: actions/cache@v4
+        with:
+          path: src/ui/.yarn/cache
+          key: ${{ runner.os }}-yarncache-ui-${{ hashFiles('src/ui/yarn.lock') }}
+          restore-keys: ${{ runner.os }}-yarncache-ui-
+      - name: Install deps (Core)
+        working-directory: src/shared/ts
+        run: yarn install --immutable
+      - name: Install deps (Socket)
+        working-directory: src/socket
+        run: yarn install --immutable
+      - name: Install deps (UI)
+        working-directory: src/ui
+        run: yarn install --immutable
+      - name: Run Core Linter
+        working-directory: src/shared/ts
+        run: yarn run lint
+      - name: Run Socket Linter
+        working-directory: src/socket
+        run: yarn run lint
+      - name: Run UI Linter
+        working-directory: src/ui
+        run: yarn run lint
