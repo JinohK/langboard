@@ -6,13 +6,13 @@ from core.security import AuthSecurity
 from core.utils.Encryptor import Encryptor
 from fastapi import Request, status
 from jwt import ExpiredSignatureError
-from models import Bot, User, UserEmail, UserGroup, UserNotification, UserProfile
+from models import Bot, User, UserEmail, UserGroup, UserProfile
 from models.UserNotification import NotificationType
 from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from ...Constants import DOMAIN
 from ...security import Auth
 from ...services import Service
-from .scopes import AuthEmailForm, AuthEmailResponse, SignInForm
+from .forms import AuthEmailForm, AuthEmailResponse, SignInForm
 
 
 @AppRouter.api.post(
@@ -140,7 +140,6 @@ async def refresh(request: Request) -> JsonResponse:
                         }
                     },
                 ),
-                "notifications": [UserNotification],
                 "bots": [Bot],
             }
         )
@@ -159,7 +158,6 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
     }
     response["user_groups"] = await service.user_group.get_all_by_user(user, as_api=True)
     response["subemails"] = await service.user.get_subemails(user)
-    notifications = await service.notification.get_list(user)
 
     notification_unsubs = await service.user_notification_setting.get_unsubscriptions_query_builder(user).all()
     unsubs = {}
@@ -188,7 +186,7 @@ async def about_me(user: User = Auth.scope("api_user"), service: Service = Servi
 
     bots = await service.bot.get_list(as_api=True)
 
-    return JsonResponse(content={"user": response, "notifications": notifications, "bots": bots})
+    return JsonResponse(content={"user": response, "bots": bots})
 
 
 @AppRouter.api.post("/auth/signout", tags=["Auth"], responses=OpenApiSchema(202).suc({}).get())

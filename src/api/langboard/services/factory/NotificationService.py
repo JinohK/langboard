@@ -7,6 +7,7 @@ from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.EditorContentParser import change_date_element, find_mentioned
 from core.utils.String import concat
+from dateutil.relativedelta import relativedelta
 from models import (
     Bot,
     Card,
@@ -38,20 +39,23 @@ class NotificationService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "notification"
 
-    async def get_list(self, user: User) -> list[dict[str, Any]]:
+    async def get_list(self, user: User, time_range: Literal["3d", "7d", "1m", "all"] = "3d") -> list[dict[str, Any]]:
+        query = SqlBuilder.select.table(UserNotification).where((UserNotification.column("receiver_id") == user.id))
+
+        if time_range.endswith("d"):
+            days = int(time_range[:-1])
+            query = query.where(UserNotification.column("created_at") >= SafeDateTime.now() - timedelta(days=days))
+        elif time_range.endswith("m"):
+            month = int(time_range[:-1])
+            query = query.where(
+                UserNotification.column("created_at") >= SafeDateTime.now() - relativedelta(months=month)
+            )
+
+        query = query.order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
+
         raw_notifications = []
         with DbSession.use(readonly=True) as db:
-            result = db.exec(
-                SqlBuilder.select.table(UserNotification)
-                .where(
-                    (UserNotification.column("receiver_id") == user.id)
-                    & (
-                        (UserNotification.column("read_at") == None)  # noqa
-                        | (UserNotification.column("read_at") >= SafeDateTime.now() - timedelta(days=3))
-                    )
-                )
-                .order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
-            )
+            result = db.exec(query)
             raw_notifications = result.all()
 
         references: list[tuple[str, int]] = []
@@ -380,6 +384,7 @@ class NotificationService(BaseService):
             email_formats["sender"] = notifier.get_fullname()
 
         notification = UserNotification(
+            id=SnowflakeID(),  # generate new ID
             notifier_type="user" if isinstance(notifier, User) else "bot",
             notifier_id=notifier.id,
             receiver_id=target_user.id,

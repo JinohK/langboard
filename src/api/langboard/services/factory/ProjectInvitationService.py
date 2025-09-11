@@ -22,15 +22,13 @@ from .UserService import UserService
 
 class InvitationRelatedResult:
     def __init__(self):
-        self.already_assigned_ids: list[SnowflakeID] = []
-        self.already_assigned_users: list[User] = []
-        self.already_assigned_user_emails: list[str] = []
-        self.already_sent_user_emails: list[str] = []
-        self.emails_should_invite: list[str] = []
+        self.already_assigned_ids: set[SnowflakeID] = set()
+        self.already_sent_user_emails: set[str] = set()
+        self.emails_should_invite: set[str] = set()
         self.emails_should_remove: dict[str, tuple[ProjectInvitation, User | None]] = {}
         self.users_by_email: dict[str, User] = {}
-        self.user_ids_should_delete: list[SnowflakeID] = []
-        self.assigned_ids_should_delete: list[SnowflakeID] = []
+        self.user_ids_should_delete: set[SnowflakeID] = set()
+        self.assigned_ids_should_delete: set[SnowflakeID] = set()
 
 
 class ProjectInvitationService(BaseService):
@@ -108,11 +106,9 @@ class ProjectInvitationService(BaseService):
         for email in emails:
             user, subemail = await user_service.get_by_email(email)
             if user:
-                if user.email in invitation_result.emails_should_remove:
-                    invitation_result.emails_should_remove.pop(user.email)
+                invitation_result.emails_should_remove.pop(user.email, None)
             if subemail:
-                if subemail.email in invitation_result.emails_should_remove:
-                    invitation_result.emails_should_remove.pop(subemail.email)
+                invitation_result.emails_should_remove.pop(subemail.email, None)
 
             if user:
                 assigned_user = None
@@ -125,9 +121,7 @@ class ProjectInvitationService(BaseService):
                     )
                     assigned_user = result.first()
                 if assigned_user:
-                    invitation_result.already_assigned_ids.append(assigned_user.id)
-                    invitation_result.already_assigned_users.append(user)
-                    invitation_result.already_assigned_user_emails.append(email)
+                    invitation_result.already_assigned_ids.add(assigned_user.id)
                     continue
 
             invitation = None
@@ -140,21 +134,21 @@ class ProjectInvitationService(BaseService):
                 )
                 invitation = result.first()
             if invitation:
-                invitation_result.already_sent_user_emails.append(email)
+                invitation_result.already_sent_user_emails.add(email)
             else:
                 if user:
                     invitation_result.users_by_email[email] = user
-                invitation_result.emails_should_invite.append(email)
+                invitation_result.emails_should_invite.add(email)
 
         prev_assigned_users = ServiceHelper.get_all_by(ProjectAssignedUser, "project_id", project.id)
         for assigned_user in prev_assigned_users:
             if assigned_user.user_id == project.owner_id:
-                invitation_result.already_assigned_ids.append(assigned_user.id)
+                invitation_result.already_assigned_ids.add(assigned_user.id)
                 continue
 
             if assigned_user.id not in invitation_result.already_assigned_ids:
-                invitation_result.user_ids_should_delete.append(assigned_user.user_id)
-                invitation_result.assigned_ids_should_delete.append(assigned_user.id)
+                invitation_result.user_ids_should_delete.add(assigned_user.user_id)
+                invitation_result.assigned_ids_should_delete.add(assigned_user.id)
 
         return invitation_result
 

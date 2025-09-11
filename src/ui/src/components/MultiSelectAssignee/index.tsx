@@ -2,7 +2,7 @@
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Button, Flex, IconComponent, Popover as BasePopover, ButtonProps, SubmitButton, DropdownMenu } from "@/components/base";
 import {
-    ISelectEditorProps,
+    ISelectEditorProviderProps,
     SelectEditor,
     SelectEditorCombobox,
     SelectEditorContent,
@@ -162,7 +162,7 @@ export interface IFormProps {
         withUserGroups?: bool;
         groups?: UserGroup.TModel[];
         filterGroupUser?: (user: User.TModel) => bool;
-    } & Pick<ISelectEditorProps, "validateNewItem" | "createNewItemLabel">;
+    } & Pick<ISelectEditorProviderProps, "validateNewItem" | "createNewItemLabel">;
 }
 
 const Form = memo(

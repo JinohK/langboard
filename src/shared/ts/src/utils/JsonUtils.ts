@@ -81,27 +81,26 @@ const Parse: typeof JSON.parse = (text, reviver) => {
     const customFormat = /^-?\d+n$/;
 
     // Find and mark big numbers with "n"
-    const serializedData = text.replace(stringsOrLargeNumbers, (text, digits, fractional, exponential) => {
-        const isString = text[0] === '"';
-        const isNoise = isString && Boolean(text.match(noiseValueWithQuotes));
+    const serializedData = text.replace(stringsOrLargeNumbers, (chunk, digits, fractional, exponential) => {
+        const isString = chunk[0] === '"';
+        const isNoise = isString && Boolean(chunk.match(noiseValueWithQuotes));
 
         if (isNoise) {
-            return text.substring(0, text.length - 1) + 'n"';
+            return chunk.substring(0, chunk.length - 1) + 'n"';
         }
 
         const isFractionalOrExponential = fractional || exponential;
         const isLessThanMaxSafeInt = digits && (digits.length < MAX_DIGITS || (digits.length === MAX_DIGITS && digits <= MAX_INT));
 
         if (isString || isFractionalOrExponential || isLessThanMaxSafeInt) {
-            return text;
+            return chunk;
         }
 
-        return '"' + text + 'n"';
+        return '"' + chunk + 'n"';
     });
 
     return originalParse(serializedData, (key: any, value: any) => {
         const isCustomFormatBigInt = TypeUtils.isString(value) && Boolean(value.match(customFormat));
-
         if (isCustomFormatBigInt) {
             return BigInt(value.substring(0, value.length - 1));
         }

@@ -1,6 +1,6 @@
 import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
-import { ProjectLabel } from "@/core/models";
+import { Project, ProjectLabel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
 
 export interface IBoardLabelCreatedRawResponse {
@@ -8,20 +8,20 @@ export interface IBoardLabelCreatedRawResponse {
 }
 
 export interface IUseBoardLabelCreatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
-    projectUID: string;
+    project: Project.TModel;
 }
 
-const useBoardLabelCreatedHandlers = ({ callback, projectUID }: IUseBoardLabelCreatedHandlersProps) => {
+const useBoardLabelCreatedHandlers = ({ callback, project }: IUseBoardLabelCreatedHandlersProps) => {
     return useSocketHandler<{}, IBoardLabelCreatedRawResponse>({
         topic: ESocketTopic.Board,
-        topicId: projectUID,
-        eventKey: `board-label-created-${projectUID}`,
+        topicId: project.uid,
+        eventKey: `board-label-created-${project.uid}`,
         onProps: {
             name: SOCKET_SERVER_EVENTS.BOARD.LABEL.CREATED,
-            params: { uid: projectUID },
+            params: { uid: project.uid },
             callback,
             responseConverter: (data) => {
-                ProjectLabel.Model.fromOne(data.label, true);
+                project.labels = [...project.labels, data.label];
                 return {};
             },
         },

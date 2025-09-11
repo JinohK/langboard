@@ -1,4 +1,5 @@
-import { Box, Floating, Select, Toast } from "@/components/base";
+import { Box, Toast } from "@/components/base";
+import BotPlatformSelect from "@/components/bots/BotPlatformSelect";
 import useUpdateInternalBot from "@/controllers/api/settings/internalBots/useUpdateInternalBot";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
@@ -55,21 +56,7 @@ const InternalBotPlatform = memo(() => {
 
     return (
         <Box>
-            <Floating.LabelSelect
-                label={t("settings.Select a platform")}
-                value={platform}
-                defaultValue={platform.toString()}
-                onValueChange={changePlatform}
-                disabled={isValidating}
-                options={Object.keys(EBotPlatform).map((platformKey) => {
-                    const targetPlatform = EBotPlatform[platformKey];
-                    return (
-                        <Select.Item value={targetPlatform.toString()} key={`internalBot-platform-select-${targetPlatform}`}>
-                            {t(`bot.platforms.${targetPlatform}`)}
-                        </Select.Item>
-                    );
-                })}
-            />
+            <BotPlatformSelect state={[platform, changePlatform]} isValidating={isValidating} />
         </Box>
     );
 });

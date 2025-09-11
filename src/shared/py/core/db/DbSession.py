@@ -103,6 +103,7 @@ class DbSession:
             return
 
         obj.id = SnowflakeID()
+        obj.updated_at = obj.created_at
         obj = obj.model_validate(obj.model_dump())
         try:
             self.__session.add(obj)

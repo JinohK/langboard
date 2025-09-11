@@ -1,5 +1,5 @@
 import { API_ROUTES } from "@/controllers/constants";
-import { AuthUser, BotModel, UserNotification } from "@/core/models";
+import { AuthUser, BotModel } from "@/core/models";
 import { AxiosInstance } from "axios";
 import { create } from "zustand";
 import { immer } from "zustand/middleware/immer";
@@ -38,7 +38,6 @@ const useAuthStore = create(
                     try {
                         const response = await api.get<{
                             user: AuthUser.Interface;
-                            notifications: UserNotification.Interface[];
                             bots: BotModel.Interface[];
                         }>(API_ROUTES.AUTH.ABOUT_ME, {
                             headers: {
@@ -69,7 +68,6 @@ const useAuthStore = create(
                 }
 
                 const user = AuthUser.Model.fromOne(data.user);
-                UserNotification.Model.fromArray(data.notifications, true);
                 BotModel.Model.fromArray(data.bots, true);
 
                 set({ currentUser: user, state: "loaded" });

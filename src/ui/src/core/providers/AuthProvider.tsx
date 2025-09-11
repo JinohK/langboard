@@ -7,9 +7,11 @@ import { AuthUser } from "@/core/models";
 import { ROUTES } from "@/core/routing/constants";
 import { cleanModels } from "@/core/models/Base";
 import { useTranslation } from "react-i18next";
-import useAuthStore from "@/core/stores/AuthStore";
+import useAuthStore, { getAuthStore } from "@/core/stores/AuthStore";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { Progress } from "@/components/base";
+import useGetNotificationList from "@/controllers/api/notification/useGetNotificationList";
+import { useUserSettings } from "@/core/stores/UserSettingsStore";
 
 export interface IAuthContext {
     signIn: (accessToken: string, redirectCallback?: () => void) => Promise<void>;
@@ -37,6 +39,8 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     const [_, i18n] = useTranslation();
     const { queryClient } = useQueryMutation();
     const { state, currentUser, pageLoaded, updateToken, removeToken } = useAuthStore();
+    const { mutateAsync } = useGetNotificationList();
+    const timeRange = useUserSettings("notifications_time_range");
     const navigate = usePageNavigateRef();
 
     useEffect(() => {
@@ -59,7 +63,15 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
 
         switch (state) {
             case "initial":
-                refresh();
+                refresh().finally(() => {
+                    if (!getAuthStore().pageLoaded) {
+                        return;
+                    }
+
+                    mutateAsync({
+                        time_range: timeRange || "3d",
+                    });
+                });
                 return;
             case "loaded":
                 if (!currentUser && !shouldSkip) {

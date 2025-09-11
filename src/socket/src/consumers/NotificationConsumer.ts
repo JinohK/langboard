@@ -3,7 +3,7 @@ import * as fs from "fs";
 import Consumer from "@/core/broadcast/Consumer";
 import Subscription from "@/core/server/Subscription";
 import UserNotification from "@/models/UserNotification";
-import UserNotificationUnsubscription, { ENotificationChannel, TSocketPublishData } from "@/models/UserNotificationUnsubscription";
+import UserNotificationUnsubscription, { ENotificationChannel, TNotificationPublishData } from "@/models/UserNotificationUnsubscription";
 import { MAIL_FROM, MAIL_FROM_NAME, MAIL_PASSWORD, MAIL_PORT, MAIL_SERVER, MAIL_SSL_TLS, MAIL_USERNAME, PROJECT_NAME, ROOT_DIR } from "@/Constants";
 import * as path from "path";
 import { Utils } from "@langboard/core/utils";
@@ -11,7 +11,7 @@ import { ESocketTopic } from "@langboard/core/enums";
 import SnowflakeID from "@/core/db/SnowflakeID";
 
 Consumer.register("notification_publish", async (data: unknown) => {
-    const webNotification = async (model: TSocketPublishData) => {
+    const webNotification = async (model: TNotificationPublishData) => {
         const hasUnsubscription = await UserNotificationUnsubscription.hasUnsubscription(model, ENotificationChannel.Web);
 
         if (hasUnsubscription || !model.api_notification?.notifier_user?.uid) {
@@ -39,7 +39,7 @@ Consumer.register("notification_publish", async (data: unknown) => {
         });
     };
 
-    const emailNotification = async (model: TSocketPublishData) => {
+    const emailNotification = async (model: TNotificationPublishData) => {
         if (!model.email_template_name || !MAIL_SERVER || !MAIL_FROM || !MAIL_PORT) {
             return;
         }
@@ -88,7 +88,7 @@ Consumer.register("notification_publish", async (data: unknown) => {
             });
     };
 
-    const mobileNotification = async (model: TSocketPublishData) => {
+    const mobileNotification = async (model: TNotificationPublishData) => {
         const hasUnsubscription = await UserNotificationUnsubscription.hasUnsubscription(model, ENotificationChannel.Mobile);
 
         if (hasUnsubscription) {
@@ -96,7 +96,7 @@ Consumer.register("notification_publish", async (data: unknown) => {
         }
     };
 
-    const iotNotification = async (model: TSocketPublishData) => {
+    const iotNotification = async (model: TNotificationPublishData) => {
         const hasUnsubscription = await UserNotificationUnsubscription.hasUnsubscription(model, ENotificationChannel.IoT);
 
         if (hasUnsubscription) {
@@ -104,7 +104,7 @@ Consumer.register("notification_publish", async (data: unknown) => {
         }
     };
 
-    if (!Utils.Type.isObject<TSocketPublishData>(data)) {
+    if (!Utils.Type.isObject<TNotificationPublishData>(data)) {
         return;
     }
 

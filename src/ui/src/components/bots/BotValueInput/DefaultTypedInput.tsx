@@ -1,0 +1,132 @@
+import { Button, Flex, Floating, IconComponent, Select } from "@/components/base";
+import { useBotValueDefaultInput } from "@/components/bots/BotValueInput/DefaultProvider";
+import { TAgentFormInput, IStringAgentFormInput, ISelectAgentFormInput, IIntegerAgentFormInput } from "@langboard/core/ai";
+import { useCallback, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
+
+export interface IDefaultTypedInputProps {
+    input: TAgentFormInput;
+}
+
+function DefaultTypedInput({ input }: IDefaultTypedInputProps) {
+    const { selectedProvider, valuesRef, setValue } = useBotValueDefaultInput();
+    switch (input.type) {
+        case "text":
+        case "password":
+            setValue(input.name)(valuesRef.current[input.name] || input.defaultValue);
+            return <DefaultStringInput key={`default-bot-json-input-${selectedProvider}-${input.name}`} input={input} />;
+        case "select":
+            setValue(input.name)(valuesRef.current[input.name] || input.defaultValue || input.options[0]);
+            return <DefaultSelectInput key={`default-bot-json-input-${selectedProvider}-${input.name}`} input={input} />;
+        case "integer":
+            setValue(input.name)(valuesRef.current[input.name] || input.defaultValue || input.min);
+            return <DefaultIntegerInput key={`default-bot-json-input-${selectedProvider}-${input.name}`} input={input} />;
+    }
+}
+
+function DefaultStringInput({ input }: { input: IStringAgentFormInput }) {
+    const { valuesRef, setInputRef, setValue, isValidating, required } = useBotValueDefaultInput();
+
+    return (
+        <Floating.LabelInput
+            type={input.type}
+            name={input.name}
+            label={input.label}
+            autoComplete="off"
+            defaultValue={valuesRef.current[input.name] ?? input.defaultValue}
+            onInput={(e) => setValue(input.name)(e.currentTarget.value)}
+            required={required && !input.nullable}
+            disabled={isValidating}
+            ref={setInputRef(input.name)}
+        />
+    );
+}
+
+function DefaultSelectInput({ input }: { input: ISelectAgentFormInput }) {
+    const [t] = useTranslation();
+    const { selectedProvider, valuesRef, setInputRef, setValue, isValidating, required } = useBotValueDefaultInput();
+    const [currentValue, setCurrentValue] = useState(valuesRef.current[input.name] || input.defaultValue || input.options[0]);
+    const [options, setOptions] = useState<string[]>(input.options);
+    const fetchOptions = useCallback(async () => {
+        if (!input.getOptions) {
+            return;
+        }
+
+        const newOptions = await input.getOptions(valuesRef.current);
+        setOptions(() => newOptions);
+        if (!newOptions.includes(currentValue)) {
+            setCurrentValue(() => newOptions[0]);
+            setValue(input.name)(newOptions[0]);
+        }
+    }, [input, input.getOptions, selectedProvider, currentValue, setOptions]);
+
+    useEffect(() => {
+        setValue(input.name)(currentValue);
+    }, [currentValue]);
+
+    useEffect(() => {
+        setOptions(input.options);
+        const newValue = valuesRef.current[input.name] || input.defaultValue || input.options[0];
+        setValue(input.name)(newValue);
+        setCurrentValue(newValue);
+    }, [selectedProvider, input.options, input.defaultValue, input.name, setValue, valuesRef]);
+
+    const inputComp = (
+        <Floating.LabelSelect
+            label={input.label}
+            value={currentValue}
+            onValueChange={setCurrentValue}
+            required={required && !input.nullable}
+            disabled={isValidating}
+            options={options.map((option) => (
+                <Select.Item value={option} key={`default-bot-json-input-${selectedProvider}-${input.name}-${option}`}>
+                    {option}
+                </Select.Item>
+            ))}
+            ref={setInputRef(input.name)}
+        />
+    );
+
+    if (!input.getOptions) {
+        return inputComp;
+    }
+
+    return (
+        <Flex items="center" justify="between" gap="2">
+            {inputComp}
+            <Button
+                type="button"
+                size="icon"
+                variant="outline"
+                className="size-10"
+                disabled={isValidating}
+                onClick={fetchOptions}
+                title={t("common.Refresh")}
+            >
+                <IconComponent icon="rotate-ccw" size="4" />
+            </Button>
+        </Flex>
+    );
+}
+
+function DefaultIntegerInput({ input }: { input: IIntegerAgentFormInput }) {
+    const { valuesRef, setValue, required, isValidating, setInputRef } = useBotValueDefaultInput();
+
+    return (
+        <Floating.LabelInput
+            type="number"
+            name={input.name}
+            label={input.label}
+            autoComplete="off"
+            defaultValue={valuesRef.current[input.name] || input.defaultValue || input.min}
+            onInput={(e) => setValue(input.name)(e.currentTarget.value)}
+            required={required && !input.nullable}
+            disabled={isValidating}
+            min={input.min}
+            max={input.max}
+            ref={setInputRef(input.name)}
+        />
+    );
+}
+
+export default DefaultTypedInput;

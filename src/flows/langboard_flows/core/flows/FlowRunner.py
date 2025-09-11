@@ -7,16 +7,20 @@ from langflow.graph import Graph
 from langflow.graph.schema import RunOutputs
 from langflow.schema.schema import INPUT_FIELD_NAME
 from langflow.services.deps import get_settings_service
+from models import Bot, InternalBot
 from ..logger import Logger
 from ..schema import FlowRequestModel, InputValueRequest, RunResponse
 from ..schema.Exception import InvalidChatInputError
 
 
 class FlowRunner:
-    def __init__(self, graph: Graph, input_request: FlowRequestModel, stream: bool = False):
+    def __init__(
+        self, graph: Graph, input_request: FlowRequestModel, stream: bool = False, bot: InternalBot | Bot | None = None
+    ):
         self.graph = graph
         self.input_request = input_request
         self.stream = stream
+        self.bot = bot
 
     async def run_stream(self):
         asyncio_queue = asyncio.Queue()

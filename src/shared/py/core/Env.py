@@ -36,6 +36,14 @@ class Env:
         return self.__get_from_cache("PROJECT_SHORT_NAME", self.PROJECT_NAME)
 
     @property
+    def ADMIN_EMAIL(self) -> str:
+        return self.__get_from_cache("ADMIN_EMAIL")
+
+    @property
+    def ADMIN_PASSWORD(self) -> str:
+        return self.__get_from_cache("ADMIN_PASSWORD")
+
+    @property
     def API_PORT(self) -> int:
         return int(self.__get_from_cache("API_PORT", "5381"))
 

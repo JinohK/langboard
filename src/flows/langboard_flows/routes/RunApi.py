@@ -18,13 +18,14 @@ from ..resources.Resource import get_resource_path
 
 @AppRouter.api.post("/api/v1/run/{anypath}")
 async def run_flow(api_request: FlowRequestModel, stream: bool = False):
-    bot_json = _get_flow_json(api_request)
-    if isinstance(bot_json, ApiErrorCode):
-        return JsonResponse(content=bot_json, status_code=status.HTTP_404_NOT_FOUND)
+    result = _get_flow_json(api_request)
+    if isinstance(result, ApiErrorCode):
+        return JsonResponse(content=result, status_code=status.HTTP_404_NOT_FOUND)
 
+    bot, bot_json = result
     graph = await aload_flow_from_json(flow=json_loads(bot_json), tweaks=api_request.tweaks)
 
-    runner = FlowRunner(graph, api_request, stream)
+    runner = FlowRunner(graph, api_request, stream, bot)
 
     if runner.stream:
         result = await runner.run_stream()
@@ -55,21 +56,18 @@ async def run_flow(api_request: FlowRequestModel, stream: bool = False):
 
 @AppRouter.api.post("/api/v1/webhook/{anypath}")
 async def webhook_run_flow(api_request: FlowRequestModel, background_tasks: BackgroundTasks):
-    bot_json = _get_flow_json(api_request)
-    if isinstance(bot_json, ApiErrorCode):
-        return JsonResponse(content=bot_json, status_code=status.HTTP_404_NOT_FOUND)
+    result = _get_flow_json(api_request)
+    if isinstance(result, ApiErrorCode):
+        return JsonResponse(content=result, status_code=status.HTTP_404_NOT_FOUND)
 
-    bot_json = _get_flow_json(api_request)
-    if isinstance(bot_json, ApiErrorCode):
-        return JsonResponse(content=bot_json, status_code=status.HTTP_404_NOT_FOUND)
-
+    bot, bot_json = result
     if not api_request.tweaks:
         api_request.tweaks = {}
     api_request.tweaks["Webhook"] = {"data": {"tweaks": json_dumps(api_request.tweaks)}}
 
     graph = await aload_flow_from_json(flow=json_loads(bot_json), tweaks=api_request.tweaks)
 
-    runner = FlowRunner(graph, api_request)
+    runner = FlowRunner(graph, api_request, bot=bot)
 
     error_msg = ""
     try:
@@ -81,7 +79,7 @@ async def webhook_run_flow(api_request: FlowRequestModel, background_tasks: Back
     return JsonResponse(content={"message": "Task started in the background", "status": "in progress"})
 
 
-def _get_flow_json(api_request: FlowRequestModel) -> str | ApiErrorCode:
+def _get_flow_json(api_request: FlowRequestModel) -> ApiErrorCode | tuple[InternalBot | Bot, str]:
     if api_request.run_type == "internal_bot":
         bot_class = InternalBot
         bot_code = ApiErrorCode.NF3001
@@ -100,16 +98,23 @@ def _get_flow_json(api_request: FlowRequestModel) -> str | ApiErrorCode:
 
     if isinstance(bot, InternalBot):
         if bot.platform == BotPlatform.Default and bot.platform_running_type == BotPlatformRunningType.Default:
-            return _get_default_flow()
-        return bot.value
+            return bot, _get_default_flow()
+        return bot, bot.value
     elif isinstance(bot, Bot):
-        return _get_default_flow()
+        return bot, _get_default_flow()
     else:
         return bot_code
 
 
-def _get_default_flow():
-    flow_json_path = get_resource_path("flows", "default_flow.json")
+def _get_default_flow(tweaks: dict | None = None) -> str:
+    json_filename = "default"
+    if tweaks:
+        if "Ollama" in tweaks:
+            json_filename = "ollama"
+        elif "LM Studio" in tweaks:
+            json_filename = "lm_studio"
+
+    flow_json_path = get_resource_path("flows", f"{json_filename}_flow.json")
     with open(flow_json_path, "r", encoding="utf-8") as f:
         default_flow_json = f.read()
     return default_flow_json

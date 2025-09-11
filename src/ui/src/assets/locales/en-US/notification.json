@@ -8,6 +8,13 @@
   "Read notification": "Read notification",
   "Delete notification": "Delete notification",
   "No notifications received.": "No notifications received.",
+  "All": "All",
+  "timeRanges": {
+    "3d": "In last 3 days",
+    "7d": "In last 7 days",
+    "1m": "In a month",
+    "all": "All"
+  },
   "titles": {
     "project_invited": "<Who/> <Span>invited you to a project.</Span>",
     "mentioned_in_card": "<Who/> <Span>mentioned you at card.</Span>",

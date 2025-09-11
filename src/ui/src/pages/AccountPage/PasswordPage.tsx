@@ -43,6 +43,7 @@ function PasswordPage(): JSX.Element {
                             label={t("user.Current password")}
                             isFormControl
                             autoFocus
+                            required
                             isValidating={isValidating}
                             error={errors.current_password}
                         />
@@ -51,6 +52,7 @@ function PasswordPage(): JSX.Element {
                             label={t("user.New password")}
                             className="mt-4"
                             isFormControl
+                            required
                             isValidating={isValidating}
                             error={errors.new_password}
                         />
@@ -59,6 +61,7 @@ function PasswordPage(): JSX.Element {
                             label={t("user.Confirm new password")}
                             className="mt-4"
                             isFormControl
+                            required
                             isValidating={isValidating}
                             error={errors["password-confirm"]}
                         />

@@ -6,7 +6,7 @@ from core.storage import StorageName
 from fastapi import File, UploadFile, status
 from ...core.storage import Storage
 from ...services import Service
-from .scopes import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
+from .forms import ActivateUserForm, CheckEmailForm, ResendLinkForm, SignUpForm
 
 
 @AppRouter.api.post(

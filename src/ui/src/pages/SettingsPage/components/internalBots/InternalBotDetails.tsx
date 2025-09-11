@@ -14,7 +14,7 @@ import InternalBotPlatform from "@/pages/SettingsPage/components/internalBots/In
 import InternalBotPlatformRunningType from "@/pages/SettingsPage/components/internalBots/InternalBotPlatformRunningType";
 import InternalBotType from "@/pages/SettingsPage/components/internalBots/InternalBotType";
 import InternalBotValue from "@/pages/SettingsPage/components/internalBots/InternalBotValue";
-import { requirements } from "@/components/BotValueInput/utils";
+import { requirements } from "@/components/bots/BotValueInput/utils";
 import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 

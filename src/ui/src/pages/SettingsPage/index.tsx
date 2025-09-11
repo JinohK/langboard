@@ -95,7 +95,7 @@ function SettingsProxy(): JSX.Element {
             },
         },
         [ROUTES.SETTINGS.INTERNAL_BOTS]: {
-            icon: "langflow-icon",
+            icon: "bot-message-square",
             name: t("settings.Internal bots"),
             onClick: () => {
                 navigate(ROUTES.SETTINGS.INTERNAL_BOTS, { smooth: true });

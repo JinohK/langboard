@@ -1,7 +1,7 @@
 import { Button, Dialog, Flex, ScrollArea } from "@/components/base";
 import BotLogList from "@/components/BotLogList";
-import BotScheduleList from "@/components/BotScheduleList";
-import BotTriggerConditionList from "@/components/BotTriggerConditionList";
+import BotScheduleList from "@/components/bots/BotScheduleList";
+import BotTriggerConditionList from "@/components/bots/BotTriggerConditionList";
 import MoreMenu from "@/components/MoreMenu";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";

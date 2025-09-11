@@ -11,7 +11,7 @@ from .NotificationSettingForm import NotificationSettingForm, NotificationSettin
 
 
 @AppRouter.api.put(
-    "/notification/setting/all",
+    "/notification/settings/all",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -26,7 +26,7 @@ async def toggle_all_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/type",
+    "/notification/settings/type",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -46,7 +46,7 @@ async def toggle_all_type_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/project",
+    "/notification/settings/project",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -63,7 +63,7 @@ async def toggle_all_project_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/column",
+    "/notification/settings/column",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -78,7 +78,7 @@ async def toggle_all_column_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/card",
+    "/notification/settings/card",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -93,7 +93,7 @@ async def toggle_all_card_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/wiki",
+    "/notification/settings/wiki",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -108,7 +108,7 @@ async def toggle_all_wiki_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/project/{project_uid}",
+    "/notification/settings/project/{project_uid}",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -129,7 +129,7 @@ async def toggle_project_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/project/{project_uid}/column/{column_uid}",
+    "/notification/settings/project/{project_uid}/column/{column_uid}",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -151,7 +151,7 @@ async def toggle_column_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/project/{project_uid}/card/{card_uid}",
+    "/notification/settings/project/{project_uid}/card/{card_uid}",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )
@@ -173,7 +173,7 @@ async def toggle_card_notification_subscription(
 
 
 @AppRouter.api.put(
-    "/notification/setting/project/{project_uid}/wiki/{wiki_uid}",
+    "/notification/settings/project/{project_uid}/wiki/{wiki_uid}",
     tags=["Notification"],
     responses=OpenApiSchema().suc({"notification_types": [NotificationType]}).auth().forbidden().get(),
 )

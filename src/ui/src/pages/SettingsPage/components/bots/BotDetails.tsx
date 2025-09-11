@@ -11,11 +11,11 @@ import BotAppApiToken from "@/pages/SettingsPage/components/bots/BotAppApiToken"
 import BotAvatar from "@/pages/SettingsPage/components/bots/BotAvatar";
 import BotIpWhitelist from "@/pages/SettingsPage/components/bots/BotIpWhitelist";
 import BotName from "@/pages/SettingsPage/components/bots/BotName";
-import BotPlatformInput from "@/pages/SettingsPage/components/bots/BotPlatformInput";
-import BotPlatformRunningTypeInput from "@/pages/SettingsPage/components/bots/BotPlatformRunningTypeInput";
+import BotPlatform from "@/pages/SettingsPage/components/bots/BotPlatform";
+import BotPlatformRunningType from "@/pages/SettingsPage/components/bots/BotPlatformRunningType";
 import BotUniqueName from "@/pages/SettingsPage/components/bots/BotUniqueName";
 import BotValue from "@/pages/SettingsPage/components/bots/BotValue";
-import { requirements } from "@/components/BotValueInput/utils";
+import { requirements } from "@/components/bots/BotValueInput/utils";
 import { memo, useEffect, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { ALLOWED_ALL_IPS_BY_PLATFORMS } from "@/core/models/bot.related.type";
@@ -69,8 +69,8 @@ const BotDetails = memo(({ bot }: IBotDetailsProps) => {
                 </Flex>
                 <Flex justify="center" mt="3">
                     <Flex direction="col" gap="2" w="full" className="max-w-screen-xs">
-                        <BotPlatformInput />
-                        <BotPlatformRunningTypeInput />
+                        <BotPlatform />
+                        <BotPlatformRunningType />
                     </Flex>
                 </Flex>
                 <Flex justify="center" mt="3">

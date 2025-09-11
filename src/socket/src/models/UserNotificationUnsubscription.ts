@@ -17,7 +17,7 @@ export enum ENotificationScope {
     Specific = "specific",
 }
 
-export type TSocketPublishData = {
+export type TNotificationPublishData = {
     notification: Omit<DeepPartial<UserNotification>, "id">;
     api_notification: Record<string, any>;
     target_user: DeepPartial<User>;
@@ -47,7 +47,7 @@ class UserNotificationUnsubscription extends BaseModel {
     @BigIntColumn(false)
     public specific_id: TBigIntString | null = null;
 
-    public static async hasUnsubscription(publishModel: TSocketPublishData, channel: ENotificationChannel) {
+    public static async hasUnsubscription(publishModel: TNotificationPublishData, channel: ENotificationChannel) {
         if (!publishModel.notification?.receiver_id || !publishModel.notification?.notification_type) {
             return false;
         }

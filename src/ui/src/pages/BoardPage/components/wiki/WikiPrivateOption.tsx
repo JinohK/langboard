@@ -101,10 +101,15 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
 
         setIsValidating(true);
 
+        const newAssignees = items.map((item) => item.uid);
+        if (wiki.assigned_members.some((member) => member.uid === currentUser.uid)) {
+            newAssignees.unshift(currentUser.uid);
+        }
+
         const promise = updateWikiAssigneesMutateAsync({
             project_uid: projectUID,
             wiki_uid: wiki.uid,
-            assignees: items.map((item) => item.uid),
+            assignees: newAssignees,
         });
 
         Toast.Add.promise(promise, {

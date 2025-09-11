@@ -1,8 +1,25 @@
-import { AnimatedList, Box, Button, Card, Flex, IconComponent, Label, Loading, Popover, ScrollArea, Switch, Toast, Tooltip } from "@/components/base";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import {
+    AnimatedList,
+    Box,
+    Button,
+    Card,
+    Flex,
+    IconComponent,
+    Label,
+    Loading,
+    Popover,
+    ScrollArea,
+    Select,
+    Switch,
+    Toast,
+    Tooltip,
+} from "@/components/base";
 import InfiniteScroller from "@/components/InfiniteScroller";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { QUERY_NAMES } from "@/constants";
+import useGetNotificationList from "@/controllers/api/notification/useGetNotificationList";
 import useDeleteAllUserNotificationsHandlers from "@/controllers/socket/notification/useDeleteAllUserNotificationsHandlers";
 import useDeleteUserNotificationHandlers from "@/controllers/socket/notification/useDeleteUserNotificationHandlers";
 import useReadAllUserNotificationsHandlers from "@/controllers/socket/notification/useReadAllUserNotificationsHandlers";
@@ -17,9 +34,10 @@ import { TUserLikeModel } from "@/core/models/ModelRegistry";
 import { ENotificationType } from "@/core/models/notification.type";
 import { useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
+import { getUserSettingsStore, IUserSettings, NOTIFICATIONS_TIME_RANGE_OPTIONS, useUserSettings } from "@/core/stores/UserSettingsStore";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
-import { memo, useCallback, useMemo, useReducer, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
 import { Trans, useTranslation } from "react-i18next";
 
 interface IHeaderUserNotificationProps {
@@ -33,6 +51,8 @@ const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationPro
     const unreadNotifications = UserNotification.Model.useModels((model) => !model.read_at, [updated]);
     const [isOnlyUnread, setIsOnlyUnread] = useState(true);
     const [isOpened, setIsOpened] = useState(false);
+    const { mutateAsync } = useGetNotificationList();
+    const timeRange = useUserSettings("notifications_time_range");
     const { send: sendReadAllUserNotifications } = useReadAllUserNotificationsHandlers();
     const { send: sendDeleteAllUserNotifications } = useDeleteAllUserNotificationsHandlers();
     const notifiedHandlers = useMemo(
@@ -61,9 +81,19 @@ const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationPro
         sendDeleteAllUserNotifications({});
         UserNotification.Model.deleteModels(() => true);
     }, []);
+    const updateTimeRange = (value: IUserSettings["notifications_time_range"]) => {
+        getUserSettingsStore().updateSettingsByKey("notifications_time_range", value);
+    };
+
+    useEffect(() => {
+        UserNotification.Model.deleteModels(() => true);
+        mutateAsync({
+            time_range: timeRange || "3d",
+        });
+    }, [timeRange]);
 
     return (
-        <Popover.Root open={isOpened} onOpenChange={setIsOpened}>
+        <Popover.Root modal open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
                 <Button
                     variant="ghost"
@@ -90,9 +120,26 @@ const HeaderUserNotification = memo(({ currentUser }: IHeaderUserNotificationPro
             </Popover.Trigger>
             <Popover.Content className="min-w-[min(theme(screens.xs),100vw)] max-w-[min(theme(screens.xs),100vw)] p-0">
                 <Flex items="center" justify="between" py="2.5" px="3" className="border-b">
-                    <Box textSize="base" weight="semibold">
+                    <Flex items="center" gap="1.5" textSize="base" weight="semibold">
                         {t("notification.Notifications")}
-                    </Box>
+                        <Select.Root value={timeRange || "3d"} onValueChange={updateTimeRange as any}>
+                            <Select.Trigger className="h-8 gap-1 px-1.5 py-0.5 text-xs">
+                                <Select.Value />
+                            </Select.Trigger>
+                            <Select.Content
+                                onPointerDown={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                }}
+                            >
+                                {NOTIFICATIONS_TIME_RANGE_OPTIONS.map((option) => (
+                                    <Select.Item key={`notification-time-range-${option}`} value={option}>
+                                        {t(`notification.timeRanges.${option}`)}
+                                    </Select.Item>
+                                ))}
+                            </Select.Content>
+                        </Select.Root>
+                    </Flex>
                     <Flex gap="1.5" items="center">
                         <Label display="inline-flex" cursor="pointer" items="center" gap="2" textSize="xs">
                             <Switch checked={isOnlyUnread} onCheckedChange={setIsOnlyUnread} />
@@ -136,7 +183,7 @@ interface IHeaderUserNotificationListProps {
 function HeaderUserNotificationList({ isOnlyUnread, updater }: IHeaderUserNotificationListProps) {
     const [t] = useTranslation();
     const [updated] = updater;
-    const flatNotifications = UserNotification.Model.useModels(() => true);
+    const flatNotifications = UserNotification.Model.useModels(() => true, [updated]);
     const filteredNotifications = useMemo(
         () =>
             flatNotifications

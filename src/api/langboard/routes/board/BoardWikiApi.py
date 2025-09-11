@@ -93,9 +93,9 @@ async def get_project_wiki_details(
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (ProjectWiki, wiki_uid))
     if not params:
         return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
-    _, project_wiki = params
+    project, project_wiki = params
 
-    api_wiki = await service.project_wiki.convert_to_api_response(user_or_bot, project_wiki)
+    api_wiki = await service.project_wiki.convert_to_api_response(user_or_bot, project, project_wiki)
     if not api_wiki:
         return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
 

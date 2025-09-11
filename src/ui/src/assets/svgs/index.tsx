@@ -1,5 +1,5 @@
 /// <reference types="vite-plugin-svgr/client" />
-import LangflowIcon from "./LangflowIcon.svg?react";
+import svgIconMap, { TSVGIconMap } from "@/assets/svgs/icons";
 import { Utils } from "@langboard/core/utils";
 import { forwardRef, memo } from "react";
 
@@ -14,14 +14,12 @@ export type TInternalIconProps = React.ForwardRefExoticComponent<IInternalIconPr
 export const InternalIcon = memo(
     forwardRef<React.ComponentRef<TInternalIconProps>, React.ComponentPropsWithoutRef<TInternalIconProps>>(({ icon, ...props }, ref) => {
         const pascalCaseIcon = new Utils.String.Case(icon).toPascal();
+        const Component = svgIconMap[pascalCaseIcon as keyof TSVGIconMap];
 
-        switch (pascalCaseIcon) {
-            case "LangflowIcon":
-                return <LangflowIcon ref={ref} {...props} />;
-            default:
-                return null;
+        if (!Component) {
+            return null;
         }
+
+        return <Component ref={ref} {...props} />;
     })
 );
-
-export { LangflowIcon };

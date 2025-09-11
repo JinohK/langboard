@@ -62,12 +62,12 @@
   },
   "agent": {
     "Agent settings": "Agent settings",
-    "Select a model": "Select a model",
+    "Select a provider": "Select a provider",
     "System prompt": "System prompt",
     "Select API(s) to use": "Select API(s) to use",
     "errors": {
       "missing": {
-        "agent_llm": "Agent LLM model is required.",
+        "agent_llm": "Agent provider is required.",
         "api_key": "API key is required.",
         "api_version": "API version is required.",
         "azure_endpoint": "Endpoint is required.",

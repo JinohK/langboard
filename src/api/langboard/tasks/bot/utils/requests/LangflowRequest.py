@@ -55,7 +55,6 @@ class LangflowRequest(BaseBotRequest):
             logger.error("Timeout while requesting bot: %s", e)
             await self._update_log(bot_log, BotLogType.Error, str(e))
         except Exception as e:
-            print(url)
             if res:
                 logger.error(
                     "Failed to request bot: %s(@%s) %s: %s",
@@ -102,7 +101,17 @@ class LangflowRequest(BaseBotRequest):
             if self._bot.platform_running_type == BotPlatformRunningType.Default:
                 url = f"{self._base_url}/api/v1/webhook/{self._bot.id}"
                 try:
-                    request_data["tweaks"]["Agent"] = json_loads(json_dumps(json_loads(self._bot.value or "{}")))
+                    bot_value: dict = json_loads(json_dumps(json_loads(self._bot.value or "{}")))
+                    agent_llm = bot_value.pop("agent_llm", "")
+                    if not agent_llm:
+                        raise ValueError("agent_llm is required for Default platform")
+
+                    if agent_llm in {"Ollama", "LM Studio"}:
+                        request_data["tweaks"][agent_llm] = bot_value
+                    else:
+                        bot_value["agent_llm"] = agent_llm
+                        request_data["tweaks"]["Agent"] = bot_value
+
                     if "system_prompt" in request_data["tweaks"]["Agent"]:
                         system_prompt = request_data["tweaks"]["Agent"].pop("system_prompt", "")
                         request_data["tweaks"]["Prompt"] = {"prompt": system_prompt}

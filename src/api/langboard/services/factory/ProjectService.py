@@ -377,7 +377,7 @@ class ProjectService(BaseService):
             db.exec(
                 SqlBuilder.delete.table(ProjectRole).where(
                     (ProjectRole.column("project_id") == project.id)
-                    & (ProjectRole.column("user_id").in_(invitation_related_data.user_ids_should_delete))
+                    & (ProjectRole.column("user_id").in_(list(invitation_related_data.user_ids_should_delete)))
                     & (ProjectRole.column("user_id") != user.id)
                     & (ProjectRole.column("user_id") != None)  # noqa
                 )
@@ -387,7 +387,7 @@ class ProjectService(BaseService):
             db.exec(
                 SqlBuilder.delete.table(ProjectAssignedUser).where(
                     (ProjectAssignedUser.column("project_id") == project.id)
-                    & ProjectAssignedUser.column("id").in_(invitation_related_data.assigned_ids_should_delete)
+                    & ProjectAssignedUser.column("id").in_(list(invitation_related_data.assigned_ids_should_delete))
                     & (ProjectAssignedUser.column("user_id") != user.id)
                 )
             )

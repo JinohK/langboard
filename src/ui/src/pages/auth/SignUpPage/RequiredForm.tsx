@@ -57,6 +57,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                     isFormControl
                     autoFocus
                     autoComplete="email"
+                    required
                     disabled={isValidating}
                     defaultValue={values.email ?? ""}
                 />
@@ -67,6 +68,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                     label={t("user.First Name")}
                     isFormControl
                     autoComplete="firstname"
+                    required
                     disabled={isValidating}
                     defaultValue={values.firstname ?? ""}
                 />
@@ -77,6 +79,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                     label={t("user.Last Name")}
                     isFormControl
                     autoComplete="lastname"
+                    required
                     disabled={isValidating}
                     defaultValue={values.lastname ?? ""}
                 />
@@ -86,6 +89,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 name="password"
                 label={t("user.Password")}
                 isFormControl
+                required
                 isValidating={isValidating}
                 defaultValue={values.password}
                 error={errors.password}
@@ -94,6 +98,7 @@ function RequiredForm({ values, moveStep, initialErrorsRef }: ISignUpFormProps):
                 name="password-confirm"
                 label={t("auth.Confirm password")}
                 isFormControl
+                required
                 isValidating={isValidating}
                 defaultValue={values.password}
                 error={errors["password-confirm"]}

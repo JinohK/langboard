@@ -12,10 +12,12 @@ import { EHttpStatus } from "@langboard/core/enums";
 import useCreateInternalBot from "@/controllers/api/settings/internalBots/useCreateInternalBot";
 import PasswordInput from "@/components/PasswordInput";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { getValueType, requirements } from "@/components/BotValueInput/utils";
+import { getValueType, requirements } from "@/components/bots/BotValueInput/utils";
 import { AVAILABLE_RUNNING_TYPES_BY_PLATFORM, EBotPlatform, EBotPlatformRunningType } from "@/core/models/bot.related.type";
-import BotValueInput from "@/components/BotValueInput";
-import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
+import BotValueInput from "@/components/bots/BotValueInput";
+import { TBotValueDefaultInputRefLike } from "@/components/bots/BotValueInput/types";
+import BotPlatformSelect from "@/components/bots/BotPlatformSelect";
+import BotPlatformRunningTypeSelect from "@/components/bots/BotPlatformRunningTypeSelect";
 
 export interface IInternalBotCreateFormDialogProps {
     opened: bool;
@@ -200,36 +202,13 @@ function InternalBotCreateFormDialog({ opened, setOpened }: IInternalBotCreateFo
                         />
                     </Box>
                     <Box mt="4">
-                        <Floating.LabelSelect
-                            label={t("settings.Select a platform")}
-                            value={selectedPlatform}
-                            onValueChange={setSelectedPlatform as (value: string) => void}
-                            disabled={isValidating}
-                            required
-                            options={Object.keys(EBotPlatform).map((typeKey) => {
-                                const botType = EBotPlatform[typeKey];
-                                return (
-                                    <Select.Item value={botType} key={`internal-bot-platform-select-${botType}`}>
-                                        {t(`bot.platforms.${botType}`)}
-                                    </Select.Item>
-                                );
-                            })}
-                        />
+                        <BotPlatformSelect state={[selectedPlatform, setSelectedPlatform]} isValidating={isValidating} />
                     </Box>
                     <Box mt="4">
-                        <Floating.LabelSelect
-                            label={t("settings.Select a platform running type")}
-                            value={selectedPlatformRunningType}
-                            onValueChange={setSelectedPlatformRunningType as (value: string) => void}
-                            disabled={isValidating}
-                            required
-                            options={AVAILABLE_RUNNING_TYPES_BY_PLATFORM[selectedPlatform].map((botType) => {
-                                return (
-                                    <Select.Item value={botType} key={`internal-bot-platform-running-type-select-${botType}`}>
-                                        {t(`bot.platformRunningTypes.${botType}`)}
-                                    </Select.Item>
-                                );
-                            })}
+                        <BotPlatformRunningTypeSelect
+                            state={[selectedPlatformRunningType, setSelectedPlatformRunningType]}
+                            platform={selectedPlatform}
+                            isValidating={isValidating}
                         />
                     </Box>
                     {formRequirements.includes("url") && (

@@ -8,7 +8,6 @@ from .CheckitemPublisher import CheckitemPublisher
 from .ChecklistPublisher import ChecklistPublisher
 from .InternalBotPublisher import InternalBotPublisher
 from .MetadataPublisher import MetadataPublisher
-from .NotificationPublisher import NotificationPublisher
 from .ProjectBotPublisher import ProjectBotPublisher
 from .ProjectColumnPublisher import ProjectColumnPublisher
 from .ProjectInvitationPublisher import ProjectInvitationPublisher
@@ -29,7 +28,6 @@ __all__ = [
     "ChecklistPublisher",
     "InternalBotPublisher",
     "MetadataPublisher",
-    "NotificationPublisher",
     "ProjectBotPublisher",
     "ProjectColumnPublisher",
     "ProjectInvitationPublisher",

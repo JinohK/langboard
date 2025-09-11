@@ -5,10 +5,10 @@ import { ESocketTopic } from "@langboard/core/enums";
 
 type TSocketPublishQueueData = {
     data: Record<string, unknown>;
-    publish_models: TSocketPublishData[] | TSocketPublishData;
+    publish_models: TNotificationPublishData[] | TNotificationPublishData;
 };
 
-type TSocketPublishData = {
+type TNotificationPublishData = {
     topic: string;
     topic_id: string;
     event: string;

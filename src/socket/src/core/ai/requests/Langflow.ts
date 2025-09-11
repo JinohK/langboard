@@ -189,7 +189,21 @@ class LangflowRequest extends BaseRequest {
 
         if (this.internalBot.platform === EBotPlatform.Default && this.internalBot.platform_running_type === EBotPlatformRunningType.Default) {
             try {
-                requestModel.tweaks.Agent = Utils.Json.Parse(this.internalBot.value ?? "{}");
+                const botValue: Record<string, any> = Utils.Json.Parse(this.internalBot.value ?? "{}");
+                if (!botValue.agent_llm) {
+                    throw new Error("agent_llm is required for Default platform");
+                }
+
+                const agentLLM = botValue.agent_llm;
+                delete botValue.agent_llm;
+
+                if (["Ollama", "LM Studio"].includes(agentLLM)) {
+                    requestModel.tweaks[agentLLM] = botValue;
+                } else {
+                    botValue.agent_llm = agentLLM;
+                    requestModel.tweaks.Agent = botValue;
+                }
+
                 if (requestModel.tweaks.Agent.system_prompt) {
                     const systemPrompt = requestModel.tweaks.Agent.system_prompt;
                     delete requestModel.tweaks.Agent.system_prompt;

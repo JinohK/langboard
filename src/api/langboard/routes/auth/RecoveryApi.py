@@ -6,7 +6,7 @@ from core.schema import OpenApiSchema
 from core.utils.String import make_fullname
 from fastapi import status
 from ...services import Service
-from .scopes import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
+from .forms import ResetPasswordForm, SendResetLinkForm, ValidateTokenForm
 
 
 @AppRouter.api.post(

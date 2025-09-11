@@ -70,6 +70,7 @@ function AddSubEmailForm(): JSX.Element {
                         label={t("user.Email")}
                         isFormControl
                         autoComplete="email"
+                        required
                         disabled={isValidating}
                         className="h-9 w-64 py-2"
                     />

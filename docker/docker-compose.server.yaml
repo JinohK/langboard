@@ -7,6 +7,8 @@ x-server-common-env: &server-common-env
 
 x-server-env: &server-env
   <<: *server-common-env
+  ADMIN_EMAIL: ${ADMIN_EMAIL}
+  ADMIN_PASSWORD: ${ADMIN_PASSWORD}
   TERMINAL_LOGGING_LEVEL: ${TERMINAL_LOGGING_LEVEL}
   FILE_LOGGING_LEVEL: ${FILE_LOGGING_LEVEL}
   LOGGING_DIR: ${LOGGING_DIR}

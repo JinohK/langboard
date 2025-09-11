@@ -82,15 +82,16 @@ const LabelTextarea = React.forwardRef<React.ComponentRef<typeof Textarea>, Reac
 );
 LabelTextarea.displayName = "FloatingLabelTextarea";
 
-type LabelSelectProps = React.ComponentProps<(typeof Select)["Root"]> & {
+export type TLabelSelectProps = React.ComponentProps<(typeof Select)["Root"]> & {
     id?: string;
     options: React.ReactNode | React.ReactNode[];
     className?: string;
+    contentClassName?: string;
     label: React.ReactNode;
     ref?: React.Ref<HTMLButtonElement>;
 };
 
-const LabelSelect = ({ label, id, options, className, ref, ...props }: LabelSelectProps) => {
+const LabelSelect = ({ label, id, options, className, contentClassName, ref, ...props }: TLabelSelectProps) => {
     const [shouldShow, setShouldShow] = React.useState(!!props.value || !!props.defaultValue);
     const onValueChange = React.useCallback(
         (value: string) => {
@@ -111,7 +112,7 @@ const LabelSelect = ({ label, id, options, className, ref, ...props }: LabelSele
                     </Label>
                 )}
             </Select.Trigger>
-            <Select.Content>{options}</Select.Content>
+            <Select.Content className={contentClassName}>{options}</Select.Content>
         </Select.Root>
     );
 };

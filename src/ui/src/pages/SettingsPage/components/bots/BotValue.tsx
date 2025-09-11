@@ -7,10 +7,10 @@ import { memo, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { EHttpStatus } from "@langboard/core/enums";
-import { getValueType } from "@/components/BotValueInput/utils";
+import { getValueType } from "@/components/bots/BotValueInput/utils";
 import { EBotPlatformRunningType } from "@/core/models/bot.related.type";
-import BotValueInput from "@/components/BotValueInput";
-import { TBotValueDefaultInputRefLike } from "@/components/BotValueInput/types";
+import BotValueInput from "@/components/bots/BotValueInput";
+import { TBotValueDefaultInputRefLike } from "@/components/bots/BotValueInput/types";
 
 const BotValue = memo(() => {
     const [t] = useTranslation();

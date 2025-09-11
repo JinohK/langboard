@@ -50,11 +50,13 @@ class ProjectWikiService(BaseService):
             )
             raw_wikis = result.all()
 
-        wikis = [await self.convert_to_api_response(user_or_bot, raw_wiki) for raw_wiki in raw_wikis]
+        wikis = [await self.convert_to_api_response(user_or_bot, project, raw_wiki) for raw_wiki in raw_wikis]
 
         return wikis
 
-    async def convert_to_api_response(self, user_or_bot: TUserOrBot, wiki: ProjectWiki) -> dict[str, Any]:
+    async def convert_to_api_response(
+        self, user_or_bot: TUserOrBot, project: Project, wiki: ProjectWiki
+    ) -> dict[str, Any]:
         api_wiki = wiki.api_response()
         api_wiki["assigned_members"] = []
         if wiki.is_public:
@@ -65,7 +67,10 @@ class ProjectWikiService(BaseService):
 
         is_showable = (
             wiki.is_public
-            or (isinstance(user_or_bot, User) and (user_or_bot.is_admin or user_or_bot.id in assigned_user_ids))
+            or (
+                isinstance(user_or_bot, User)
+                and (user_or_bot.is_admin or project.owner_id == user_or_bot.id or user_or_bot.id in assigned_user_ids)
+            )
             or isinstance(user_or_bot, Bot)
         )
 
@@ -222,13 +227,14 @@ class ProjectWikiService(BaseService):
             if not project_assigned:
                 return None
 
-            model_params: dict[str, Any] = {
-                "project_assigned_id": project_assigned.id,
-                "project_wiki_id": wiki.id,
-            }
-            model_params["user_id"] = user_or_bot.id
-            with DbSession.use(readonly=False) as db:
-                db.insert(ProjectWikiAssignedUser(**model_params))
+            if isinstance(user_or_bot, User):
+                model_params: dict[str, Any] = {
+                    "project_assigned_id": project_assigned.id,
+                    "project_wiki_id": wiki.id,
+                }
+                model_params["user_id"] = user_or_bot.id
+                with DbSession.use(readonly=False) as db:
+                    db.insert(ProjectWikiAssignedUser(**model_params))
 
         was_public = wiki.is_public
         wiki.is_public = is_public
