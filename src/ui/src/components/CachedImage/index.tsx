@@ -1,4 +1,4 @@
-import { forwardRef, memo, useEffect, useState } from "react";
+import { forwardRef, memo, useEffect, useRef, useState } from "react";
 import { VariantProps, tv } from "tailwind-variants";
 import { Skeleton, SuspenseComponent } from "@/components/base";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -48,6 +48,7 @@ const lazyImage = (src: string) => {
 const CachedImage = memo(
     forwardRef<HTMLImageElement, ICachedImageProps>(({ size, w, h, src, fallback, className, ...props }, ref) => {
         const [image, setImage] = useState<React.ReactNode | null>(null);
+        const imageKeyRef = useRef(src);
 
         const classNames = cn(CachedImageVariants({ size, w, h }), className);
 
@@ -59,7 +60,7 @@ const CachedImage = memo(
 
             lazyImage(src)
                 .then(() => {
-                    setImage(<img ref={ref} src={src} className={classNames} {...props} />);
+                    setImage(<img key={imageKeyRef.current} ref={ref} src={src} className={classNames} {...props} />);
                 })
                 .catch(() => {
                     setImage(fallback ?? <Skeleton className={classNames} />);

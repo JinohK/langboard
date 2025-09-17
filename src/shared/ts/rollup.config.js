@@ -31,13 +31,7 @@ const createOptions = (dirname) => [
                 sourcemap: true,
             },
         ],
-        plugins: [
-            resolve(),
-            commonjs(),
-            typescript({
-                outputToFilesystem: true,
-            }),
-        ],
+        plugins: [resolve(), commonjs(), typescript()],
         external: [...getExternal("dependencies"), ...getExternal("devDependencies")],
         cache: false,
     },

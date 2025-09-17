@@ -31,7 +31,7 @@ export const useIsCurrentEditor = (editor: string): bool => {
         });
 
         return off;
-    }, [editor]);
+    }, [editor, setIsCurrentEditor]);
 
     return isCurrentEditor;
 };

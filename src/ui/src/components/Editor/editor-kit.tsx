@@ -11,7 +11,6 @@ import { CalloutKit } from "@/components/Editor/plugins/callout-kit";
 import { CodeBlockKit } from "@/components/Editor/plugins/code-block-kit";
 import { CursorOverlayKit } from "@/components/Editor/plugins/cursor-overlay-kit";
 import { DateKit } from "@/components/Editor/plugins/date-kit";
-import { DndKit } from "@/components/Editor/plugins/dnd-kit";
 import { EmojiKit } from "@/components/Editor/plugins/emoji-kit";
 import { ExitBreakKit } from "@/components/Editor/plugins/exit-break-kit";
 import { FixedToolbarKit } from "@/components/Editor/plugins/fixed-toolbar-kit";
@@ -52,7 +51,6 @@ export const EditorKit = [
     ...SlashKit,
     ...AutoformatKit,
     ...CursorOverlayKit,
-    ...DndKit,
     ...EmojiKit,
     ...ExitBreakKit,
     TrailingBlockPlugin,

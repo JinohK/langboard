@@ -8,6 +8,7 @@ import { createAiKit } from "@/components/Editor/plugins/ai-kit";
 import { PlateEditor, PlatePlugin, usePlateEditor } from "platejs/react";
 import { MarkdownPlugin } from "@platejs/markdown";
 import { EditorKit } from "@/components/Editor/editor-kit";
+import { DndKit } from "@/components/Editor/plugins/dnd-kit";
 
 interface IBaseUseCreateEditor {
     plugins?: PlatePlugin<any>[];
@@ -37,6 +38,7 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
         if (!readOnly && socketEvents) {
             const { chatEvents, copilotEvents } = socketEvents;
             pluginList.push(
+                ...DndKit,
                 ...createAiKit({ socket, eventKey: chatEventKey!, events: chatEvents, commonEventData: commonSocketEventData }),
                 ...createCopilotKit({
                     socket,
