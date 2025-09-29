@@ -44,8 +44,9 @@ endif
 
 check_tools:
 	@command -v poetry >/dev/null 2>&1 || { echo >&2 "$(RED)Poetry is not installed. Aborting.$(NC)"; exit 1; }
-	@command -v npm >/dev/null 2>&1 || { echo >&2 "$(RED)NPM is not installed. Aborting.$(NC)"; exit 1; }
+	@command -v yarn >/dev/null 2>&1 || { echo >&2 "$(RED)Yarn is not installed. Aborting.$(NC)"; exit 1; }
 	@command -v docker >/dev/null 2>&1 || { echo >&2 "$(RED)Docker is not installed. Aborting.$(NC)"; exit 1; }
+	@command -v docker compose >/dev/null 2>&1 || { echo >&2 "$(RED)Docker Compose is not installed. Aborting.$(NC)"; exit 1; }
 	@command -v pipx >/dev/null 2>&1 || { echo >&2 "$(RED)pipx is not installed. Aborting.$(NC)"; exit 1; }
 	@command -v uv >/dev/null 2>&1 || { echo >&2 "$(RED)uv is not installed. Aborting.$(NC)"; exit 1; }
 	@printf "$(GREEN)All required tools are installed.$(NC)"

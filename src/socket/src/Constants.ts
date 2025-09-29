@@ -92,8 +92,8 @@ export const READONLY_DATABASE_URL = getEnv<string>({
     key: "READONLY_DATABASE_URL",
     defaultValue: MAIN_DATABASE_URL,
 });
-export const DB_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TIMEOUT" }));
-export const DB_TCP_USER_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TCP_USER_TIMEOUT" }));
+export const DB_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TIMEOUT", defaultValue: "120" }));
+export const DB_TCP_USER_TIMEOUT = parseInt(getEnv<string>({ key: "DB_TCP_USER_TIMEOUT", defaultValue: "1000" }));
 
 export const REFRESH_TOKEN_NAME = `refresh_token_${PROJECT_SHORT_NAME}`;
 

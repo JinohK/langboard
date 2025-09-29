@@ -1,127 +1,172 @@
-# Langboard 🚀
+# Langboard
 
-**AI-Powered Project Management & Collaboration Tool**
-
-Langboard is an AI-driven project management solution developed by YAMON. Designed to empower teams with intelligent automation and seamless collaboration, Langboard is open-source and free for individual and non-profit users. For commercial usage, companies must sponsor via [GitHub Sponsors](https://github.com/sponsors/yamonco) or secure a separate licensing agreement.
-
----
-
-## 🌟 Key Features
-
-- **🤖 AI Task Agent**
-
-  - **Intelligent Automation:** Analyze tasks and project data with advanced AI to provide smart recommendations and automate routine workflows.
-  - **Predictive Insights:** Leverage predictive analytics to foresee bottlenecks and optimize task assignments.
-
-- **🔗 Edge-Based Card Linking**
-
-  - **Visual Task Mapping:** Connect tasks with dynamic, interactive cards to clearly visualize dependencies and workflows.
-  - **Customizable Links:** Easily adjust and customize relationships between tasks for better project planning.
-
-- **🔍 RAG Search Functionality**
-
-  - **Instant Access:** Utilize vector-based search technology to retrieve project information in seconds.
-  - **Context-Aware Results:** Get smart, contextually relevant search outcomes to enhance your project understanding.
-    onboarding.
-
-- **📊 Real-Time Analytics & Reporting**
-
-  - **Dynamic Dashboards:** Monitor project progress and team performance with interactive charts and real-time metrics.
-  - **Data-Driven Decisions:** Empower your team with actionable insights to drive productivity and success.
-
-- **💬 Collaboration & Notifications**
-  - **Seamless Communication:** Integrate chat and notification systems to keep every team member in the loop.
-  - **Activity Feeds:** Stay updated on project changes, task completions, and team interactions instantly.
+Langboard is an **AI Agent Orchestration Platform** that empowers organizations to build, manage, and monitor multi-agent workflows with **human-in-the-loop (HITL) controls**.
+Unlike traditional automation tools or fully autonomous agent experiments (e.g., AutoGPT, BabyAGI), Langboard strikes the balance between **AI autonomy** and **human governance**, ensuring safe, scalable, and enterprise-ready AI orchestration.
 
 ---
 
-## 🐳 Docker Installation and Setup
+## 🌍 Vision and Purpose
 
-Langboard is optimized for Docker deployment. The repository includes a Dockerfile and docker-compose configuration for a streamlined setup.
+AI systems are powerful, but not infallible. Even state-of-the-art large language models (LLMs) hallucinate, misinterpret context, or act unpredictably. Langboard was created with a simple principle:
 
-### Prerequisites
+> **“AI should act, but humans must approve.”**
 
-- [Docker](https://docs.docker.com/get-docker/) (version 20.10 or higher)
-- [Docker Compose](https://docs.docker.com/compose/install/) (if not bundled with your Docker installation)
-
-### Steps to Build and Run
-
-1. **Clone the Repository**
-
-   ```bash
-   git clone https://github.com/yamonco/langboard.git
-   cd langboard
-   ```
-
-2. **Configure Environment Variables**
-
-   - Duplicate the `.env.example` file and rename it to `.env`.
-   - Update the file with necessary environment variables such as API keys, database connections, and port configurations.
-
-3. **Build and Run Docker Container**
-
-   ```bash
-   make start_docker_prod
-   ```
-
-4. **Access the Application**
-
-   - Once running, access Langboard at `http://localhost:NGINX_UI_EXPOSE_PORT` (replace `NGINX_UI_EXPOSE_PORT` with the configured port in your `.env` file).
+Langboard’s mission is to enable enterprises to harness AI efficiency without sacrificing reliability, compliance, or accountability.
 
 ---
 
-## 🔧 Agent Customization with Langflow
+## ✨ Core Features
 
-Langboard seamlessly integrates with the [Langflow](https://github.com/langflow-ai/langflow) project, allowing you to directly customize and fine-tune your AI agents. Langflow is a visual tool that empowers you to design, configure, and optimize your AI workflows, making it easy to tailor agent behaviors to your specific project needs. Check out the Langflow repository for more details and start customizing your agents today!
+1. **Kanban Board Interface**
+
+   - Inspired by Trello, Langboard visualizes workflows as columns (stages) and cards (tasks).
+   - Each card represents an AI-driven process, with real-time status updates.
+   - Intuitive UX allows non-technical teams to manage complex AI pipelines.
+
+2. **Multi-Agent Collaboration**
+
+   - Multiple specialized AI agents work together as a team.
+   - Example: a **Content Writer Agent** drafts text → a **Design Agent** generates images → final output is submitted to a **Human Approver**.
+   - Supports delegation, task splitting, and cooperative workflows.
+
+3. **Human-in-the-Loop (Reaction Approval)**
+
+   - Critical actions pause until a human approves.
+   - Example: before writing to an internal database or calling an external API, Langboard shows a “Pending Approval” card.
+   - Human approvers can **approve** or **reject** with a single click.
+
+4. **LangGraph & LangChain Orchestration**
+
+   - Built on LangChain with planned integration of LangGraph for **stateful, interruptible workflows**.
+   - Each Kanban column can map to a LangGraph node, supporting branching, conditional flows, and long-running processes.
+
+5. **Observability & Monitoring**
+
+   - All agent actions are logged and visualized.
+   - Prompts, responses, and tool calls are traceable via Langfuse-style dashboards.
+   - Enhances debugging, compliance, and reliability.
+
+6. **Retrieval-Augmented Generation (RAG) Search**
+
+   - Embeds task data into vector databases for semantic retrieval.
+   - Allows context-rich search across ongoing and past tasks.
+
+7. **Customizable AI Agents**
+
+   - Modular “Template Agents” (nicknamed _Mon_) can be plugged into workflows.
+   - Supports domain-specific AI customization (finance, healthcare, legal, etc.).
 
 ---
 
-## 📌 Usage Guidelines
+## 🏗️ Architecture
 
-### For Individual & Non-Profit Users
+- **Frontend:** Kanban-style board, real-time collaboration.
+- **Backend:** Langboard Orchestrator → LangGraph (planned) → LangChain / LangFlow / external AI tools.
+- **Human-in-the-loop:** Interrupt gates at predefined workflow steps.
+- **Integrations:** External APIs, vector databases, and custom tools.
+- **Deployment:** SaaS, On-premises (VPC), or Full On-premises with network isolation.
 
-- **Free Usage:** Clone, use, modify, and redistribute Langboard for personal, educational, research, or non-profit projects.
-- **Community Driven:** Contributions and feedback from the community are highly appreciated to enhance and evolve the project.
+---
 
-### For Commercial Users
+## 🆚 Differentiation
 
-- **Mandatory Sponsorship:**
-  - Commercial use requires regular sponsorship via [GitHub Sponsors](https://github.com/sponsors/yamonco) or a separate commercial licensing agreement.
-  - **Before Deployment:** Ensure you have met the sponsorship requirements or consulted with the YAMON management team.
-- **Refer to License:** Detailed commercial usage terms are outlined in the LICENSE file.
+- **vs Palantir**: Langboard is not a closed black-box platform for governments/enterprises. It’s modular, source-available, and customizable for any organization.
+- **vs DeepAuto**: DeepAuto focuses on full automation (Query Router, LongContext AI). Langboard emphasizes human approval and governance.
+- **vs LangChain (library)**: Langboard provides a **UI-driven orchestration layer** with Kanban visualization and collaboration.
+- **vs Flowise / LangFlow (open-source UI)**: These tools are great for prototyping, but lack enterprise features such as RBAC, audit logs, SSO, and approval gates. Langboard extends them into a production-grade solution.
+
+---
+
+## 💰 Pricing Model
+
+Langboard uses a **dual revenue model**:
+
+### 1. Platform Subscription (per Organization / Workspace)
+
+| Plan           | Price                            | Deployment                                                                                                                            | Key Features                                                                                                                                                                            | Limitations                                   |
+| -------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| **Free**       | ₩0                               | Self-hosted                                                                                                                           | Basic board/project/card, simple automation (webhooks & basic API), community support                                                                                                   | Max 3 boards, 5 projects, logs stored 7 days  |
+| **Basic**      | ₩290,000 / year                  |
+| (₩29 / month)  | SaaS                             | Team collaboration, basic RBAC (Viewer/Editor/Admin), audit logs (30 days), SLA (business hours), email/forum support                 | File storage & logs 30 days                                                                                                                                                             |
+| **Standard**   | ₩500,000 / year                  |
+| (₩50 / month)  | SaaS + On-premises               | Advanced RBAC (per-project roles), audit logs (180 days), SSO (SAML/OIDC), dedicated subdomain, priority support, monthly ops reports | Unlimited boards/projects, file & logs 180 days                                                                                                                                         |
+| **Enterprise** | Negotiated (₩3,000,000+ / month) | Full on-premises / VPC                                                                                                                | Data governance & KMS integration, SSO & SCIM provisioning, long-term logs (1+ years), enterprise-wide policy enforcement, dedicated TAM, performance/security audits, custom solutions | Network isolation, agent body on-prem support |
+
+---
+
+### 2. Template Agents (Mon)
+
+| Package             | Monthly Price | Monthly Calls | Notes                                              |
+| ------------------- | ------------- | ------------- | -------------------------------------------------- |
+| **T1 – Starter**    | ₩100,000      | 10,000 calls  | Up to 5 min runtime or 20 tool calls per execution |
+| **T3 – Growth**     | ₩250,000      | 50,000 calls  | Popular among SMEs                                 |
+| **T5 – Scale**      | ₩520,000      | 120,000 calls | For larger organizations                           |
+| **T∞ – Enterprise** | Contract      | Unlimited     | Custom SLA & negotiated pricing                    |
+
+- Credits reset monthly (no rollover).
+- Overages: ₩16,000 per additional 1,000 calls.
+- Available for all platform plans (Free → Enterprise).
+
+---
+
+### 3. Add-ons & Services
+
+- **On-premises setup**: ₩20,000,000 (one-time)
+- **Custom Agent development**: ₩2,000,000 per agent (+₩200,000 monthly maintenance)
+- **Workflow consulting**: From ₩3,000,000 per project
+- **Enterprise governance & compliance consulting**: Custom quotes
+
+---
+
+## 📜 License
+
+Langboard is distributed under a **source-available license inspired by Elastic License v2**.
+
+- ✅ Internal use: free and unlimited.
+- ❌ No SaaS resale: cannot be offered as a hosted service without a commercial license.
+- ⚖️ Commercial license required: for SaaS, resale, or bundled enterprise products.
+- 🌐 GitHub Sponsors supported: sponsorship is voluntary support, not a substitute for a license.
+
+> **Special Clause (valid until April 30, 2025):**
+> Organizations subscribing to the **lowest-tier paid plan via GitHub Sponsors** before April 30, 2025, are eligible for a **3-year fixed-price commercial license** at the current plan rate, protected against future price increases.
+
+See [LICENSE](./LICENSE) for full details.
 
 ---
 
 ## 🤝 Contributing
 
-We welcome contributions from developers and project enthusiasts! Here’s how you can get involved:
+Contributions are welcome!
 
-1. **Fork the Repository:** Create your own copy to work on new features or fixes.
-2. **Create a Branch:** Develop your changes in a dedicated branch.
-3. **Submit a Pull Request:** Send your changes for review and integration.
-4. **Join the Discussion:** Engage with us on GitHub Issues and Discussions to share ideas and improvements.
+- Fork the repo and submit pull requests.
+- Report issues and request features.
+- Participate in discussions and share workflow templates.
 
----
-
-## 📄 License
-
-This project is licensed under the [Elastic License 2.0 (ELv2)](LICENSE).
-
-- **Individual & Non-Profit Users:** Free to use, modify, and redistribute under the terms of the Elastic License 2.0.
-- **Commercial Users:** Must adhere to the restrictions of the Elastic License 2.0. Commercial use is only permitted in compliance with the License, which may require obtaining a separate commercial license.
-
-For full details, please see the LICENSE file.
+Please follow our [contribution guidelines](./CONTRIBUTING.md).
 
 ---
 
-## 📬 Official Contact
+## ❤️ Sponsorship
 
-- **Email:** battlecruser@yamon.io
-- **GitHub Issues:** [Langboard Issues](https://github.com/yamonco/langboard/issues)
+Langboard development is sustained through **GitHub Sponsors**.
+If you find Langboard valuable, please consider supporting us:
+
+👉 [Sponsor Langboard on GitHub](https://github.com/sponsors/yamonco)
+
+Sponsors may receive acknowledgments, early previews, or priority feedback opportunities.
 
 ---
 
-## 🔗 Additional Information
+## 📧 Contact
 
-- **Official Website:** Stay updated with the latest news and documentation at [our website](https://langboard.yamon.io).
-- **Community Resources:** Explore our community forums, blogs, and tutorials to get the most out of Langboard.
+For **commercial license inquiries**, **enterprise deployment**, or **partnerships**, please reach out to:
+
+📩 [yamon@yamon.io](mailto:yamon@yamon.io)
+
+---
+
+🔥 With Langboard, you get the **efficiency of AI agents + the reliability of human governance** — all in one orchestration platform.
+
+---
+
+Would you like me to **package this README with LICENSE.md** into a polished GitHub repo starter (ready-to-push format)? That way you can drop it directly into your Langboard repository.
