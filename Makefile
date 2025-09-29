@@ -5,7 +5,9 @@ COMPOSE_ARGS := -f $(COMPOSE_PREFIX).kafka.yaml -f $(COMPOSE_PREFIX).pg.yaml -f 
 DOCS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).docs.yaml
 UI_WATCHER_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ui-watcher.yaml
 FLOWS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).flows.yaml
-OLLAMA_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.yaml
+OLLAMA_SHARED_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.shared.yaml
+OLLAMA_CPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.cpu.yaml
+OLLAMA_GPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.gpu.yaml
 UI_DIR := src/ui
 API_DIR := src/api
 FLOWS_DIR := src/flows
@@ -21,7 +23,8 @@ NC := \033[0m
 COMPOSE_ARGS := $(COMPOSE_ARGS)
 WITH_DOCS ?= false
 WITH_UI_WATCHER ?= false
-WITH_OLLAMA ?= false
+WITH_OLLAMA_CPU ?= false
+WITH_OLLAMA_GPU ?= false
 
 ifeq ($(WITH_DOCS), true)
 	COMPOSE_ARGS += $(DOCS_COMPOSE_ARGS)
@@ -29,9 +32,15 @@ endif
 ifeq ($(WITH_UI_WATCHER), true)
 	COMPOSE_ARGS += $(UI_WATCHER_COMPOSE_ARGS)
 endif
-ifeq ($(WITH_OLLAMA), true)
-	COMPOSE_ARGS += $(OLLAMA_COMPOSE_ARGS)
+ifeq ($(WITH_OLLAMA_CPU), true)
+	COMPOSE_ARGS += $(OLLAMA_CPU_COMPOSE_ARGS)
+	COMPOSE_ARGS += $(OLLAMA_SHARED_COMPOSE_ARGS)
 endif
+ifeq ($(WITH_OLLAMA_GPU), true)
+	COMPOSE_ARGS += $(OLLAMA_GPU_COMPOSE_ARGS)
+	COMPOSE_ARGS += $(OLLAMA_SHARED_COMPOSE_ARGS)
+endif
+
 
 check_tools:
 	@command -v poetry >/dev/null 2>&1 || { echo >&2 "$(RED)Poetry is not installed. Aborting.$(NC)"; exit 1; }

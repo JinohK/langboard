@@ -1,0 +1,17 @@
+services:
+  ollama:
+    init: true
+    container_name: ${PROJECT_NAME}_ollama
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=${PROJECT_NAME}_ollama:11434
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - net
+    restart: always
+
+volumes:
+  ollama_data:
+    driver: local
