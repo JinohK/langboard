@@ -2,9 +2,9 @@ from os.path import dirname
 from pathlib import Path
 from ssl import CERT_NONE
 from uvicorn.config import SSL_PROTOCOL_VERSION
-from core.bootstrap.uvicorn import create_config
-from core.bootstrap.uvicorn import run as run_server
-from core.FastAPIAppConfig import FastAPIAppConfig
+from .bootstrap.uvicorn import create_config
+from .bootstrap.uvicorn import run as run_server
+from .FastAPIAppConfig import FastAPIAppConfig
 from .logger import Logger
 
 
@@ -28,7 +28,11 @@ def run(app: str, config_file: str | Path, logger: Logger, watch_dir: str | Path
             workers=config.workers,
             reload=config.watch,
             reload_dirs=(
-                [str(watch_dir), dirname(__file__), str(Path(dirname(__file__)) / ".." / "models")]
+                [
+                    str(watch_dir),
+                    dirname(__file__),
+                    str(Path(dirname(__file__)) / ".." / "models"),
+                ]
                 if config.watch
                 else None
             ),

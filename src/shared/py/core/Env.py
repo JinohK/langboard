@@ -68,6 +68,10 @@ class Env:
         return f"{self.PUBLIC_UI_URL}/redirect"
 
     @property
+    def OLLAMA_API_URL(self) -> str | None:
+        return self.__get_from_cache("OLLAMA_API_URL", None)
+
+    @property
     def PROJECT_VERSION(self) -> str:
         return version(self.PROJECT_NAME)
 

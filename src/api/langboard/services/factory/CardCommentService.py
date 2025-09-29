@@ -1,9 +1,9 @@
 from typing import Any
 from core.db import DbSession, EditorContentModel, SqlBuilder
 from core.service import BaseService
+from helpers import ServiceHelper
 from models import Bot, Card, CardComment, CardCommentReaction, Project, User
-from ...core.service import ServiceHelper
-from ...publishers import CardCommentPublisher
+from publishers import CardCommentPublisher
 from ...tasks.activities import CardCommentActivityTask
 from ...tasks.bot import CardCommentBotTask
 from .NotificationService import NotificationService
@@ -31,9 +31,15 @@ class CardCommentService(BaseService):
                 .outerjoin(User, CardComment.column("user_id") == User.column("id"))
                 .outerjoin(Bot, CardComment.column("bot_id") == Bot.column("id"))
                 .where(CardComment.column("card_id") == card.id)
-                .order_by(CardComment.column("created_at").desc(), CardComment.column("id").desc())
+                .order_by(
+                    CardComment.column("created_at").desc(),
+                    CardComment.column("id").desc(),
+                )
                 .group_by(
-                    CardComment.column("id"), CardComment.column("created_at"), User.column("id"), Bot.column("id")
+                    CardComment.column("id"),
+                    CardComment.column("created_at"),
+                    User.column("id"),
+                    Bot.column("id"),
                 )
             )
             raw_comments = result.all()

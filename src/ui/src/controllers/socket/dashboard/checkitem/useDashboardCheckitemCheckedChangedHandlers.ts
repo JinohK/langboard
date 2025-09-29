@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useDashboardCheckitemCheckedChangedHandlers = ({ callback, projectUID }: I
         topicId: projectUID,
         eventKey: `dashboard-checkitem-checked-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CHECKITEM.CHECKED_CHANGED,
+            name: SocketEvents.SERVER.DASHBOARD.CHECKITEM.CHECKED_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

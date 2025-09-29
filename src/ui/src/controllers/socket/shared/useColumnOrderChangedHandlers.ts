@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment, ProjectChecklist, ProjectColumn, ProjectLabel, ProjectWiki } from "@/core/models";
 import { TPickedModel } from "@/core/models/ModelRegistry";
@@ -25,27 +25,27 @@ const useColumnOrderChangedHandlers = ({ callback, type, params, topicId, sorted
     let topic = ESocketTopic.None;
     switch (type) {
         case "ProjectColumn":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.COLUMN.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.COLUMN.ORDER_CHANGED;
             targetModel = ProjectColumn.Model;
             topic = ESocketTopic.Board;
             break;
         case "ProjectCardAttachment":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.CARD.ATTACHMENT.ORDER_CHANGED;
             targetModel = ProjectCardAttachment.Model;
             topic = ESocketTopic.BoardCard;
             break;
         case "ProjectChecklist":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKLIST.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.CARD.CHECKLIST.ORDER_CHANGED;
             targetModel = ProjectChecklist.Model;
             topic = ESocketTopic.Board;
             break;
         case "ProjectWiki":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.WIKI.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.WIKI.ORDER_CHANGED;
             targetModel = ProjectWiki.Model;
             topic = ESocketTopic.BoardWiki;
             break;
         case "ProjectLabel":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.LABEL.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.LABEL.ORDER_CHANGED;
             targetModel = ProjectLabel.Model;
             topic = ESocketTopic.Board;
             break;

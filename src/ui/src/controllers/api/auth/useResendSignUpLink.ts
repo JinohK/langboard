@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -13,7 +13,7 @@ const useResendSignUpLink = (options?: TMutationOptions<IResendSignUpLinkForm>) 
 
     const resendSignUpLink = async (params: IResendSignUpLinkForm) => {
         const res = await api.post(
-            API_ROUTES.AUTH.SIGN_UP.RESEND_LINK,
+            Routing.API.AUTH.SIGN_UP.RESEND_LINK,
             {
                 ...params,
             },

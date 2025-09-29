@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardBotScope, ProjectColumnBotScope } from "@/core/models";
 import { TBotRelatedTargetTable } from "@/core/models/bot.related.type";
@@ -22,7 +22,7 @@ const useBoardBoardBotScopeConditionsUpdatedHandlers = ({ callback, projectUID }
         topicId: projectUID,
         eventKey: `board-bot-scope-trigger-conditions-updated-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.BOT.SCOPE.TRIGGER_CONDITION_TOGGLED,
+            name: SocketEvents.SERVER.BOARD.BOT.SCOPE.TRIGGER_CONDITION_TOGGLED,
             callback,
             responseConverter: (data) => {
                 let model;

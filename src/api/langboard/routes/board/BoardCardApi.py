@@ -5,6 +5,7 @@ from core.schema import OpenApiSchema
 from core.types import SafeDateTime
 from core.utils.Converter import convert_python_data
 from fastapi import status
+from helpers import ServiceHelper
 from models import (
     Bot,
     Card,
@@ -23,7 +24,6 @@ from models import (
 )
 from models.bases import ALL_GRANTED
 from models.ProjectRole import ProjectRoleAction
-from ...core.service import ServiceHelper
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
@@ -54,7 +54,10 @@ from .forms import (
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",
                             "relationships": [CardRelationship],
-                            "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
+                            "current_auth_role_actions": [
+                                ALL_GRANTED,
+                                ProjectRoleAction,
+                            ],
                         }
                     },
                 ),
@@ -96,7 +99,10 @@ from .forms import (
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_details(
-    project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    card_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
@@ -145,7 +151,13 @@ async def get_card_details(
             "comments": [
                 (
                     CardComment,
-                    {"schema": {"user?": User, "bot?": Bot, "reactions": {"<reaction type>": ["<user or bot uid>"]}}},
+                    {
+                        "schema": {
+                            "user?": User,
+                            "bot?": Bot,
+                            "reactions": {"<reaction type>": ["<user or bot uid>"]},
+                        }
+                    },
                 ),
             ]
         }
@@ -177,7 +189,10 @@ async def get_card_comments(card_uid: str, service: Service = Service.scope()) -
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",
                             "relationships": [CardRelationship],
-                            "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
+                            "current_auth_role_actions": [
+                                ALL_GRANTED,
+                                ProjectRoleAction,
+                            ],
                         }
                     },
                 )
@@ -199,7 +214,12 @@ async def create_card(
     service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card.create(
-        user_or_bot, project_uid, form.column_uid, form.title, form.description, form.assign_users
+        user_or_bot,
+        project_uid,
+        form.column_uid,
+        form.title,
+        form.description,
+        form.assign_users,
     )
     if not result:
         return JsonResponse(content=ApiErrorCode.NF2004, status_code=status.HTTP_404_NOT_FOUND)
@@ -373,7 +393,10 @@ async def update_card_relationships(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def archive_card(
-    project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    card_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if project is None:
@@ -398,7 +421,10 @@ async def archive_card(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardDelete], RoleFinder.project)
 @AuthFilter.add()
 async def delete_card(
-    project_uid: str, card_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    card_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.card.delete(user_or_bot, project_uid, card_uid)
     if not result:

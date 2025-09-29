@@ -1,10 +1,10 @@
 from json import loads as json_loads
 from core.Env import Env
+from core.resources.locales.EmailTemplateNames import TEmailTemplateName
 from core.service import BaseService
 from fastapi_mail import ConnectionConfig, FastMail, MessageSchema, MessageType
 from pydantic import SecretStr
-from ...resources.locales.EmailTemplateNames import TEmailTemplateName
-from ...resources.Resource import get_resource_path
+from ...resources import get_resource_path
 
 
 class EmailService(BaseService):

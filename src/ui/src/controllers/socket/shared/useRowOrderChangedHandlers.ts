@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
@@ -43,13 +43,13 @@ const useRowOrderChangedHandlers = ({ callback, type, params, topicId }: IUseRow
     let topic = ESocketTopic.None;
     switch (type) {
         case "ProjectCard":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.CARD.ORDER_CHANGED;
             targetModel = ProjectCard.Model;
             targetModelColumn = "column_uid";
             topic = ESocketTopic.Board;
             break;
         case "ProjectCheckitem":
-            onEventName = SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
+            onEventName = SocketEvents.SERVER.BOARD.CARD.CHECKITEM.ORDER_CHANGED;
             targetModel = ProjectCheckitem.Model;
             targetModelColumn = "checklist_uid";
             topic = ESocketTopic.BoardCard;

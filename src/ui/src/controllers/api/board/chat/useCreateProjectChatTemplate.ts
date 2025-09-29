@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useCreateProjectChatTemplate = (options?: TMutationOptions) => {
     const { mutate } = useQueryMutation();
 
     const createProjectChatTemplate = async (params: ICreateProjectChatTemplateForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.TEMPLATE.CREATE, {
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.TEMPLATE.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

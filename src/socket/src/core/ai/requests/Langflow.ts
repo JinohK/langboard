@@ -13,6 +13,7 @@ import formidable from "formidable";
 import fs from "fs";
 import { IStreamResponse } from "@/core/ai/requests/types";
 import { EBotPlatform, EBotPlatformRunningType } from "@/models/bot.related.types";
+import { OLLAMA_API_URL } from "@/Constants";
 
 export interface ICreateLangflowRequestModelParams {
     headers: Record<string, any>;
@@ -143,11 +144,15 @@ class LangflowRequest extends BaseRequest {
     }
 
     public async isAvailable(): Promise<bool> {
-        const healthCheck = await api.get(`${this.baseURL}/health`, {
-            headers: this.getBotRequestHeaders(),
-        });
+        try {
+            const healthCheck = await api.get(`${this.baseURL}/health`, {
+                headers: this.getBotRequestHeaders(),
+            });
 
-        return healthCheck.status === EHttpStatus.HTTP_200_OK;
+            return healthCheck.status === EHttpStatus.HTTP_200_OK;
+        } catch {
+            return false;
+        }
     }
 
     #createLangflowRequestModel({ headers, requestModel, useStream }: ICreateLangflowRequestModelParams) {
@@ -188,38 +193,7 @@ class LangflowRequest extends BaseRequest {
         );
 
         if (this.internalBot.platform === EBotPlatform.Default && this.internalBot.platform_running_type === EBotPlatformRunningType.Default) {
-            try {
-                const botValue: Record<string, any> = Utils.Json.Parse(this.internalBot.value ?? "{}");
-                if (!botValue.agent_llm) {
-                    throw new Error("agent_llm is required for Default platform");
-                }
-
-                const agentLLM = botValue.agent_llm;
-                delete botValue.agent_llm;
-
-                if (["Ollama", "LM Studio"].includes(agentLLM)) {
-                    requestModel.tweaks[agentLLM] = botValue;
-                } else {
-                    botValue.agent_llm = agentLLM;
-                    requestModel.tweaks.Agent = botValue;
-                }
-
-                if (requestModel.tweaks.Agent.system_prompt) {
-                    const systemPrompt = requestModel.tweaks.Agent.system_prompt;
-                    delete requestModel.tweaks.Agent.system_prompt;
-                    requestModel.tweaks.Prompt = {
-                        prompt: systemPrompt,
-                    };
-                }
-
-                if (requestModel.tweaks.Agent.api_names) {
-                    const apiNames = requestModel.tweaks.Agent.api_names;
-                    delete requestModel.tweaks.Agent.api_names;
-                    component.setApiNames(apiNames);
-                }
-            } catch {
-                // Ignore parsing errors
-            }
+            requestModel.tweaks = this.#setDefaultTweaks(component, requestModel.tweaks);
         }
 
         return {
@@ -249,6 +223,57 @@ class LangflowRequest extends BaseRequest {
 
     #parseLangflowResponse(response: { session_id: string; outputs: Record<string, any>[] }): string {
         return response.outputs?.[0]?.outputs?.[0]?.results?.message?.data?.text ?? "";
+    }
+
+    #setDefaultTweaks(component: LangboardCalledVariablesComponent, tweaks: Record<string, any>) {
+        try {
+            const botValue: Record<string, any> = Utils.Json.Parse(this.internalBot.value ?? "{}");
+            if (!botValue.agent_llm) {
+                throw new Error("agent_llm is required for Default platform");
+            }
+
+            const agentLLM = botValue.agent_llm;
+            delete botValue.agent_llm;
+
+            if (["Ollama", "LM Studio"].includes(agentLLM)) {
+                tweaks[agentLLM] = botValue;
+            } else {
+                botValue.agent_llm = agentLLM;
+                tweaks.Agent = botValue;
+            }
+
+            if (tweaks.base_url) {
+                delete tweaks.base_url;
+            }
+
+            if (tweaks.Ollama && tweaks.Ollama.base_url === "default_docker") {
+                tweaks.Ollama.base_url = OLLAMA_API_URL;
+            }
+
+            const possibleAgents = ["", "Agent", "Ollama", "LM Studio"];
+            for (let i = 0; i < possibleAgents.length; ++i) {
+                const possibleKey = possibleAgents[i];
+                const agentData = possibleKey ? (tweaks[possibleKey] ?? {}) : tweaks;
+
+                if (agentData.system_prompt) {
+                    const systemPrompt = agentData.system_prompt;
+                    delete agentData.system_prompt;
+                    tweaks.Prompt = {
+                        prompt: systemPrompt,
+                    };
+                }
+
+                if (agentData.api_names) {
+                    const apiNames = agentData.api_names;
+                    delete agentData.api_names;
+                    component.setApiNames(apiNames);
+                }
+            }
+        } catch {
+            // Ignore parsing errors
+        }
+
+        return tweaks;
     }
 }
 

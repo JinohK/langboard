@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TBotScopeRelatedParams } from "@/controllers/api/shared/botScopes/types";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { EBotTriggerCondition } from "@/core/models/botScopes/EBotTriggerCondition";
@@ -18,7 +18,7 @@ const useCreateBotScope = (params: TUseCreateBotScopeParams, options?: TMutation
     const { mutate } = useQueryMutation();
 
     const createBotScope = async (form: ICreateBotScopeForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.BOT.SCOPE.CREATE, {
+        const url = Utils.String.format(Routing.API.BOARD.BOT.SCOPE.CREATE, {
             uid: params.project_uid,
             bot_uid: params.bot_uid,
         });

@@ -1,0 +1,49 @@
+import { Flex } from "@/components/base";
+import useGetOllamaModelList from "@/controllers/api/settings/ollama/useGetOllamaModelList";
+import useGetOllamaRunningModelList from "@/controllers/api/settings/ollama/useGetOllamaRunningModelList";
+import { usePageHeader } from "@/core/providers/PageHeaderProvider";
+import { useSocket } from "@/core/providers/SocketProvider";
+import OllamaModelList from "@/pages/SettingsPage/components/ollama/OllamaModelList";
+import OllamaModelTrackingList from "@/pages/SettingsPage/components/ollama/OllamaModelTrackingList";
+import OllamaPullModelButton from "@/pages/SettingsPage/components/ollama/OllamaPullModelButton";
+import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
+import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
+
+function OllamaPage() {
+    const socket = useSocket();
+    const { setPageAliasRef } = usePageHeader();
+    const [t] = useTranslation();
+    const { mutateAsync: getOllamaModelListMutateAsync } = useGetOllamaModelList();
+    const { mutateAsync: getOllamaRunningModelListMutateAsync } = useGetOllamaRunningModelList();
+
+    useEffect(() => {
+        setPageAliasRef.current("Ollama");
+        const fetchModels = async () => {
+            await getOllamaModelListMutateAsync({});
+            await getOllamaRunningModelListMutateAsync({});
+
+            socket.subscribe(ESocketTopic.OllamaManager, [GLOBAL_TOPIC_ID]);
+        };
+
+        fetchModels();
+
+        return () => {
+            socket.unsubscribe(ESocketTopic.OllamaManager, [GLOBAL_TOPIC_ID]);
+        };
+    }, []);
+
+    return (
+        <>
+            <Flex justify="between" mb="4" pb="2" textSize="3xl" weight="semibold" className="scroll-m-20 border-b tracking-tight">
+                <span className="w-36">{t("settings.Ollama")}</span>
+            </Flex>
+            <OllamaModelList />
+            <OllamaModelTrackingList />
+            <OllamaPullModelButton />
+        </>
+    );
+}
+OllamaPage.displayName = "OllamaPage";
+
+export default OllamaPage;

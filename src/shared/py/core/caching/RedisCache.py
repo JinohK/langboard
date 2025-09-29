@@ -10,6 +10,7 @@ _TCastReturn = TypeVar("_TCastReturn")
 
 class RedisCache(BaseCache):
     def __init__(self):
+        super().__init__()
         self._cache = Redis.from_url(Env.CACHE_URL, decode_responses=True)
 
     @overload

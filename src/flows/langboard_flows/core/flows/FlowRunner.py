@@ -1,13 +1,17 @@
 import asyncio
 import time
-from typing import AsyncGenerator
+from typing import AsyncGenerator, Literal
+from core.caching import Cache
+from core.db import DbSession
 from langflow.events.event_manager import EventManager, create_stream_tokens_event_manager
 from langflow.exceptions.serialization import SerializationError
 from langflow.graph import Graph
 from langflow.graph.schema import RunOutputs
 from langflow.schema.schema import INPUT_FIELD_NAME
 from langflow.services.deps import get_settings_service
-from models import Bot, InternalBot
+from models import Bot, BotLog, InternalBot, Project
+from models.BotLog import BotLogMessage, BotLogType
+from publishers import CardPublisher, ProjectBotPublisher, ProjectColumnPublisher
 from ..logger import Logger
 from ..schema import FlowRequestModel, InputValueRequest, RunResponse
 from ..schema.Exception import InvalidChatInputError
@@ -15,12 +19,20 @@ from ..schema.Exception import InvalidChatInputError
 
 class FlowRunner:
     def __init__(
-        self, graph: Graph, input_request: FlowRequestModel, stream: bool = False, bot: InternalBot | Bot | None = None
+        self,
+        graph: Graph,
+        input_request: FlowRequestModel,
+        stream: bool = False,
+        raw_project: dict | None = None,
+        raw_bot: tuple[Literal["bot", "internal_bot"], dict] | None = None,
+        raw_bot_log: tuple[dict | None, dict | None] | None = None,
     ):
         self.graph = graph
         self.input_request = input_request
         self.stream = stream
-        self.bot = bot
+        self.raw_project = raw_project
+        self.raw_bot = raw_bot
+        self.raw_bot_log = raw_bot_log
 
     async def run_stream(self):
         asyncio_queue = asyncio.Queue()
@@ -67,7 +79,7 @@ class FlowRunner:
             )
 
     async def __simple_run_flow(self, event_manager: EventManager | None = None):
-        self.__validate_input_and_tweaks(self.input_request)
+        self.__validate_input_and_tweaks()
 
         task_result: list[RunOutputs] = []
         inputs = None
@@ -92,6 +104,7 @@ class FlowRunner:
                 )
             ]
 
+        await self._update_log(BotLogType.Info, "Running flow...", "running")
         task_result, session_id = await self.__run_graph_internal(
             inputs=inputs,
             outputs=outputs,
@@ -122,6 +135,7 @@ class FlowRunner:
         self.graph.session_id = self.input_request.session_id
 
         run_outputs = []
+        await self._publish_status("running")
         try:
             run_outputs = await self.graph.arun(
                 inputs=inputs_list,
@@ -133,16 +147,20 @@ class FlowRunner:
                 fallback_to_env_vars=fallback_to_env_vars,
                 event_manager=event_manager,
             )
+            await self._update_log(BotLogType.Success, "Flow successfully completed", "stopped")
         except Exception as e:
             Logger.main.exception(e)
+            await self._update_log(BotLogType.Error, str(e), "stopped")
+
+        await self._publish_status("stopped")
 
         return run_outputs, self.graph.session_id
 
-    def __validate_input_and_tweaks(self, input_request: FlowRequestModel) -> None:
-        if not input_request.tweaks:
+    def __validate_input_and_tweaks(self) -> None:
+        if not self.input_request.tweaks:
             return
 
-        for key, value in input_request.tweaks.items():
+        for key, value in self.input_request.tweaks.items():
             if not isinstance(value, dict):
                 continue
 
@@ -150,17 +168,80 @@ class FlowRunner:
             if input_value is None:
                 continue
 
-            request_has_input = input_request.input_value is not None
+            request_has_input = self.input_request.input_value is not None
 
             if any(chat_key in key for chat_key in ("ChatInput", "Chat Input")):
-                if request_has_input and input_request.input_type == "chat":
+                if request_has_input and self.input_request.input_type == "chat":
                     msg = "If you pass an input_value to the chat input, you cannot pass a tweak with the same name."
                     raise InvalidChatInputError(msg)
 
             elif (
                 any(text_key in key for text_key in ("TextInput", "Text Input"))
                 and request_has_input
-                and input_request.input_type == "text"
+                and self.input_request.input_type == "text"
             ):
                 msg = "If you pass an input_value to the text input, you cannot pass a tweak with the same name."
                 raise InvalidChatInputError(msg)
+
+    async def _update_log(self, log_type: BotLogType, stack: str, status: Literal["running", "stopped"]) -> None:
+        if not self.raw_bot_log:
+            return
+        log, scope_log = self.raw_bot_log
+        if not log:
+            return
+
+        log = BotLog(**log)
+        log.log_type = log_type
+        log_stack = BotLogMessage(message=stack, log_type=log_type)
+        message_stack = log.message_stack
+        message_stack.append(log_stack)
+        log.message_stack = message_stack
+
+        with DbSession.use(readonly=False) as db:
+            db.update(log)
+
+        if self.raw_project and scope_log:
+            project = Project(**self.raw_project)
+            await ProjectBotPublisher.log_stack_added(project, log, log_stack, status)
+
+    async def _publish_status(self, status: Literal["running", "stopped"]) -> None:
+        if not self.raw_project or not self.input_request.tweaks or not self.raw_bot:
+            return
+
+        rest_data = self.input_request.tweaks.get("rest_data")
+        if not rest_data:
+            return
+
+        column_uid = rest_data.get("column_uid")
+        card_uid = rest_data.get("card_uid")
+        if not column_uid and not card_uid:
+            return
+
+        project = Project(**self.raw_project)
+        project_uid = project.get_uid()
+        bot_type, bot_data = self.raw_bot
+        bot = Bot(**bot_data) if bot_type == "bot" else InternalBot(**bot_data)
+        bot_uid = bot.get_uid()
+
+        if card_uid:
+            target_type = "card"
+            publisher = CardPublisher
+            target_uid = card_uid
+        elif column_uid:
+            target_type = "project_column"
+            publisher = ProjectColumnPublisher
+            target_uid = column_uid
+        else:
+            return
+
+        status_map: dict = await Cache.get("bot.status.map") or {}
+        if project_uid not in status_map:
+            status_map[project_uid] = {}
+        if target_type not in status_map[project_uid]:
+            status_map[project_uid][target_type] = {}
+        if target_uid not in status_map[project_uid][target_type]:
+            status_map[project_uid][target_type][target_uid] = []
+        status_map[project_uid][target_type][target_uid].append(bot_uid)
+
+        await Cache.set("bot.status.map", status_map, ttl=24 * 60 * 60)
+        await publisher.bot_status_changed(project_uid, bot_uid, target_uid, status)

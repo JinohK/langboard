@@ -1,6 +1,6 @@
 import { Box, Button, Flex, IconComponent, Input, Textarea, Toast } from "@/components/base";
 import useUploadProjectChatAttachment from "@/controllers/api/board/chat/useUploadProjectChatAttachment";
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { useSocket } from "@/core/providers/SocketProvider";
@@ -114,7 +114,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             return socket.send({
                 topic: ESocketTopic.Board,
                 topicId: projectUID,
-                eventName: SOCKET_CLIENT_EVENTS.BOARD.CHAT.SEND,
+                eventName: SocketEvents.CLIENT.BOARD.CHAT.SEND,
                 data: { message: chatMessage, file_path: filePath, task_id: chatTaskIdRef.current },
             }).isConnected;
         };

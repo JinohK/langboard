@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TBotScopeRelatedParams } from "@/controllers/api/shared/botScopes/types";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -13,7 +13,7 @@ const useDeleteBotScope = (params: TUseDeleteBotScopeParams, options?: TMutation
     const { mutate } = useQueryMutation();
 
     const deleteBotScope = async () => {
-        const url = Utils.String.format(API_ROUTES.BOARD.BOT.SCOPE.CREATE, {
+        const url = Utils.String.format(Routing.API.BOARD.BOT.SCOPE.CREATE, {
             uid: params.project_uid,
             scope_uid: params.bot_scope_uid,
         });

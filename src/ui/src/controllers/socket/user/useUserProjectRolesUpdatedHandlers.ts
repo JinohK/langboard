@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, Project, ProjectCard } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useUserProjectRolesUpdatedHandlers = ({ callback, currentUser }: IUseUserP
         topicId: currentUser.uid,
         eventKey: `user-project-roles-updated-${currentUser.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.USER.PROJECT_ROLES_UPDATED,
+            name: SocketEvents.SERVER.USER.PROJECT_ROLES_UPDATED,
             callback,
             responseConverter: (data) => {
                 const project = Project.Model.getModel(data.project_uid);

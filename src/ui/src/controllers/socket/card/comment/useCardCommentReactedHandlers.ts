@@ -1,5 +1,5 @@
 import { TReactionEmoji } from "@/components/ReactionCounter";
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -23,7 +23,7 @@ const useCardCommentReactedHandlers = ({ callback, projectUID, cardUID }: IUseCa
         topicId: projectUID,
         eventKey: `board-card-comment-reacted-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.REACTED,
+            name: SocketEvents.SERVER.BOARD.CARD.COMMENT.REACTED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

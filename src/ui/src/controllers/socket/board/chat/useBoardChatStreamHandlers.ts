@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketStreamHandler, { IBaseUseSocketStreamHandlersProps } from "@/core/hooks/useSocketStreamHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -12,7 +12,7 @@ const useBoardChatStreamHandlers = ({ projectUID, callbacks }: IUseBoardChatStre
         topicId: projectUID,
         eventKey: `board-chat-stream-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.STREAM,
+            name: SocketEvents.SERVER.BOARD.CHAT.STREAM,
             params: { uid: projectUID },
             callbacks,
         },

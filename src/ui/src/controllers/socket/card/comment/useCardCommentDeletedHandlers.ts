@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCardComment } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
@@ -19,7 +19,7 @@ const useCardCommentDeletedHandlers = ({ callback, projectUID, cardUID }: IUseCa
         topicId: projectUID,
         eventKey: `board-card-comment-deleted-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.DELETED,
+            name: SocketEvents.SERVER.BOARD.CARD.COMMENT.DELETED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

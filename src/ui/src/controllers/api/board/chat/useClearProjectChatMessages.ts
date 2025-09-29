@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -12,7 +12,7 @@ const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectCha
     const { mutate } = useQueryMutation();
 
     const clearProjectChatMessages = async (params: IClearProjectChatMessagesForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

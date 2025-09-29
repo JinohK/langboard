@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -20,7 +20,7 @@ const useBoardLabelDetailsChangedHandlers = ({ callback, projectUID, labelUID }:
         topicId: projectUID,
         eventKey: `board-label-details-changed-${labelUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.DETAILS_CHANGED,
+            name: SocketEvents.SERVER.BOARD.LABEL.DETAILS_CHANGED,
             params: { uid: labelUID },
             callback,
             responseConverter: (data) => {

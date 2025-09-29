@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toggleAllScopedUnsubscriptions } from "@/controllers/api/notification/settings/utils";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser } from "@/core/models";
@@ -21,19 +21,19 @@ const useToggleAllScopedNotificationSettings = (
     let url;
     switch (type) {
         case "project":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.ALL_PROJECT;
+            url = Routing.API.NOTIFICATION.SETTINGS.ALL_PROJECT;
             break;
         case "column":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.ALL_COLUMN;
+            url = Routing.API.NOTIFICATION.SETTINGS.ALL_COLUMN;
             break;
         case "card":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.ALL_CARD;
+            url = Routing.API.NOTIFICATION.SETTINGS.ALL_CARD;
             break;
         case "wiki":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.ALL_WIKI;
+            url = Routing.API.NOTIFICATION.SETTINGS.ALL_WIKI;
             break;
         default:
-            url = API_ROUTES.NOTIFICATION.SETTINGS.ALL;
+            url = Routing.API.NOTIFICATION.SETTINGS.ALL;
             break;
     }
 

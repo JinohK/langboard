@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -21,7 +21,7 @@ const useDashboardCardOrderChangedHandlers = ({ callback, project }: IUseDashboa
         topicId: project.uid,
         eventKey: `dashboard-card-order-changed-${project.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.ORDER_CHANGED,
+            name: SocketEvents.SERVER.DASHBOARD.CARD.ORDER_CHANGED,
             params: { uid: project.uid },
             callback,
             responseConverter: (data) => {

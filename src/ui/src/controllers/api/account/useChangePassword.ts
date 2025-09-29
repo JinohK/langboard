@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -12,7 +12,7 @@ const useChangePassword = (options?: TMutationOptions<IChangePasswordForm>) => {
     const { mutate } = useQueryMutation();
 
     const changePassword = async (params: IChangePasswordForm) => {
-        const res = await api.put(API_ROUTES.ACCOUNT.CHANGE_PASSWORD, params, {
+        const res = await api.put(Routing.API.ACCOUNT.CHANGE_PASSWORD, params, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

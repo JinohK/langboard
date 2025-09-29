@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useChangeWikiOrder = (options?: TMutationOptions<IChangeWikiOrderForm>) =>
     const { mutate } = useQueryMutation();
 
     const changeWikiOrder = async (params: IChangeWikiOrderForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CHANGE_ORDER, {
+        const url = Utils.String.format(Routing.API.BOARD.WIKI.CHANGE_ORDER, {
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });

@@ -1,4 +1,5 @@
 import Consumer from "@/core/broadcast/Consumer";
+import Cache from "@/core/caching/Cache";
 import DB from "@/core/db/DB";
 import Server from "@/core/server/Server";
 import Logger from "@/core/utils/Logger";
@@ -52,6 +53,7 @@ for (let i = 0; i < EXIT_SIGNALS.length; ++i) {
             Logger.green("Shutting down gracefully...\n");
 
             await Consumer.stop();
+            await Cache.stop();
             try {
                 Server.destroy();
             } catch {

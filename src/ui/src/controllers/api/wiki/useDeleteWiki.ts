@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -13,7 +13,7 @@ const useDeleteWiki = (options?: TMutationOptions<IDeleteWikiForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteWiki = async (params: IDeleteWikiForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.DELETE, {
+        const url = Utils.String.format(Routing.API.BOARD.WIKI.DELETE, {
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });

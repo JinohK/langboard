@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ActivityModel } from "@/core/models";
@@ -67,19 +67,19 @@ const useGetActivities = (
     let url;
     switch (form.type) {
         case "user":
-            url = API_ROUTES.ACTIVITIY.USER;
+            url = Routing.API.ACTIVITIY.USER;
             break;
         case "project":
-            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT, { uid: form.project_uid });
+            url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT, { uid: form.project_uid });
             break;
         case "card":
-            url = Utils.String.format(API_ROUTES.ACTIVITIY.CARD, { uid: form.project_uid, card_uid: form.card_uid });
+            url = Utils.String.format(Routing.API.ACTIVITIY.CARD, { uid: form.project_uid, card_uid: form.card_uid });
             break;
         case "project_wiki":
-            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.wiki_uid });
+            url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.wiki_uid });
             break;
         case "project_assignee":
-            url = Utils.String.format(API_ROUTES.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
+            url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
             break;
         default:
             throw new Error("Invalid activity type");

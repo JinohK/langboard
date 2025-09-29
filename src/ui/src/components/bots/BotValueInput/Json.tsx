@@ -18,7 +18,7 @@ function BotValueJsonInput({ value, newValueRef, previewByDialog, isValidating, 
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [isDialogOpened, setIsDialogOpened] = useState(false);
 
-    const onValueCHange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const onValueChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
         if (!textareaRef.current?.value) {
             return;
         }
@@ -119,7 +119,7 @@ function BotValueJsonInput({ value, newValueRef, previewByDialog, isValidating, 
             value={currentJSON}
             className="min-h-[calc(65vh_-_theme(spacing.28))] w-full p-0.5 text-[13px] leading-[1.32]"
             resize="none"
-            onChange={onValueCHange}
+            onChange={onValueChange}
             onBlur={save}
             disabled={isValidating}
             required={required}

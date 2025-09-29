@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCheckitem } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useCardCheckitemCardifiedHandlers = ({ callback, cardUID, checkitem }: IUs
         topicId: cardUID,
         eventKey: `board-card-checkitem-cardified-${checkitem.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CARDIFIED,
+            name: SocketEvents.SERVER.BOARD.CARD.CHECKITEM.CARDIFIED,
             params: { uid: checkitem.uid },
             callback,
             responseConverter: (data) => {

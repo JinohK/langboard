@@ -3,13 +3,27 @@ from core.db import DbSession, SqlBuilder
 from core.schema import Pagination
 from core.service import BaseService
 from core.types import SafeDateTime
-from models import Card, Checkitem, CheckitemTimerRecord, Checklist, Project, ProjectColumn, User
+from helpers import ServiceHelper
+from models import (
+    Card,
+    Checkitem,
+    CheckitemTimerRecord,
+    Checklist,
+    Project,
+    ProjectColumn,
+    User,
+)
 from models.Checkitem import CheckitemStatus
-from ...core.service import ServiceHelper
-from ...publishers import CheckitemPublisher
+from publishers import CheckitemPublisher
 from ...tasks.activities import CardCheckitemActivityTask
 from ...tasks.bot import CardBotTask, CardCheckitemBotTask
-from .Types import TCardParam, TCheckitemParam, TChecklistParam, TProjectParam, TUserOrBot
+from .Types import (
+    TCardParam,
+    TCheckitemParam,
+    TChecklistParam,
+    TProjectParam,
+    TUserOrBot,
+)
 
 
 class CheckitemService(BaseService):
@@ -72,7 +86,12 @@ class CheckitemService(BaseService):
             .join(Project, Project.column("id") == Card.column("project_id"))
             .where((Checkitem.column("user_id") == user.id) & (Checkitem.column("created_at") <= refer_time))
             .order_by(Checkitem.column("created_at").desc())
-            .group_by(Checkitem.column("id"), Checkitem.column("created_at"), Card.column("id"), Project.column("id"))
+            .group_by(
+                Checkitem.column("id"),
+                Checkitem.column("created_at"),
+                Card.column("id"),
+                Project.column("id"),
+            )
         )
         query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
 
@@ -104,7 +123,12 @@ class CheckitemService(BaseService):
         return api_checkitems, list(api_cards.values()), list(api_projects.values())
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
+        title: str,
     ) -> Checkitem | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (Checklist, checklist)
@@ -257,7 +281,10 @@ class CheckitemService(BaseService):
                 return False
 
             if checkitem.status == CheckitemStatus.Started:
-                last_timer_record = cast(CheckitemTimerRecord, await self.__get_timer_record(checkitem, "last"))
+                last_timer_record = cast(
+                    CheckitemTimerRecord,
+                    await self.__get_timer_record(checkitem, "last"),
+                )
                 accumulated_seconds = int((current_time - last_timer_record.created_at).total_seconds())
                 checkitem.accumulated_seconds += accumulated_seconds
                 with DbSession.use(readonly=False) as db:
@@ -271,7 +298,12 @@ class CheckitemService(BaseService):
                 started_checkitem = await self.__find_started_checkitem(user_or_bot)
                 if started_checkitem:
                     await self.change_status(
-                        user_or_bot, project, card, started_checkitem, CheckitemStatus.Paused, current_time
+                        user_or_bot,
+                        project,
+                        card,
+                        started_checkitem,
+                        CheckitemStatus.Paused,
+                        current_time,
                     )
             checkitem.is_checked = False
 
@@ -421,7 +453,10 @@ class CheckitemService(BaseService):
                 SqlBuilder.select.table(CheckitemTimerRecord)
                 .where(CheckitemTimerRecord.column("checkitem_id") == checkitem.id)
                 .order_by(order_by)
-                .group_by(CheckitemTimerRecord.column("id"), CheckitemTimerRecord.column("created_at"))
+                .group_by(
+                    CheckitemTimerRecord.column("id"),
+                    CheckitemTimerRecord.column("created_at"),
+                )
                 .limit(1)
             )
             record = result.first()
@@ -447,7 +482,10 @@ class CheckitemService(BaseService):
         self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam
     ) -> tuple[Project, Card, Checkitem] | None: ...
     async def __get_records_by_params(
-        self, project: TProjectParam, card: TCardParam, checkitem: TCheckitemParam | None = None
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        checkitem: TCheckitemParam | None = None,
     ) -> tuple[Project, Card, Checkitem | None] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:

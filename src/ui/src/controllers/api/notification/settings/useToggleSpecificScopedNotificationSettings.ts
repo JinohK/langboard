@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TToggleSpecificScopedNotificationSettingsForm } from "@/controllers/api/notification/settings/types";
 import { toggleSpecificScopedUnsubscriptions } from "@/controllers/api/notification/settings/utils";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser } from "@/core/models";
@@ -19,19 +19,19 @@ const useToggleSpecificScopedNotificationSettings = <TType extends TNotification
     let getSpecificUID;
     switch (type) {
         case "project":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.PROJECT;
+            url = Routing.API.NOTIFICATION.SETTINGS.PROJECT;
             getSpecificUID = (params: TToggleSpecificScopedNotificationSettingsForm<"project">) => params.project_uid;
             break;
         case "column":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.COLUMN;
+            url = Routing.API.NOTIFICATION.SETTINGS.COLUMN;
             getSpecificUID = (params: TToggleSpecificScopedNotificationSettingsForm<"column">) => params.column_uid;
             break;
         case "card":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.CARD;
+            url = Routing.API.NOTIFICATION.SETTINGS.CARD;
             getSpecificUID = (params: TToggleSpecificScopedNotificationSettingsForm<"card">) => params.card_uid;
             break;
         case "wiki":
-            url = API_ROUTES.NOTIFICATION.SETTINGS.WIKI;
+            url = Routing.API.NOTIFICATION.SETTINGS.WIKI;
             getSpecificUID = (params: TToggleSpecificScopedNotificationSettingsForm<"wiki">) => params.wiki_uid;
             break;
         default:

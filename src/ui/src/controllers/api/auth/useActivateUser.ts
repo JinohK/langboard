@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -11,7 +11,7 @@ const useActivateUser = (options?: TMutationOptions<IActivateUserForm>) => {
     const { mutate } = useQueryMutation();
 
     const activateUser = async (params: IActivateUserForm) => {
-        const res = await api.post(API_ROUTES.AUTH.SIGN_UP.ACTIVATE, params, {
+        const res = await api.post(Routing.API.AUTH.SIGN_UP.ACTIVATE, params, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

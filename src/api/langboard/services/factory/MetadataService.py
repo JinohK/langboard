@@ -1,8 +1,8 @@
 from typing import Any, Literal, TypeVar, overload
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.service import BaseService
+from helpers import ServiceHelper
 from models.bases import BaseMetadataModel
-from ...core.service import ServiceHelper
 
 
 _TMetadata = TypeVar("_TMetadata", bound=BaseMetadataModel)
@@ -16,18 +16,33 @@ class MetadataService(BaseService):
 
     @overload
     async def get_list(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, as_api: Literal[False]
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        as_api: Literal[False],
     ) -> list[_TMetadata]: ...
     @overload
     async def get_list(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, as_api: Literal[True], as_dict: Literal[False]
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        as_api: Literal[True],
+        as_dict: Literal[False],
     ) -> list[dict[str, Any]]: ...
     @overload
     async def get_list(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, as_api: Literal[True], as_dict: Literal[True]
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        as_api: Literal[True],
+        as_dict: Literal[True],
     ) -> dict[str, Any]: ...
     async def get_list(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, as_api: bool, as_dict: bool = False
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        as_api: bool,
+        as_dict: bool = False,
     ) -> list[_TMetadata] | list[dict[str, Any]] | dict[str, Any]:
         foreign_key = f"{foreign_model.__tablename__}_id"
         if foreign_key not in model.model_fields:
@@ -47,14 +62,26 @@ class MetadataService(BaseService):
 
     @overload
     async def get_by_key(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: Literal[False]
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        key: str,
+        as_api: Literal[False],
     ) -> _TMetadata | None: ...
     @overload
     async def get_by_key(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: Literal[True]
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        key: str,
+        as_api: Literal[True],
     ) -> dict[str, Any] | None: ...
     async def get_by_key(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, as_api: bool
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        key: str,
+        as_api: bool,
     ) -> _TMetadata | dict[str, Any] | None:
         foreign_key = f"{foreign_model.__tablename__}_id"
         if foreign_key not in model.model_fields:
@@ -75,7 +102,12 @@ class MetadataService(BaseService):
         return metadata.api_schema() if metadata else None
 
     async def save(
-        self, model: type[_TMetadata], foreign_model: BaseSqlModel, key: str, value: str, old_key: str | None = None
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        key: str,
+        value: str,
+        old_key: str | None = None,
     ) -> _TMetadata | None:
         foreign_key = f"{foreign_model.__tablename__}_id"
         if foreign_key not in model.model_fields:
@@ -106,7 +138,12 @@ class MetadataService(BaseService):
 
         return metadata
 
-    async def delete(self, model: type[_TMetadata], foreign_model: BaseSqlModel, keys: str | list[str]) -> bool:
+    async def delete(
+        self,
+        model: type[_TMetadata],
+        foreign_model: BaseSqlModel,
+        keys: str | list[str],
+    ) -> bool:
         foreign_key = f"{foreign_model.__tablename__}_id"
         if foreign_key not in model.model_fields:
             return False

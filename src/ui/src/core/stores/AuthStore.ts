@@ -1,4 +1,4 @@
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { AuthUser, BotModel } from "@/core/models";
 import { AxiosInstance } from "axios";
 import { create } from "zustand";
@@ -39,7 +39,7 @@ const useAuthStore = create(
                         const response = await api.get<{
                             user: AuthUser.Interface;
                             bots: BotModel.Interface[];
-                        }>(API_ROUTES.AUTH.ABOUT_ME, {
+                        }>(Routing.API.AUTH.ABOUT_ME, {
                             headers: {
                                 Authorization: `Bearer ${accessToken}`,
                             },

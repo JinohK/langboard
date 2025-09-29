@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -16,7 +16,7 @@ const useBoardAssignedInternalBotChangedHandlers = ({ callback, projectUID }: IU
         topicId: projectUID,
         eventKey: `board-assigned-internal-bot-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.ASSIGNED_INTERNAL_BOT_CHANGED,
+            name: SocketEvents.SERVER.BOARD.ASSIGNED_INTERNAL_BOT_CHANGED,
             params: { uid: projectUID },
             callback,
         },

@@ -18,6 +18,8 @@ import { useSocket } from "@/core/providers/SocketProvider";
 import UsersPage from "@/pages/SettingsPage/UsersPage";
 import ApiKeysPage from "@/pages/SettingsPage/ApiKeysPage";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
+import { IS_OLLAMA_RUNNING } from "@/constants";
+import OllamaPage from "@/pages/SettingsPage/OllamaPage";
 
 function SettingsProxy(): JSX.Element {
     const [t] = useTranslation();
@@ -117,6 +119,16 @@ function SettingsProxy(): JSX.Element {
         },
     };
 
+    if (IS_OLLAMA_RUNNING) {
+        sidebarNavs[ROUTES.SETTINGS.OLLAMA] = {
+            icon: "ollama",
+            name: t("settings.Ollama"),
+            onClick: () => {
+                navigate(ROUTES.SETTINGS.OLLAMA, { smooth: true });
+            },
+        };
+    }
+
     if (sidebarNavs[pathname]) {
         sidebarNavs[pathname].current = true;
     }
@@ -146,6 +158,10 @@ function SettingsProxy(): JSX.Element {
             break;
         case ROUTES.SETTINGS.WEBHOOKS:
             pageContent = <WebhooksPage />;
+            skeletonContent = <></>;
+            break;
+        case ROUTES.SETTINGS.OLLAMA:
+            pageContent = <OllamaPage />;
             skeletonContent = <></>;
             break;
     }

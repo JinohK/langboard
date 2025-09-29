@@ -1,19 +1,24 @@
 from json import dumps as json_dumps
 from json import loads as json_loads
+from typing import Literal, cast
 from core.db import DbSession, SqlBuilder
 from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.types import SnowflakeID
 from fastapi import BackgroundTasks, HTTPException, status
 from fastapi.responses import StreamingResponse
+from helpers import ModelHelper, ServiceHelper
 from langflow.load import aload_flow_from_json
+from models import BotLog, Project
 from models.BaseBotModel import BotPlatform, BotPlatformRunningType
+from models.bases import BaseBotLogModel
 from models.Bot import Bot
 from models.InternalBot import InternalBot
+from sqlalchemy import Row
 from ..core.flows import FlowRunner
 from ..core.logger import Logger
 from ..core.schema import FlowRequestModel
 from ..core.schema.Exception import APIException, InvalidChatInputError
-from ..resources.Resource import get_resource_path
+from ..resources import get_resource_path
 
 
 @AppRouter.api.post("/api/v1/run/{anypath}")
@@ -25,7 +30,17 @@ async def run_flow(api_request: FlowRequestModel, stream: bool = False):
     bot, bot_json = result
     graph = await aload_flow_from_json(flow=json_loads(bot_json), tweaks=api_request.tweaks)
 
-    runner = FlowRunner(graph, api_request, stream, bot)
+    project = _get_raw_project(api_request)
+    bot_log = _get_raw_bot_log(api_request)
+
+    runner = FlowRunner(
+        graph,
+        api_request,
+        stream,
+        project,
+        (cast(Literal["bot", "internal_bot"], bot.__tablename__), bot.model_dump()),
+        bot_log,
+    )
 
     if runner.stream:
         result = await runner.run_stream()
@@ -67,7 +82,16 @@ async def webhook_run_flow(api_request: FlowRequestModel, background_tasks: Back
 
     graph = await aload_flow_from_json(flow=json_loads(bot_json), tweaks=api_request.tweaks)
 
-    runner = FlowRunner(graph, api_request, bot=bot)
+    project = _get_raw_project(api_request)
+    bot_log = _get_raw_bot_log(api_request)
+
+    runner = FlowRunner(
+        graph,
+        api_request,
+        raw_project=project,
+        raw_bot=(cast(Literal["bot", "internal_bot"], bot.__tablename__), bot.model_dump()),
+        raw_bot_log=bot_log,
+    )
 
     error_msg = ""
     try:
@@ -96,14 +120,56 @@ def _get_flow_json(api_request: FlowRequestModel) -> ApiErrorCode | tuple[Intern
         )
         bot = result.first()
 
+    if isinstance(bot, Row):
+        bot = bot._data
+
     if isinstance(bot, InternalBot):
         if bot.platform == BotPlatform.Default and bot.platform_running_type == BotPlatformRunningType.Default:
-            return bot, _get_default_flow()
+            return bot, _get_default_flow(api_request.tweaks)
         return bot, bot.value
     elif isinstance(bot, Bot):
-        return bot, _get_default_flow()
+        return bot, _get_default_flow(api_request.tweaks)
     else:
         return bot_code
+
+
+def _get_raw_bot_log(api_request: FlowRequestModel) -> tuple[dict | None, dict | None]:
+    bot_log = None
+    scope_log = None
+    if not api_request.log_uid:
+        return bot_log, scope_log
+
+    query = SqlBuilder.select.table(BotLog)
+    if api_request.scope_log_table:
+        scope_log_class = ModelHelper.get_model_by_table_name(api_request.scope_log_table)
+        if scope_log_class and isinstance(scope_log_class, type) and issubclass(scope_log_class, BaseBotLogModel):
+            query = SqlBuilder.select.tables(BotLog, scope_log_class).join(
+                scope_log_class, scope_log_class.column("bot_log_id") == BotLog.id
+            )
+    query = query.where(BotLog.id == SnowflakeID.from_short_code(api_request.log_uid))
+
+    with DbSession.use(readonly=True) as db:
+        result = db.exec(query)
+        bot_log = result.first()
+
+    if isinstance(bot_log, Row):
+        bot_log = bot_log._data
+
+    if not isinstance(bot_log, tuple) or len(bot_log) != 2:
+        if isinstance(bot_log, tuple):
+            bot_log = bot_log[0]
+        bot_log = bot_log.model_dump() if bot_log else None, scope_log
+    else:
+        bot_log = bot_log[0].model_dump(), bot_log[1].model_dump()
+    return bot_log
+
+
+def _get_raw_project(api_request: FlowRequestModel) -> dict | None:
+    if not api_request.project_uid:
+        return None
+
+    project = ServiceHelper.get_by_param(Project, api_request.project_uid)
+    return project.model_dump() if project else None
 
 
 def _get_default_flow(tweaks: dict | None = None) -> str:

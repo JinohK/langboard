@@ -6,14 +6,20 @@ from core.schema import OpenApiSchema
 from core.storage import StorageName
 from core.utils.Converter import convert_python_data
 from fastapi import File, UploadFile, status
+from helpers import ServiceHelper
 from models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiAttachment, User
 from models.ProjectRole import ProjectRoleAction
-from ...core.service import ServiceHelper
 from ...core.storage import Storage
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .forms import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, ChangeWikiPublicForm, WikiForm
+from .forms import (
+    AssigneesForm,
+    ChangeChildOrderForm,
+    ChangeWikiDetailsForm,
+    ChangeWikiPublicForm,
+    WikiForm,
+)
 
 
 @AppRouter.schema()
@@ -47,7 +53,9 @@ from .forms import AssigneesForm, ChangeChildOrderForm, ChangeWikiDetailsForm, C
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_project_wikis(
-    project_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if project is None:
@@ -131,7 +139,10 @@ async def get_project_wiki_details(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def create_project_wiki(
-    project_uid: str, form: WikiForm, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    form: WikiForm,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.project_wiki.create(user_or_bot, project_uid, form.title, form.content)
     if not result:
@@ -275,7 +286,10 @@ async def update_project_wiki_assignees(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def change_project_wiki_order(
-    project_uid: str, wiki_uid: str, form: ChangeChildOrderForm, service: Service = Service.scope()
+    project_uid: str,
+    wiki_uid: str,
+    form: ChangeChildOrderForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await service.project_wiki.change_order(project_uid, wiki_uid, form.order)
     if not result:
@@ -317,7 +331,10 @@ async def upload_wiki_attachment(
 
     file_model = Storage.upload(attachment, StorageName.Wiki)
     if not file_model:
-        return JsonResponse(content=ApiErrorCode.OP1002, status_code=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return JsonResponse(
+            content=ApiErrorCode.OP1002,
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
 
     result = await service.project_wiki.upload_attachment(user, project_uid, wiki_uid, file_model)
     if not result:
@@ -339,7 +356,10 @@ async def upload_wiki_attachment(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def delete_project_wiki(
-    project_uid: str, wiki_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    wiki_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     project_wiki = await service.project_wiki.get_by_uid(wiki_uid)
     if not project_wiki:

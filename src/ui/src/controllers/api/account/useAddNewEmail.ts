@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
+import { Routing } from "@langboard/core/constants";
 
 export interface IAddNewEmailForm {
     new_email: string;
@@ -13,7 +13,7 @@ const useAddNewEmail = (options?: TMutationOptions<IAddNewEmailForm>) => {
 
     const addNewEmail = async (params: IAddNewEmailForm) => {
         const res = await api.post(
-            API_ROUTES.ACCOUNT.EMAIL.CRUD,
+            Routing.API.ACCOUNT.EMAIL.CRUD,
             {
                 ...params,
             },

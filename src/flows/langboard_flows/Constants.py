@@ -1,6 +1,7 @@
 from os.path import dirname
 from pathlib import Path
 from sys import executable
+from core.caching import Cache
 from core.Env import Env
 
 
@@ -21,6 +22,10 @@ LOGGING_DIR = Path(Env.get_from_env("LOGGING_DIR", DATA_DIR / "logs" / "flows"))
 
 # App Config
 APP_CONFIG_FILE = DATA_DIR / "flows_config.json"
+
+# Cache
+CACHE_DIR = DATA_DIR / "cache"
+Cache.set_cache_dir(CACHE_DIR)
 
 
 if Env.MAIN_DATABASE_URL.startswith("sqlite"):

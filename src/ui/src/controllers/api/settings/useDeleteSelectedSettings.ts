@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AppSettingModel } from "@/core/models";
@@ -12,7 +12,7 @@ const useDeleteSelectedSettings = (options?: TMutationOptions<IDeleteSelectedSet
     const { mutate } = useQueryMutation();
 
     const deleteSelectedSettings = async (params: IDeleteSelectedSettingsForm) => {
-        const res = await api.delete(API_ROUTES.SETTINGS.DELETE_SELECTED, {
+        const res = await api.delete(Routing.API.SETTINGS.DELETE_SELECTED, {
             data: params,
             env: {
                 interceptToast: options?.interceptToast,

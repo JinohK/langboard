@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { GlobalRelationshipType } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -12,7 +12,7 @@ const useSelectedGlobalRelationshipsDeletedHandlers = ({ callback }: IBaseUseSoc
         topic: ESocketTopic.Global,
         eventKey: "selected-global-relationship-deleted",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.SELECTIONS_DELETED,
+            name: SocketEvents.SERVER.GLOBALS.GLOBAL_RELATIONSHIPS.SELECTIONS_DELETED,
             callback,
             responseConverter: (data) => {
                 GlobalRelationshipType.Model.deleteModels(data.uids);

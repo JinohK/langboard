@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { GlobalRelationshipType } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useGlobalRelationshipUpdatedHandlers = ({ callback, globalRelationship }: 
         topic: ESocketTopic.Global,
         eventKey: `global-relationship-updated-${globalRelationship.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.UPDATED,
+            name: SocketEvents.SERVER.GLOBALS.GLOBAL_RELATIONSHIPS.UPDATED,
             params: { uid: globalRelationship.uid },
             callback,
             responseConverter: (data) => {

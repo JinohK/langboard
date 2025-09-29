@@ -1,10 +1,9 @@
 from typing import Literal
 from core.db import BaseSqlModel
+from helpers import BotHelper, ModelHelper
 from models import Bot, Project
 from ...ai import BotDefaultTrigger
 from ...core.broker import Broker
-from ...core.utils.BotUtils import BotUtils
-from ...core.utils.ModelUtils import get_model_by_table_name
 from .utils import BotTaskDataHelper, BotTaskHelper
 
 
@@ -27,12 +26,14 @@ async def bot_created(bot: Bot):
 )
 @Broker.wrap_async_task_decorator
 async def bot_mentioned(
-    bot: Bot, mentioned_in: Literal["card", "comment", "project_wiki"], dumped_models: list[tuple[str, dict]]
+    bot: Bot,
+    mentioned_in: Literal["card", "comment", "project_wiki"],
+    dumped_models: list[tuple[str, dict]],
 ):
     models: list[BaseSqlModel] = []
     for dumped_model in dumped_models:
         table_model, model_data = dumped_model
-        table = get_model_by_table_name(table_model)
+        table = ModelHelper.get_model_by_table_name(table_model)
         if not table:
             continue
         try:
@@ -48,12 +49,16 @@ async def bot_mentioned(
         data[f"{model.__tablename__}_uid"] = model.get_uid()
         if isinstance(model, Project):
             project = model
-        if model.__tablename__ in BotUtils.AVAILABLE_TARGET_TABLES:
+        if model.__tablename__ in BotHelper.AVAILABLE_TARGET_TABLES:
             scope_model = model
 
     if not project:
         return
 
     await BotTaskHelper.run(
-        bot, BotDefaultTrigger.BotMentioned, {"mentioned_in": mentioned_in, **data}, project, scope_model
+        bot,
+        BotDefaultTrigger.BotMentioned,
+        {"mentioned_in": mentioned_in, **data},
+        project,
+        scope_model,
     )

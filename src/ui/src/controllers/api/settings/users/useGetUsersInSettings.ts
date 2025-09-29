@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
@@ -36,7 +36,7 @@ const useGetUsersInSettings = (
 
             ++params.page;
 
-            const res = await api.get(API_ROUTES.SETTINGS.USERS.GET_LIST, {
+            const res = await api.get(Routing.API.SETTINGS.USERS.GET_LIST, {
                 params: {
                     ...params,
                     refer_time: lastCurrentDateRef.current,
@@ -91,7 +91,7 @@ const useGetUsersInSettings = (
                 return;
             }
 
-            const res = await api.get(API_ROUTES.SETTINGS.USERS.GET_LIST, {
+            const res = await api.get(Routing.API.SETTINGS.USERS.GET_LIST, {
                 params: {
                     only_count: true,
                     refer_time: referTime,

@@ -4,6 +4,7 @@ from core.service import BaseService
 from core.storage import FileModel
 from core.types import SnowflakeID
 from core.utils.Converter import convert_python_data
+from helpers import ServiceHelper
 from models import (
     Bot,
     Project,
@@ -13,8 +14,7 @@ from models import (
     ProjectWikiAttachment,
     User,
 )
-from ...core.service import ServiceHelper
-from ...publishers import ProjectWikiPublisher
+from publishers import ProjectWikiPublisher
 from ...tasks.activities import ProjectWikiActivityTask
 from .NotificationService import NotificationService
 from .ProjectService import ProjectService
@@ -97,7 +97,10 @@ class ProjectWikiService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.tables(User, ProjectWikiAssignedUser)
-                .join(ProjectWikiAssignedUser, User.column("id") == ProjectWikiAssignedUser.column("user_id"))
+                .join(
+                    ProjectWikiAssignedUser,
+                    User.column("id") == ProjectWikiAssignedUser.column("user_id"),
+                )
                 .where(ProjectWikiAssignedUser.column("project_wiki_id") == wiki.id)
             )
             raw_users = result.all()
@@ -132,7 +135,11 @@ class ProjectWikiService(BaseService):
         return bool(record)
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, title: str, content: EditorContentModel | None = None
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        title: str,
+        content: EditorContentModel | None = None,
     ) -> tuple[ProjectWiki, dict[str, Any]] | None:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
@@ -157,7 +164,11 @@ class ProjectWikiService(BaseService):
         return wiki, api_wiki
 
     async def update(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, form: dict
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        form: dict,
     ) -> dict[str, Any] | Literal[True] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:
@@ -200,7 +211,11 @@ class ProjectWikiService(BaseService):
         return model
 
     async def change_public(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, wiki: TWikiParam, is_public: bool
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        is_public: bool,
     ) -> tuple[ProjectWiki, Project] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:
@@ -248,7 +263,11 @@ class ProjectWikiService(BaseService):
         return wiki, project
 
     async def update_assignees(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, assign_user_uids: list[str]
+        self,
+        user: User,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        assign_user_uids: list[str],
     ) -> tuple[ProjectWiki, Project] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:
@@ -324,7 +343,11 @@ class ProjectWikiService(BaseService):
         return project, wiki
 
     async def upload_attachment(
-        self, user: User, project: TProjectParam, wiki: TWikiParam, attachment: FileModel
+        self,
+        user: User,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        attachment: FileModel,
     ) -> ProjectWikiAttachment | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:

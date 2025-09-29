@@ -14,3 +14,6 @@ class FlowRequestModel(BaseModel):
     session_id: str = Field(..., description="The session id")
     run_type: str = Field(..., description="The run type (internal_bot, bot)")
     uid: str = Field(...)
+    project_uid: str | None = Field(default=None, description="The project uid")
+    log_uid: str | None = Field(default=None, description="The bot log uid")
+    scope_log_table: str | None = Field(default=None, description="The scope bot log table")

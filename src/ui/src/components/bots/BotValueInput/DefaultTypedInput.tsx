@@ -1,6 +1,7 @@
-import { Button, Flex, Floating, IconComponent, Select } from "@/components/base";
+import { Button, Checkbox, Flex, Floating, IconComponent, Label, Select } from "@/components/base";
 import { useBotValueDefaultInput } from "@/components/bots/BotValueInput/DefaultProvider";
 import { TAgentFormInput, IStringAgentFormInput, ISelectAgentFormInput, IIntegerAgentFormInput } from "@langboard/core/ai";
+import { Utils } from "@langboard/core/utils";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -25,9 +26,11 @@ function DefaultTypedInput({ input }: IDefaultTypedInputProps) {
 }
 
 function DefaultStringInput({ input }: { input: IStringAgentFormInput }) {
+    const [t] = useTranslation();
     const { valuesRef, setInputRef, setValue, isValidating, required } = useBotValueDefaultInput();
+    const [isDefault, setIsDefault] = useState(valuesRef.current[input.name] === input.checkDefault);
 
-    return (
+    const inputComp = (
         <Floating.LabelInput
             type={input.type}
             name={input.name}
@@ -36,9 +39,33 @@ function DefaultStringInput({ input }: { input: IStringAgentFormInput }) {
             defaultValue={valuesRef.current[input.name] ?? input.defaultValue}
             onInput={(e) => setValue(input.name)(e.currentTarget.value)}
             required={required && !input.nullable}
-            disabled={isValidating}
+            disabled={isValidating || isDefault}
             ref={setInputRef(input.name)}
         />
+    );
+
+    if (!Utils.Type.isString(input.checkDefault)) {
+        return inputComp;
+    }
+
+    return (
+        <Flex items="center" justify="between" gap="2">
+            {inputComp}
+            <Label display="flex" items="center" gap="1.5" w="36" cursor="pointer">
+                <Checkbox
+                    checked={isDefault}
+                    onCheckedChange={(checked) => {
+                        if (Utils.Type.isString(checked)) {
+                            return;
+                        }
+
+                        setIsDefault(checked);
+                        setValue(input.name)(checked ? input.checkDefault : "");
+                    }}
+                />
+                {t("settings.Use Default")}
+            </Label>
+        </Flex>
     );
 }
 
@@ -54,6 +81,7 @@ function DefaultSelectInput({ input }: { input: ISelectAgentFormInput }) {
 
         const newOptions = await input.getOptions(valuesRef.current);
         setOptions(() => newOptions);
+        input.options = newOptions;
         if (!newOptions.includes(currentValue)) {
             setCurrentValue(() => newOptions[0]);
             setValue(input.name)(newOptions[0]);
@@ -61,15 +89,24 @@ function DefaultSelectInput({ input }: { input: ISelectAgentFormInput }) {
     }, [input, input.getOptions, selectedProvider, currentValue, setOptions]);
 
     useEffect(() => {
+        if (!input.options.length) {
+            fetchOptions();
+        } else {
+            setOptions(input.options);
+        }
         setValue(input.name)(currentValue);
     }, [currentValue]);
 
     useEffect(() => {
-        setOptions(input.options);
+        if (!input.options.length) {
+            fetchOptions();
+        } else {
+            setOptions(input.options);
+        }
         const newValue = valuesRef.current[input.name] || input.defaultValue || input.options[0];
         setValue(input.name)(newValue);
         setCurrentValue(newValue);
-    }, [selectedProvider, input.options, input.defaultValue, input.name, setValue, valuesRef]);
+    }, [selectedProvider, input.defaultValue, input.name, setValue, valuesRef]);
 
     const inputComp = (
         <Floating.LabelSelect

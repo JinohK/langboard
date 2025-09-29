@@ -14,7 +14,7 @@ const SidebarNavItems = memo(({ isFloating, navs }: TSidebarNavItemsProps): JSX.
                 return (
                     <Tooltip.Root key={Utils.String.Token.shortUUID()}>
                         <Tooltip.Trigger asChild>
-                            <span>
+                            <span className="w-full">
                                 <Comp key={key} item={item} />
                             </span>
                         </Tooltip.Trigger>

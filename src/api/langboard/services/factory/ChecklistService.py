@@ -2,10 +2,10 @@ from typing import Any, Literal, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
+from helpers import ServiceHelper
 from models import Card, Checkitem, Checklist, Project, User
 from models.Checkitem import CheckitemStatus
-from ...core.service import ServiceHelper
-from ...publishers import ChecklistPublisher
+from publishers import ChecklistPublisher
 from ...tasks.activities import CardChecklistActivityTask
 from ...tasks.bot import CardChecklistBotTask
 from .CheckitemService import CheckitemService
@@ -84,7 +84,11 @@ class ChecklistService(BaseService):
         return records
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, title: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        title: str,
     ) -> Checklist | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
@@ -104,7 +108,12 @@ class ChecklistService(BaseService):
         return checklist
 
     async def change_title(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, title: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
+        title: str,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (Checklist, checklist)
@@ -128,7 +137,12 @@ class ChecklistService(BaseService):
         return True
 
     async def change_order(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam, order: int
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
+        order: int,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (Checklist, checklist)
@@ -155,7 +169,11 @@ class ChecklistService(BaseService):
         return True
 
     async def toggle_checked(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (Checklist, checklist)
@@ -196,7 +214,9 @@ class ChecklistService(BaseService):
 
         project_service = self._get_service(ProjectService)
         assigned_users = await project_service.get_assigned_users(
-            project, as_api=False, where_user_ids_in=[SnowflakeID.from_short_code(user_uid) for user_uid in user_uids]
+            project,
+            as_api=False,
+            where_user_ids_in=[SnowflakeID.from_short_code(user_uid) for user_uid in user_uids],
         )
 
         for user, _ in assigned_users:
@@ -206,7 +226,11 @@ class ChecklistService(BaseService):
         return True
 
     async def delete(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, checklist: TChecklistParam
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        checklist: TChecklistParam,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (Checklist, checklist)
@@ -220,7 +244,13 @@ class ChecklistService(BaseService):
         current_time = SafeDateTime.now()
         for checkitem, _, _ in checkitems:
             await checkitem_service.change_status(
-                user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+                user_or_bot,
+                project,
+                card,
+                checkitem,
+                CheckitemStatus.Stopped,
+                current_time,
+                should_publish=False,
             )
 
         with DbSession.use(readonly=False) as db:

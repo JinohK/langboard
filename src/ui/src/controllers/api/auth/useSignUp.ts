@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { QUERY_NAMES } from "@/constants";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
@@ -39,7 +39,7 @@ const useSignUp = (options?: TMutationOptions<ISignUpForm>) => {
 
         formData.append("activate_token_query_name", QUERY_NAMES.SIGN_UP_ACTIVATE_TOKEN);
 
-        const res = await api.post(API_ROUTES.AUTH.SIGN_UP.SEND_LINK, formData, {
+        const res = await api.post(Routing.API.AUTH.SIGN_UP.SEND_LINK, formData, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

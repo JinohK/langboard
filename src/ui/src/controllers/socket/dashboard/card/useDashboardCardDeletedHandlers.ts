@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, ProjectCard, ProjectColumn } from "@/core/models";
@@ -19,7 +19,7 @@ const useDashboardCardDeletedHandlers = ({ callback, project }: IUseDashboardCar
         topicId: project.uid,
         eventKey: `dashboard-card-deleted-${project.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.DELETED,
+            name: SocketEvents.SERVER.DASHBOARD.CARD.DELETED,
             params: { uid: project.uid },
             callback,
             responseConverter: (data) => {

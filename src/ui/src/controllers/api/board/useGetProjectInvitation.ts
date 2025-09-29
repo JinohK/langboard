@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -18,7 +18,7 @@ const useGetProjectInvitation = (options?: TMutationOptions<IGetProjectInvitatio
     const { mutate } = useQueryMutation();
 
     const getProjectInvitation = async (form: IGetProjectInvitationForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.GET_INVITATION, { token: form.token });
+        const url = Utils.String.format(Routing.API.BOARD.GET_INVITATION, { token: form.token });
         const res = await api.post(url, undefined, {
             env: {
                 interceptToast: options?.interceptToast,

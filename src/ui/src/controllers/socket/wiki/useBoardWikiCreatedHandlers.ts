@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectWiki } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useBoardWikiCreatedHandlers = ({ callback, projectUID }: IUseBoardWikiCrea
         topicId: projectUID,
         eventKey: `board-wiki-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.WIKI.CREATED,
+            name: SocketEvents.SERVER.BOARD.WIKI.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

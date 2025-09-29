@@ -4,10 +4,19 @@ from core.db.Models import BaseSqlModel
 from core.schema import Pagination
 from core.service import BaseService
 from core.types import SafeDateTime
-from models import Bot, Card, Project, ProjectActivity, ProjectWiki, ProjectWikiActivity, User, UserActivity
+from helpers import ServiceHelper
+from models import (
+    Bot,
+    Card,
+    Project,
+    ProjectActivity,
+    ProjectWiki,
+    ProjectWikiActivity,
+    User,
+    UserActivity,
+)
 from models.bases import BaseActivityModel
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from ...core.service import ServiceHelper
 from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam
 
 
@@ -27,10 +36,18 @@ class ActivityService(BaseService):
     ) -> tuple[list[dict[str, Any]], int, User] | None: ...
     @overload
     async def get_list_by_user(
-        self, user: TUserParam, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]
+        self,
+        user: TUserParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: Literal[True],
     ) -> int | None: ...
     async def get_list_by_user(
-        self, user: TUserParam, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False
+        self,
+        user: TUserParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, User] | int | None:
         user = ServiceHelper.get_by_param(User, user)
         if not user:
@@ -61,7 +78,11 @@ class ActivityService(BaseService):
 
     @overload
     async def get_list_by_project_assignee(
-        self, project: TProjectParam, assignee: TUserParam | TBotParam, pagination: Pagination, refer_time: SafeDateTime
+        self,
+        project: TProjectParam,
+        assignee: TUserParam | TBotParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
     ) -> tuple[list[dict[str, Any]], int, User | Bot] | None: ...
     @overload
     async def get_list_by_project_assignee(
@@ -103,7 +124,12 @@ class ActivityService(BaseService):
             return await self.__count_new_records(UserActivity, refer_time, outdated_query, **where_clauses)
 
         activities, count_new_records = await self.__get_list(
-            UserActivity, pagination, refer_time, list_query, outdated_query, **where_clauses
+            UserActivity,
+            pagination,
+            refer_time,
+            list_query,
+            outdated_query,
+            **where_clauses,
         )
         api_activties = []
         cached_dict = await self.__get_cached_references(activities)
@@ -128,10 +154,18 @@ class ActivityService(BaseService):
     ) -> tuple[list[dict[str, Any]], int, Project] | None: ...
     @overload
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime, only_count: Literal[True]
+        self,
+        project: TProjectParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: Literal[True],
     ) -> int | None: ...
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime, only_count: bool = False
+        self,
+        project: TProjectParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: bool = False,
     ) -> tuple[list[dict[str, Any]], int, Project] | int | None:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
@@ -143,11 +177,19 @@ class ActivityService(BaseService):
         activities, count_new_records = await self.__get_list(
             ProjectActivity, pagination, refer_time, project_id=project.id
         )
-        return [activity.api_response() for activity in activities], count_new_records, project
+        return (
+            [activity.api_response() for activity in activities],
+            count_new_records,
+            project,
+        )
 
     @overload
     async def get_list_by_card(
-        self, project: TProjectParam, card: TCardParam, pagination: Pagination, refer_time: SafeDateTime
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | None: ...
     @overload
     async def get_list_by_card(
@@ -175,13 +217,26 @@ class ActivityService(BaseService):
             return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id, card_id=card.id)
 
         activities, count_new_records = await self.__get_list(
-            ProjectActivity, pagination, refer_time, project_id=project.id, card_id=card.id
+            ProjectActivity,
+            pagination,
+            refer_time,
+            project_id=project.id,
+            card_id=card.id,
         )
-        return [activity.api_response() for activity in activities], count_new_records, project, card
+        return (
+            [activity.api_response() for activity in activities],
+            count_new_records,
+            project,
+            card,
+        )
 
     @overload
     async def get_list_by_wiki(
-        self, project: TProjectParam, wiki: TWikiParam, pagination: Pagination, refer_time: SafeDateTime
+        self,
+        project: TProjectParam,
+        wiki: TWikiParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | None: ...
     @overload
     async def get_list_by_wiki(
@@ -207,13 +262,25 @@ class ActivityService(BaseService):
 
         if only_count:
             return await self.__count_new_records(
-                ProjectWikiActivity, refer_time, project_id=project.id, project_wiki_id=wiki.id
+                ProjectWikiActivity,
+                refer_time,
+                project_id=project.id,
+                project_wiki_id=wiki.id,
             )
 
         activities, count_new_records = await self.__get_list(
-            ProjectWikiActivity, pagination, refer_time, project_id=project.id, project_wiki_id=wiki.id
+            ProjectWikiActivity,
+            pagination,
+            refer_time,
+            project_id=project.id,
+            project_wiki_id=wiki.id,
         )
-        return [activity.api_response() for activity in activities], count_new_records, project, wiki
+        return (
+            [activity.api_response() for activity in activities],
+            count_new_records,
+            project,
+            wiki,
+        )
 
     async def __get_list(
         self,
@@ -257,11 +324,17 @@ class ActivityService(BaseService):
 
     @overload
     def __make_query(
-        self, query: Select[_TSelectParam], activity_class: type[_TActivityModel], **where_clauses
+        self,
+        query: Select[_TSelectParam],
+        activity_class: type[_TActivityModel],
+        **where_clauses,
     ) -> Select[_TSelectParam]: ...
     @overload
     def __make_query(
-        self, query: SelectOfScalar[_TSelectParam], activity_class: type[_TActivityModel], **where_clauses
+        self,
+        query: SelectOfScalar[_TSelectParam],
+        activity_class: type[_TActivityModel],
+        **where_clauses,
     ) -> SelectOfScalar[_TSelectParam]: ...
     def __make_query(
         self,
@@ -284,7 +357,9 @@ class ActivityService(BaseService):
     @overload
     def __refer_project(self, query: SelectOfScalar[int], project: Project) -> SelectOfScalar[int]: ...
     def __refer_project(
-        self, query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int], project: Project
+        self,
+        query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int],
+        project: Project,
     ) -> Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int]:
         return (
             query.outerjoin(
@@ -337,7 +412,10 @@ class ActivityService(BaseService):
             if not activity_references:
                 continue
 
-            references[activity.id] = {"refer": refer_activity.api_response(), "references": activity_references}
+            references[activity.id] = {
+                "refer": refer_activity.api_response(),
+                "references": activity_references,
+            }
         return references
 
     def __get_converted_references(
@@ -345,7 +423,10 @@ class ActivityService(BaseService):
     ) -> dict[str, Any] | None:
         activity_references = {}
         if isinstance(activity, (ProjectActivity, ProjectWikiActivity)) and activity.project_id:
-            reference = cast(Project, cached_references.get(f"{Project.__tablename__}_{activity.project_id}"))
+            reference = cast(
+                Project,
+                cached_references.get(f"{Project.__tablename__}_{activity.project_id}"),
+            )
             if not reference:
                 return None
             activity_references["project"] = reference.api_response()
@@ -355,7 +436,10 @@ class ActivityService(BaseService):
         if isinstance(activity, ProjectActivity) and activity.project_id:
             activity_references["refer_type"] = "project"
             if activity.card_id:
-                reference = cast(Card, cached_references.get(f"{Card.__tablename__}_{activity.card_id}"))
+                reference = cast(
+                    Card,
+                    cached_references.get(f"{Card.__tablename__}_{activity.card_id}"),
+                )
                 if not reference:
                     return None
                 activity_references["card"] = reference.api_response()
@@ -364,7 +448,8 @@ class ActivityService(BaseService):
         elif isinstance(activity, ProjectWikiActivity) and activity.project_id:
             activity_references["refer_type"] = "project_wiki"
             reference = cast(
-                ProjectWiki, cached_references.get(f"{ProjectWiki.__tablename__}_{activity.project_wiki_id}")
+                ProjectWiki,
+                cached_references.get(f"{ProjectWiki.__tablename__}_{activity.project_wiki_id}"),
             )
             if not reference:
                 return None

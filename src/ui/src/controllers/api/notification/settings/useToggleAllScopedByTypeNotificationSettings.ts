@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { toggleAllScopedUnsubscriptions } from "@/controllers/api/notification/settings/utils";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser } from "@/core/models";
@@ -20,7 +20,7 @@ const useToggleAllScopedByTypeNotificationSettings = (
 
     const toggleAllScopedByTypeNotificationSettings = async (params: IToggleAllScopedByTypeNotificationSettingsForm) => {
         const res = await api.put(
-            API_ROUTES.NOTIFICATION.SETTINGS.TYPE,
+            Routing.API.NOTIFICATION.SETTINGS.TYPE,
             {
                 channel: params.channel,
                 notification_type: params.type,

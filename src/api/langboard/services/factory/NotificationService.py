@@ -3,11 +3,14 @@ from typing import Any, Literal, TypeVar, cast, overload
 from urllib.parse import urlparse
 from core.db import BaseSqlModel, DbSession, EditorContentModel, SqlBuilder
 from core.Env import UI_QUERY_NAMES, Env
+from core.publisher import NotificationPublisher, NotificationPublishModel
+from core.resources.locales.EmailTemplateNames import TEmailTemplateName
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.EditorContentParser import change_date_element, find_mentioned
 from core.utils.String import concat
 from dateutil.relativedelta import relativedelta
+from helpers import ServiceHelper
 from models import (
     Bot,
     Card,
@@ -21,15 +24,13 @@ from models import (
     UserNotification,
 )
 from models.UserNotification import NotificationType
-from ...core.publisher import NotificationPublisher, NotificationPublishModel
-from ...core.service import ServiceHelper
-from ...resources.locales.EmailTemplateNames import TEmailTemplateName
 from ...tasks.bot import BotDefaultTask
 from .Types import TNotificationParam, TUserOrBot, TUserParam
 
 
 _TModel = TypeVar(
-    "_TModel", bound=User | Bot | Project | ProjectInvitation | ProjectWiki | Card | CardComment | Checklist
+    "_TModel",
+    bound=User | Bot | Project | ProjectInvitation | ProjectWiki | Card | CardComment | Checklist,
 )
 
 
@@ -51,7 +52,10 @@ class NotificationService(BaseService):
                 UserNotification.column("created_at") >= SafeDateTime.now() - relativedelta(months=month)
             )
 
-        query = query.order_by(UserNotification.column("created_at").desc(), UserNotification.column("id").desc())
+        query = query.order_by(
+            UserNotification.column("created_at").desc(),
+            UserNotification.column("id").desc(),
+        )
 
         raw_notifications = []
         with DbSession.use(readonly=True) as db:
@@ -151,9 +155,15 @@ class NotificationService(BaseService):
         self, notification: UserNotification, as_api: bool
     ) -> User | Bot | tuple[str, dict[str, Any]]:
         if notification.notifier_type == "user":
-            notifier = cast(User, ServiceHelper.get_by(User, "id", notification.notifier_id, with_deleted=True))
+            notifier = cast(
+                User,
+                ServiceHelper.get_by(User, "id", notification.notifier_id, with_deleted=True),
+            )
         else:
-            notifier = cast(Bot, ServiceHelper.get_by(Bot, "id", notification.notifier_id, with_deleted=True))
+            notifier = cast(
+                Bot,
+                ServiceHelper.get_by(Bot, "id", notification.notifier_id, with_deleted=True),
+            )
 
         if not as_api:
             return notifier
@@ -201,7 +211,11 @@ class NotificationService(BaseService):
 
     # from here, notifiable types are added
     async def notify_project_invited(
-        self, notifier: TUserOrBot, target_user: TUserParam, project: Project, project_invitation: ProjectInvitation
+        self,
+        notifier: TUserOrBot,
+        target_user: TUserParam,
+        project: Project,
+        project_invitation: ProjectInvitation,
     ):
         await self.__notify(
             notifier,
@@ -249,7 +263,11 @@ class NotificationService(BaseService):
         )
 
     async def notify_assigned_to_card(
-        self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card
+        self,
+        notifier: TUserOrBot,
+        target_user: TUserParam,
+        project: Project,
+        card: Card,
     ):
         column = await self.__get_column_by_card(card)
         await self.__notify(
@@ -288,7 +306,12 @@ class NotificationService(BaseService):
         )
 
     async def notify_checklist(
-        self, notifier: TUserOrBot, target_user: TUserParam, project: Project, card: Card, checklist: Checklist
+        self,
+        notifier: TUserOrBot,
+        target_user: TUserParam,
+        project: Project,
+        card: Card,
+        checklist: Checklist,
     ):
         column = await self.__get_column_by_card(card)
         await self.__notify(

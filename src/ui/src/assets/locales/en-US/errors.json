@@ -61,6 +61,8 @@
     "NF3002": "Settings couldn't be found.",
     "NF3003": "Global relationships couldn't be found.",
     "NF3004": "The internal bot couldn't be found.",
+    "NF9000": "Ollama server is not reachable. Please check the server address and your network connection.",
+    "NF9001": "The specified model could not be found on the Ollama server.",
 
     "VA0000": "Invalid request.",
     "VA1001": "Couldn't find your {{app}} Account.",

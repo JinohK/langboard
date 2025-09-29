@@ -1,4 +1,4 @@
-import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { Routing, SocketEvents } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, ProjectWiki, User } from "@/core/models";
@@ -24,7 +24,7 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
         topicId: projectUID,
         eventKey: `board-wiki-assignees-updated-${wiki.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.WIKI.ASSIGNEES_UPDATED,
+            name: SocketEvents.SERVER.BOARD.WIKI.ASSIGNEES_UPDATED,
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {
@@ -40,7 +40,7 @@ const useBoardWikiAssigneesUpdatedHandlers = ({ callback, projectUID, wiki, curr
                 if (!socket.isSubscribed(ESocketTopic.BoardWikiPrivate, wiki.uid)) {
                     socket.subscribe(ESocketTopic.BoardWikiPrivate, [wiki.uid], () => {
                         api.get(
-                            Utils.String.format(API_ROUTES.BOARD.WIKI.GET_DETAILS, {
+                            Utils.String.format(Routing.API.BOARD.WIKI.GET_DETAILS, {
                                 uid: projectUID,
                                 wiki_uid: wiki.uid,
                             })

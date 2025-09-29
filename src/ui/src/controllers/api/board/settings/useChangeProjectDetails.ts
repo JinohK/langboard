@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -16,7 +16,7 @@ const useChangeProjectDetails = (projectUID: string, options?: TMutationOptions<
     const { mutate } = useQueryMutation();
 
     const changeProjectDetails = async (params: IChangeProjectDetailsForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.UPDATE_DETAILS, { uid: projectUID });
+        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.UPDATE_DETAILS, { uid: projectUID });
         const res = await api.put(url, params, {
             env: {
                 interceptToast: options?.interceptToast,

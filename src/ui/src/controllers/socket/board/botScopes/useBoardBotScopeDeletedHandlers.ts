@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardBotScope, ProjectColumnBotScope } from "@/core/models";
 import { TBotRelatedTargetTable } from "@/core/models/bot.related.type";
@@ -20,7 +20,7 @@ const useBoardBotScopeDeletedHandlers = ({ callback, projectUID }: IUseBoardBotS
         topicId: projectUID,
         eventKey: `board-bot-scope-deleted-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.BOT.SCOPE.DELETED,
+            name: SocketEvents.SERVER.BOARD.BOT.SCOPE.DELETED,
             callback,
             responseConverter: (data) => {
                 if (data.scope_table === "project_column") {

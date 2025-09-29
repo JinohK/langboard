@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -13,7 +13,7 @@ const useDeleteCard = (options?: TMutationOptions<IDeleteCardForm>) => {
     const { mutate } = useQueryMutation();
 
     const deleteCard = async (params: IDeleteCardForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.DELETE, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.DELETE, {
             uid: params.project_uid,
             card_uid: params.card_uid,
         });

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -17,7 +17,7 @@ const useCreateProject = (options?: TMutationOptions<ICreateProjectForm, ICreate
     const { mutate } = useQueryMutation();
 
     const createProject = async (params: ICreateProjectForm) => {
-        const res = await api.post(API_ROUTES.DASHBOARD.CREATE_PROJECT, params, {
+        const res = await api.post(Routing.API.DASHBOARD.CREATE_PROJECT, params, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

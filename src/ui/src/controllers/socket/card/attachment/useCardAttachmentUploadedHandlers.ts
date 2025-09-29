@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useCardAttachmentUploadedHandlers = ({ callback, cardUID }: IUseCardAttach
         topicId: cardUID,
         eventKey: `board-card-attachment-uploaded-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.UPLOADED,
+            name: SocketEvents.SERVER.BOARD.CARD.ATTACHMENT.UPLOADED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

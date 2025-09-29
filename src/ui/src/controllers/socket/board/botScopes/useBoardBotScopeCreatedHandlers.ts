@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardBotScope, ProjectColumnBotScope } from "@/core/models";
 import { TBotRelatedTargetTable } from "@/core/models/bot.related.type";
@@ -19,7 +19,7 @@ const useBoardBotScopeCreatedHandlers = ({ callback, projectUID }: IUseBoardBotS
         topicId: projectUID,
         eventKey: `board-bot-scope-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.BOT.SCOPE.CREATED,
+            name: SocketEvents.SERVER.BOARD.BOT.SCOPE.CREATED,
             callback,
             responseConverter: (data) => {
                 if (data.scope_table === "project_column") {

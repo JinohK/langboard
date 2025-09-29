@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ChatTemplateModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -19,7 +19,7 @@ const useBoardChatTemplateUpdatedHandlers = ({ callback, projectUID, template }:
         topicId: projectUID,
         eventKey: `board-card-template-updated-${template.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.TEMPLATE.UPDATED,
+            name: SocketEvents.SERVER.BOARD.CHAT.TEMPLATE.UPDATED,
             params: { uid: template.uid },
             callback,
             responseConverter: (data) => {

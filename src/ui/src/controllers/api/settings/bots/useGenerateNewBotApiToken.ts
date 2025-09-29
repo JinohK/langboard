@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
@@ -14,7 +14,7 @@ const useGenerateNewBotApiToken = (bot: BotModel.TModel, options?: TMutationOpti
     const { mutate } = useQueryMutation();
 
     const generateNewBotApiToken = async () => {
-        const url = Utils.String.format(API_ROUTES.SETTINGS.BOTS.GENERATE_NEW_API_TOKEN, { bot_uid: bot.uid });
+        const url = Utils.String.format(Routing.API.SETTINGS.BOTS.GENERATE_NEW_API_TOKEN, { bot_uid: bot.uid });
         const res = await api.put(url, undefined, {
             env: {
                 interceptToast: options?.interceptToast,

@@ -1,5 +1,5 @@
 import { Button, Dialog, Flex } from "@/components/base";
-import BotLogList from "@/components/BotLogList";
+import BotLogList from "@/components/bots/BotLogList";
 import BotScheduleList from "@/components/bots/BotScheduleList";
 import BotTriggerConditionList from "@/components/bots/BotTriggerConditionList";
 import UserAvatar from "@/components/UserAvatar";

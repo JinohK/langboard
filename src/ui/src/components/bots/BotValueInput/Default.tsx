@@ -11,6 +11,7 @@ import MultiSelect from "@/components/MultiSelect";
 import { BotValueDefaultInputProvider } from "@/components/bots/BotValueInput/DefaultProvider";
 import DefaultTypedInput from "@/components/bots/BotValueInput/DefaultTypedInput";
 import { providerIconMap } from "@/components/bots/BotValueInput/utils";
+import { API_URL, IS_OLLAMA_RUNNING } from "@/constants";
 
 function BotValueDefaultInput({ value, newValueRef, isValidating, required, change, ref }: TSharedBotValueInputProps) {
     const [t] = useTranslation();
@@ -85,7 +86,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
         }
 
         setValue("agent_llm")(selectedProvider);
-        setInputs(Agent.getInputForm(selectedProvider));
+        setInputs(Agent.getInputForm(selectedProvider, { IS_OLLAMA_RUNNING, API_URL }));
     }, [selectedProvider]);
 
     useEffect(() => {

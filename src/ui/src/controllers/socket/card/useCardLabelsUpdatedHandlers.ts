@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectLabel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useCardLabelsUpdatedHandlers = ({ callback, projectUID, cardUID }: IUseCar
         topicId: projectUID,
         eventKey: `board-card-labels-updated-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.LABELS_UPDATED,
+            name: SocketEvents.SERVER.BOARD.CARD.LABELS_UPDATED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

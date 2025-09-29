@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useCardColumnChangedHandlers = ({ callback, card }: IUseCardColumnChangedH
         topicId: card.uid,
         eventKey: `board-card-column-changed-${card.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ORDER_CHANGED,
+            name: SocketEvents.SERVER.BOARD.CARD.ORDER_CHANGED,
             params: { uid: card.uid },
             callback,
             responseConverter: (data) => {

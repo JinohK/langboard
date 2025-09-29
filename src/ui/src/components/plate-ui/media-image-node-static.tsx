@@ -2,6 +2,7 @@
 import type { SlateElementProps, TCaptionProps, TImageElement, TResizableProps } from "platejs";
 import { NodeApi, SlateElement } from "platejs";
 import { cn } from "@/core/utils/ComponentUtils";
+import CachedImage from "@/components/CachedImage";
 
 export function ImageElementStatic(props: SlateElementProps<TImageElement & TCaptionProps & TResizableProps>) {
     const { align = "center", caption, url, width } = props.element;
@@ -10,7 +11,7 @@ export function ImageElementStatic(props: SlateElementProps<TImageElement & TCap
         <SlateElement {...props} className="py-2.5">
             <figure className="group relative m-0 inline-block" style={{ width }}>
                 <div className="relative min-w-[92px] max-w-full" style={{ textAlign: align }}>
-                    <img
+                    <CachedImage
                         className={cn("w-full max-w-full cursor-default object-cover px-0", "rounded-sm")}
                         alt={(props.attributes as any).alt}
                         src={url}

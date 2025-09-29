@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { User } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -21,7 +21,7 @@ const useBoardWikiProjectUsersUpdatedHandlers = ({ callback, projectUID }: IUseB
         topicId: projectUID,
         eventKey: `board-wiki-project-users-updated-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.ASSIGNED_USERS_UPDATED,
+            name: SocketEvents.SERVER.BOARD.ASSIGNED_USERS_UPDATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

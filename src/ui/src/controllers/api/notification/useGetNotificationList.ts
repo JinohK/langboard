@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { UserNotification } from "@/core/models";
@@ -17,7 +17,7 @@ const useGetNotificationList = (options?: TMutationOptions<IGetNotificationListF
     const { mutate } = useQueryMutation();
 
     const toggleAllScopedByTypeNotificationSettings = async (params: IGetNotificationListForm) => {
-        const res = await api.get(API_ROUTES.NOTIFICATION.GET_LIST, {
+        const res = await api.get(Routing.API.NOTIFICATION.GET_LIST, {
             params: {
                 time_range: params.time_range || "3",
             },

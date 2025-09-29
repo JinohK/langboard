@@ -1,3 +1,4 @@
+from pathlib import Path
 from typing import Any, Callable, TypeVar, overload
 from ..Env import Env
 from ..utils.decorators import class_instance, thread_safe_singleton
@@ -17,6 +18,9 @@ class Cache(BaseCache):
             self._cache: BaseCache = RedisCache()
         else:
             self._cache: BaseCache = InMemoryCache()
+
+    def set_cache_dir(self, cache_dir: str | Path) -> None:
+        self._cache.set_cache_dir(cache_dir)
 
     @overload
     async def get(self, key: str) -> Any | None: ...

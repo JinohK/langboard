@@ -146,3 +146,8 @@ class UpdateInternalBotForm(BaseFormModel):
     api_key: str | None = None
     value: str | None = None
     delete_avatar: bool = False
+
+
+@form_model
+class OllamaModelForm(BaseFormModel):
+    model: str

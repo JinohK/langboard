@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useDashboardCheckitemDeletedHandlers = ({ callback, projectUID }: IUseDash
         topicId: projectUID,
         eventKey: `dashboard-checkitem-deleted-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CHECKITEM.DELETED,
+            name: SocketEvents.SERVER.DASHBOARD.CHECKITEM.DELETED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

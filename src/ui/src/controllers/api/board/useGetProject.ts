@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project } from "@/core/models";
@@ -17,7 +17,7 @@ const useGetProject = (form: IGetProjectForm, options?: TQueryOptions<unknown, I
     const { query } = useQueryMutation();
 
     const getProject = async () => {
-        const url = Utils.String.format(API_ROUTES.BOARD.GET, { uid: form.uid });
+        const url = Utils.String.format(Routing.API.BOARD.GET, { uid: form.uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

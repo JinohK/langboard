@@ -6,9 +6,10 @@ import { GOOGLE_GENERATIVE_AI_MODELS, TGoogleGenerativeAIModelName } from "@/ai/
 import { GROQ_MODELS, TGroqModelName } from "@/ai/models/Groq";
 import { getLMStudioModels } from "@/ai/models/LMStudio";
 import { NVIDIA_MODELS, TNvidiaModelName } from "@/ai/models/Nvidia";
-import { getOllamaModels } from "@/ai/models/Ollama";
+import { getOllamaModels, OLLAMA_DEFAULT_VALUE } from "@/ai/models/Ollama";
 import { OPEN_AI_MODELS, TOpenAiModelName } from "@/ai/models/OpenAI";
 import { SAMBA_NOVA_MODELS, TSambaNovaModelName } from "@/ai/models/SambaNova";
+import { TGetModelOptions } from "@/ai/models/types";
 
 export type TAgentModelName = (typeof AGENT_MODELS)[number];
 
@@ -84,18 +85,21 @@ interface IBaseAgentFormInput {
     label: string;
     defaultValue?: string | number;
     nullable?: bool;
+    checkDefault?: string;
 }
 
 export interface IStringAgentFormInput extends IBaseAgentFormInput {
     type: "text" | "password";
     defaultValue?: string;
+    checkDefault?: string;
 }
 
 export interface ISelectAgentFormInput extends IBaseAgentFormInput {
     type: "select";
     defaultValue?: string;
     options: string[];
-    getOptions?: (values: Record<string, any>) => Promise<string[]>;
+    getOptions?: (props: TGetModelOptions) => Promise<string[]>;
+    checkDefault?: never;
 }
 
 export interface IIntegerAgentFormInput extends IBaseAgentFormInput {
@@ -103,6 +107,7 @@ export interface IIntegerAgentFormInput extends IBaseAgentFormInput {
     defaultValue?: number;
     min: number;
     max: number;
+    checkDefault?: never;
 }
 
 export type TAgentFormInput = IStringAgentFormInput | ISelectAgentFormInput | IIntegerAgentFormInput;
@@ -120,7 +125,7 @@ const AGENT_MODELS = [
     "LM Studio",
 ] as const;
 
-const getInputForm = (model: TAgentModelName): TAgentFormInput[] => {
+const getInputForm = (model: TAgentModelName, envs: Record<string, any> = {}): TAgentFormInput[] => {
     const form: TAgentFormInput[] = [];
     switch (model) {
         case "Azure OpenAI":
@@ -183,7 +188,13 @@ const getInputForm = (model: TAgentModelName): TAgentFormInput[] => {
             break;
         case "Ollama":
             form.push(
-                { type: "text", name: "base_url", label: "Base URL", defaultValue: "" },
+                {
+                    type: "text",
+                    name: "base_url",
+                    label: "Base URL",
+                    defaultValue: "",
+                    checkDefault: envs.IS_OLLAMA_RUNNING ? OLLAMA_DEFAULT_VALUE : undefined,
+                },
                 {
                     type: "select",
                     name: "model_name",

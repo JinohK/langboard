@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -7,7 +7,7 @@ const useTaskAbortedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{ task
         topic: ESocketTopic.Global,
         eventKey: "task-aborted",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.TASK_ABORTED,
+            name: SocketEvents.SERVER.GLOBALS.TASK_ABORTED,
             callback,
         },
     });

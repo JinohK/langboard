@@ -1,4 +1,4 @@
-import { Button, Card, Collapsible, Flex, IconComponent } from "@/components/base";
+import { Button, Card, Collapsible, Flex, IconComponent, ShineBorder } from "@/components/base";
 import { UserAvatarList } from "@/components/UserAvatarList";
 import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
@@ -14,6 +14,7 @@ import { LabelModelBadge } from "@/components/LabelBadge";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
 import useCardStore, { useCardIsCollapsed } from "@/core/stores/CardStore";
+import { useHasRunningBot } from "@/core/stores/BotStatusStore";
 
 export interface IBoardColumnCardCollapsibleProps {
     isDragging: bool;
@@ -33,6 +34,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
     const isCollapsed = useCardIsCollapsed(card.uid);
     const labels = card.useForeignField("labels");
     const cardRelationships = card.useForeignField("relationships");
+    const hasRunningBot = useHasRunningBot({ type: "card", targetUID: card.uid });
     const [isSelectRelationshipDialogOpened, setIsSelectRelationshipDialogOpened] = useState(false);
     const selectedRelationship = useMemo(
         () => (selectCardViewType ? selectedRelationshipUIDs.find(([selectedCardUID]) => selectedCardUID === card.uid)?.[1] : undefined),
@@ -136,6 +138,7 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                 )}
                 onClick={openCard}
             >
+                {hasRunningBot && <ShineBorder className="z-50" />}
                 <Collapsible.Root
                     open={!isCollapsed}
                     onOpenChange={(opened) => {

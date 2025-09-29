@@ -54,7 +54,14 @@
   "Internal bot API key": "Internal bot API key",
   "Internal bot value": "Internal bot value",
   "The internal flows server should be running to use.": "The internal flows server should be running to use.",
+  "Ollama": "Ollama",
+  "Pull": "Pull",
+  "Pull a model": "Pull a model",
+  "Model name": "Model name",
+  "Running": "Running",
+  "Use Default": "Use Default",
   "errors": {
+    "Cannot delete a running model.": "Cannot delete a running model.",
     "missing": {
       "bot_name": "Enter a bot name.",
       "bot_uname": "Enter a bot unique name.",

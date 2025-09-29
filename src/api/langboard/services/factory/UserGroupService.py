@@ -1,8 +1,8 @@
 from typing import Any, Literal, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
+from helpers import ServiceHelper
 from models import User, UserEmail, UserGroup, UserGroupAssignedEmail
-from ...core.service import ServiceHelper
 from .Types import TUserGroupParam
 
 
@@ -66,9 +66,14 @@ class UserGroupService(BaseService):
                     | (User.column("id") == UserEmail.column("user_id")),
                 )
                 .where(UserGroupAssignedEmail.column("group_id") == user_group.id)
-                .order_by(UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"))
+                .order_by(
+                    UserGroupAssignedEmail.column("email"),
+                    UserGroupAssignedEmail.column("id"),
+                )
                 .group_by(
-                    UserGroupAssignedEmail.column("email"), UserGroupAssignedEmail.column("id"), User.column("id")
+                    UserGroupAssignedEmail.column("email"),
+                    UserGroupAssignedEmail.column("id"),
+                    User.column("id"),
                 )
             )
             records = result.all()

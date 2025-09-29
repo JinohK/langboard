@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AppSettingModel } from "@/core/models";
 import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
@@ -13,7 +13,7 @@ const useAppSettingDeletedHandlers = ({ callback, setting }: IUseAppSettingDelet
         topicId: GLOBAL_TOPIC_ID,
         eventKey: `app-setting-deleted-${setting.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.DELETED,
+            name: SocketEvents.SERVER.SETTINGS.DELETED,
             params: { uid: setting.uid },
             callback,
             responseConverter: () => {

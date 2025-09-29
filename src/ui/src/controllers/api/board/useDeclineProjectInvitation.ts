@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -14,7 +14,7 @@ const useDeclineProjectInvitation = (options?: TMutationOptions<IDeclineProjectI
 
     const declineProjectInvitation = async (params: IDeclineProjectInvitationForm) => {
         const res = await api.post(
-            API_ROUTES.BOARD.DECLINE_INVITATION,
+            Routing.API.BOARD.DECLINE_INVITATION,
             {
                 invitation_token: params.token,
             },

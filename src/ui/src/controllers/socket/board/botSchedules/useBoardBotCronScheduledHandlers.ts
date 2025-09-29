@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BaseBotScheduleModel, ProjectCardBotSchedule, ProjectColumnBotSchedule } from "@/core/models";
 import { TBotRelatedTargetTable } from "@/core/models/bot.related.type";
@@ -19,7 +19,7 @@ const useBoardBotCronScheduledHandlers = ({ callback, projectUID }: IUseBoardBot
         topicId: projectUID,
         eventKey: `board-bot-cron-scheduled-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.BOT.SCHEDULE.SCHEDULED,
+            name: SocketEvents.SERVER.BOARD.BOT.SCHEDULE.SCHEDULED,
             callback,
             responseConverter: (data) => {
                 if (data.target_table === "project_column") {

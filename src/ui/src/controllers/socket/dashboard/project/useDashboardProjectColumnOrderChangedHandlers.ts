@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 import { reorder } from "@atlaskit/pragmatic-drag-and-drop/reorder";
@@ -19,7 +19,7 @@ const useDashboardProjectColumnOrderChangedHandlers = ({ callback, projectUID }:
         topicId: projectUID,
         eventKey: `dashboard-project-column-order-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.COLUMN.ORDER_CHANGED,
+            name: SocketEvents.SERVER.DASHBOARD.PROJECT.COLUMN.ORDER_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

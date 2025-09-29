@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -27,7 +27,7 @@ const useSendResetLink = (options?: TMutationOptions<TSendResetLinkForm>) => {
 
     const sendResetLink = async (params: TSendResetLinkForm) => {
         const res = await api.post(
-            API_ROUTES.AUTH.RECOVERY.SEND_LINK,
+            Routing.API.AUTH.RECOVERY.SEND_LINK,
             {
                 ...params,
             },

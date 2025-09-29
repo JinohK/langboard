@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { IEditorContent } from "@/core/models/Base";
@@ -15,7 +15,7 @@ const useAddCardComment = (options?: TMutationOptions<IAddCardCommentForm>) => {
     const { mutate } = useQueryMutation();
 
     const addCardComment = async (params: IAddCardCommentForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.COMMENT.ADD, { uid: params.project_uid, card_uid: params.card_uid });
+        const url = Utils.String.format(Routing.API.BOARD.CARD.COMMENT.ADD, { uid: params.project_uid, card_uid: params.card_uid });
         const res = await api.post(
             url,
             {

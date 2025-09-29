@@ -28,6 +28,7 @@ import useInternalBotUpdatedHandlers from "@/controllers/socket/global/useIntern
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
 import { InternalBotModel, Project } from "@/core/models";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
+import useBoardBotStatusMapHandlers from "@/controllers/socket/board/useBoardBotStatusMapHandlers";
 
 const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
     switch (pageRoute) {
@@ -51,6 +52,7 @@ const BoardProxy = memo((): JSX.Element => {
     }
 
     const { data, isFetching, error, refetch } = useIsProjectAvailable({ uid: projectUID });
+    const { send: sendBoardBotStatusMap } = useBoardBotStatusMapHandlers({ projectUID });
 
     useEffect(() => {
         if (!error) {
@@ -88,7 +90,9 @@ const BoardProxy = memo((): JSX.Element => {
 
         setProjectTitle(() => data.title);
 
-        socket.subscribe(ESocketTopic.Board, [projectUID]);
+        socket.subscribe(ESocketTopic.Board, [projectUID], () => {
+            sendBoardBotStatusMap({});
+        });
         socket.subscribe(ESocketTopic.BoardSettings, [projectUID]);
 
         return () => {

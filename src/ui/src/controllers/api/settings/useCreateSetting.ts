@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AppSettingModel } from "@/core/models";
@@ -21,7 +21,7 @@ const useCreateSetting = (options?: TMutationOptions<ICreateSettingForm, ICreate
 
     const createSetting = async (params: ICreateSettingForm) => {
         const res = await api.post(
-            API_ROUTES.SETTINGS.CREATE,
+            Routing.API.SETTINGS.CREATE,
             {
                 setting_type: params.setting_type,
                 setting_name: params.setting_name,

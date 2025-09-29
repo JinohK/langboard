@@ -5,12 +5,12 @@ from alembic.autogenerate.api import AutogenContext
 from core.db import BaseSqlModel
 from core.db.DbConfigHelper import DbConfigHelper  # type: ignore
 from core.Env import Env  # type: ignore
-from langboard.core.utils import ModelUtils
+from helpers import ensure_models_imported
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection, engine_from_config
 
 
-ModelUtils.ensure_models_imported()
+ensure_models_imported()
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

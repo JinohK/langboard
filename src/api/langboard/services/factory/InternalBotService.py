@@ -2,11 +2,11 @@ from typing import Any, Literal, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.storage import FileModel
+from helpers import ServiceHelper
 from models import InternalBot, Project, ProjectAssignedInternalBot
 from models.BaseBotModel import BotPlatform, BotPlatformRunningType
 from models.InternalBot import InternalBotType
-from ...core.service import ServiceHelper
-from ...publishers import InternalBotPublisher, ProjectPublisher
+from publishers import InternalBotPublisher, ProjectPublisher
 from .Types import TInternalBotParam
 
 
@@ -74,7 +74,15 @@ class InternalBotService(BaseService):
         if not internal_bot:
             return None
 
-        mutable_keys = ["display_name", "platform", "platform_running_type", "url", "api_key", "value", "avatar"]
+        mutable_keys = [
+            "display_name",
+            "platform",
+            "platform_running_type",
+            "url",
+            "api_key",
+            "value",
+            "avatar",
+        ]
 
         updated_keys = []
 

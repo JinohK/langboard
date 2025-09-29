@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardComment } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
@@ -21,7 +21,7 @@ const useCardCommentUpdatedHandlers = ({ callback, projectUID, cardUID }: IUseCa
         topicId: projectUID,
         eventKey: `board-card-comment-updated-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.UPDATED,
+            name: SocketEvents.SERVER.BOARD.CARD.COMMENT.UPDATED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

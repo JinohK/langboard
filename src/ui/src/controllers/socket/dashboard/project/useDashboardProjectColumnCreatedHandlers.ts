@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useDashboardProjectColumnCreatedHandlers = ({ callback, projectUID }: IUse
         topicId: projectUID,
         eventKey: `dashboard-project-column-created-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.COLUMN.CREATED,
+            name: SocketEvents.SERVER.DASHBOARD.PROJECT.COLUMN.CREATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

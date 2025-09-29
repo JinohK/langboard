@@ -51,14 +51,19 @@ export const BROADCAST_URLS = getEnv<string>({ key: "BROADCAST_URLS", defaultVal
 
 export const CACHE_TYPE = getEnv({ key: "CACHE_TYPE", defaultValue: "in-memory", availableValues: ["in-memory", "redis"] });
 export const CACHE_URL = getEnv<string>({ key: "CACHE_URL" });
+export const CACHE_DIR = path.join(DATA_DIR, "cache");
 
-if (BROADCAST_TYPE === "kafka" && CACHE_TYPE === "in-memory") {
-    throw new Error("Cannot use in-memory cache with Kafka broadcast. Please set CACHE_TYPE to 'redis' or another supported type.");
+if ((BROADCAST_TYPE === "kafka" && CACHE_TYPE === "in-memory") || (BROADCAST_TYPE === "in-memory" && CACHE_TYPE === "redis")) {
+    throw new Error(
+        `Invalid combination of BROADCAST_TYPE (${BROADCAST_TYPE}) and CACHE_TYPE (${CACHE_TYPE}).
+When using kafka for broadcasting, you must use redis for caching, and vice versa.`
+    );
 }
 
 export const API_URL = getEnv<string>({ key: "API_URL", defaultValue: `http://localhost:${API_PORT}` });
 export const PUBLIC_UI_URL =
     ENVIRONMENT !== "local" ? getEnv<string>({ key: "PUBLIC_UI_URL", defaultValue: `http://localhost:${UI_PORT}` }) : `http://localhost:${UI_PORT}`;
+export const OLLAMA_API_URL = getEnv<string>({ key: "OLLAMA_API_URL", defaultValue: "" });
 
 const SUPPORTED_JWT_ALTORITHMES: jwt.Algorithm[] = [
     "RS256",

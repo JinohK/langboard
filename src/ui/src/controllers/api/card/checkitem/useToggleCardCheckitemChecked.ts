@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useToggleCardCheckitemChecked = (options?: TMutationOptions<IToggleCardChe
     const { mutate } = useQueryMutation();
 
     const toggleCheckitemChecked = async (params: IToggleCardCheckitemCheckedForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKITEM.TOGGLE_CHECKED, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.CHECKITEM.TOGGLE_CHECKED, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checkitem_uid: params.checkitem_uid,

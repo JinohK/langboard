@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
@@ -21,7 +21,7 @@ const useUpdateUserInSettings = (user: User.TModel, options?: TMutationOptions<I
     const { mutate } = useQueryMutation();
 
     const updateUserInSettings = async (params: IUpdateUserInSettingsForm) => {
-        const url = Utils.String.format(API_ROUTES.SETTINGS.USERS.UPDATE, { user_uid: user.uid });
+        const url = Utils.String.format(Routing.API.SETTINGS.USERS.UPDATE, { user_uid: user.uid });
         const res = await api.put(url, params, {
             env: {
                 interceptToast: options?.interceptToast,

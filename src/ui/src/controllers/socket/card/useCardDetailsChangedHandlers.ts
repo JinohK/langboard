@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
@@ -21,7 +21,7 @@ const useCardDetailsChangedHandlers = ({ callback, projectUID, cardUID }: IUseCa
         topicId: projectUID,
         eventKey: `board-card-details-changed-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.DETAILS_CHANGED,
+            name: SocketEvents.SERVER.BOARD.CARD.DETAILS_CHANGED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

@@ -2,9 +2,9 @@ from typing import Any, Literal, Sequence, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SnowflakeID
+from helpers import ServiceHelper
 from models import Card, CardRelationship, GlobalCardRelationshipType, Project
-from ...core.service import ServiceHelper
-from ...publishers import CardRelationshipPublisher
+from publishers import CardRelationshipPublisher
 from ...tasks.activities import CardRelationshipActivityTask
 from ...tasks.bot import CardBotTask
 from .Types import TCardParam, TProjectParam, TUserOrBot
@@ -199,7 +199,12 @@ class CardRelationshipService(BaseService):
 
         await CardRelationshipPublisher.updated(project, card, new_relationships)
         CardRelationshipActivityTask.card_relationship_updated(
-            user_or_bot, project, card, list(original_relationship_ids), list(new_relationships_dict.keys()), is_parent
+            user_or_bot,
+            project,
+            card,
+            list(original_relationship_ids),
+            list(new_relationships_dict.keys()),
+            is_parent,
         )
         CardBotTask.card_relationship_updated(user_or_bot, project, card)
 

@@ -3,6 +3,7 @@ from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.Converter import convert_python_data
+from helpers import ServiceHelper
 from models import (
     Card,
     Checkitem,
@@ -17,10 +18,9 @@ from models import (
 from models.bases import ALL_GRANTED
 from models.Checkitem import CheckitemStatus
 from models.ProjectRole import ProjectRoleAction
+from publishers import ProjectPublisher
 from sqlalchemy.orm import aliased
 from sqlalchemy.orm.attributes import InstrumentedAttribute
-from ...core.service import ServiceHelper
-from ...publishers import ProjectPublisher
 from ...tasks.activities import ProjectActivityTask
 from .InternalBotService import InternalBotService
 from .ProjectColumnService import ProjectColumnService
@@ -53,21 +53,33 @@ class ProjectService(BaseService):
 
     @overload
     async def get_assigned_users(
-        self, project: TProjectParam, as_api: Literal[False], where_user_ids_in: list[SnowflakeID] | None = None
+        self,
+        project: TProjectParam,
+        as_api: Literal[False],
+        where_user_ids_in: list[SnowflakeID] | None = None,
     ) -> list[tuple[User, ProjectAssignedUser]]: ...
     @overload
     async def get_assigned_users(
-        self, project: TProjectParam, as_api: Literal[True], where_user_ids_in: list[SnowflakeID] | None = None
+        self,
+        project: TProjectParam,
+        as_api: Literal[True],
+        where_user_ids_in: list[SnowflakeID] | None = None,
     ) -> list[dict[str, Any]]: ...
     async def get_assigned_users(
-        self, project: TProjectParam, as_api: bool, where_user_ids_in: list[SnowflakeID] | None = None
+        self,
+        project: TProjectParam,
+        as_api: bool,
+        where_user_ids_in: list[SnowflakeID] | None = None,
     ) -> list[tuple[User, ProjectAssignedUser]] | list[dict[str, Any]]:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return []
         query = (
             SqlBuilder.select.tables(User, ProjectAssignedUser)
-            .join(ProjectAssignedUser, User.column("id") == ProjectAssignedUser.column("user_id"))
+            .join(
+                ProjectAssignedUser,
+                User.column("id") == ProjectAssignedUser.column("user_id"),
+            )
             .where(ProjectAssignedUser.column("project_id") == project.id)
         )
 
@@ -101,7 +113,10 @@ class ProjectService(BaseService):
 
         query = (
             SqlBuilder.select.tables(InternalBot, ProjectAssignedInternalBot)
-            .join(ProjectAssignedInternalBot, InternalBot.column("id") == ProjectAssignedInternalBot.internal_bot_id)
+            .join(
+                ProjectAssignedInternalBot,
+                InternalBot.column("id") == ProjectAssignedInternalBot.internal_bot_id,
+            )
             .where(ProjectAssignedInternalBot.project_id == project.id)
         )
 
@@ -118,7 +133,10 @@ class ProjectService(BaseService):
     async def get_dashboard_list(self, user: User) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
         sql_query = (
             SqlBuilder.select.tables(Project, ProjectAssignedUser)
-            .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
+            .join(
+                ProjectAssignedUser,
+                Project.column("id") == ProjectAssignedUser.column("project_id"),
+            )
             .where(ProjectAssignedUser.column("user_id") == user.id)
             .order_by(Project.column("updated_at").desc(), Project.column("id").desc())
         )
@@ -165,7 +183,10 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.table(Project)
-                .join(ProjectAssignedUser, ProjectAssignedUser.column("project_id") == Project.column("id"))
+                .join(
+                    ProjectAssignedUser,
+                    ProjectAssignedUser.column("project_id") == Project.column("id"),
+                )
                 .where(ProjectAssignedUser.column("user_id") == user.id)
                 .where(ProjectAssignedUser.column("starred") == True)  # noqa
                 .order_by(
@@ -248,7 +269,10 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.column(user_a.id)
-                .join(user_b, cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id)
+                .join(
+                    user_b,
+                    cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id,
+                )
                 .where((user_a.user_id == user.id) & (user_b.user_id == target_user.id))
             )
             record = result.first()
@@ -259,7 +283,10 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.columns(ProjectAssignedUser.starred, Project.id)
-                .join(ProjectAssignedUser, Project.column("id") == ProjectAssignedUser.column("project_id"))
+                .join(
+                    ProjectAssignedUser,
+                    Project.column("id") == ProjectAssignedUser.column("project_id"),
+                )
                 .where(
                     (Project.column("id") == SnowflakeID.from_short_code(uid))
                     & (ProjectAssignedUser.column("user_id") == user.id)
@@ -295,9 +322,18 @@ class ProjectService(BaseService):
             )
 
     async def create(
-        self, user: User, title: str, description: str | None = None, project_type: str = "Other"
+        self,
+        user: User,
+        title: str,
+        description: str | None = None,
+        project_type: str = "Other",
     ) -> Project:
-        project = Project(owner_id=user.id, title=title, description=description, project_type=project_type)
+        project = Project(
+            owner_id=user.id,
+            title=title,
+            description=description,
+            project_type=project_type,
+        )
         with DbSession.use(readonly=False) as db:
             db.insert(project)
 
@@ -402,7 +438,10 @@ class ProjectService(BaseService):
 
         await ProjectPublisher.assigned_users_updated(project, model)
         ProjectActivityTask.project_assigned_users_updated(
-            user, project, [user.id for user, _ in old_assigned_users], [user.id for user, _ in new_assigned_users]
+            user,
+            project,
+            [user.id for user, _ in old_assigned_users],
+            [user.id for user, _ in new_assigned_users],
         )
 
         return result
@@ -426,7 +465,12 @@ class ProjectService(BaseService):
 
         return await self.update_assigned_users(user, project, new_user_emails)
 
-    async def update_user_roles(self, project: TProjectParam, target_user: TUserParam, roles: list[ProjectRoleAction]):
+    async def update_user_roles(
+        self,
+        project: TProjectParam,
+        target_user: TUserParam,
+        roles: list[ProjectRoleAction],
+    ):
         project = ServiceHelper.get_by_param(Project, project)
         target_user = ServiceHelper.get_by_param(User, target_user)
         if not project or not target_user or not (await self.is_assigned(target_user, project))[0]:
@@ -505,7 +549,10 @@ class ProjectService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.tables(Checkitem, Card)
-                .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
+                .join(
+                    Checklist,
+                    Checkitem.column("checklist_id") == Checklist.column("id"),
+                )
                 .join(Card, Checklist.column("card_id") == Card.column("id"))
                 .where(
                     (Card.column("project_id") == project.id) & (Checkitem.column("status") == CheckitemStatus.Started)
@@ -517,7 +564,13 @@ class ProjectService(BaseService):
         current_time = SafeDateTime.now()
         for checkitem, card in started_checkitems:
             await checkitem_service.change_status(
-                user, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+                user,
+                project,
+                card,
+                checkitem,
+                CheckitemStatus.Stopped,
+                current_time,
+                should_publish=False,
             )
 
         with DbSession.use(readonly=False) as db:

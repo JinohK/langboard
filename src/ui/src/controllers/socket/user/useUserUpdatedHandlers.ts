@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { User, AuthUser } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -22,7 +22,7 @@ const useUserUpdatedHandlers = ({ callback, user }: IUseUserUpdatedHandlersProps
         topicId: user.uid,
         eventKey: `user-updated-${user.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.USER.UPDATED,
+            name: SocketEvents.SERVER.USER.UPDATED,
             callback,
             responseConverter: (data) => {
                 if (isAuthedUser) {

@@ -35,6 +35,7 @@ import useBoardBotCronRescheduledHandlers from "@/controllers/socket/board/botSc
 import useBoardBotCronUnscheduledHandlers from "@/controllers/socket/board/botSchedules/useBoardBotCronUnscheduledHandlers";
 import useBoardBotLogCreatedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogCreatedHandlers";
 import useBoardBotLogStackAddedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogStackAddeddHandlers";
+import useBoardBotStatusChangedHandlers from "@/controllers/socket/board/useBoardBotStatusChangedHandlers";
 
 export enum ERoleAction {
     Read = "read",
@@ -119,6 +120,7 @@ class Project extends BaseModel<IStore> {
                 useDashboardCheckitemCheckedChangedHandlers,
                 useDashboardCheckitemDeletedHandlers,
                 useProjectDeletedHandlers,
+                useBoardBotStatusChangedHandlers,
             ],
             {
                 projectUID: this.uid,

@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useBoardCardCreatedHandlers = ({ callback, projectUID, columnUID }: IUseBo
         topicId: projectUID,
         eventKey: `board-card-created-${columnUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CREATED,
+            name: SocketEvents.SERVER.BOARD.CARD.CREATED,
             params: { uid: columnUID },
             callback,
             responseConverter: (data) => {

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 
@@ -11,7 +11,7 @@ const useChangePrimaryEmail = (options?: TMutationOptions<IChangePrimaryEmailFor
     const { mutate } = useQueryMutation();
 
     const changePrimaryEmail = async (params: IChangePrimaryEmailForm) => {
-        const res = await api.put(API_ROUTES.ACCOUNT.EMAIL.CRUD, params, {
+        const res = await api.put(Routing.API.ACCOUNT.EMAIL.CRUD, params, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

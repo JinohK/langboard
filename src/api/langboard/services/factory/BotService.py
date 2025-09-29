@@ -6,11 +6,11 @@ from core.storage import FileModel
 from core.utils.Converter import convert_python_data
 from core.utils.IpAddress import is_valid_ipv4_address_or_range, make_valid_ipv4_range
 from core.utils.String import generate_random_string
+from helpers import ServiceHelper
 from models import AppSetting, Bot
 from models.BaseBotModel import BotPlatform, BotPlatformRunningType
 from models.Bot import ALLOWED_ALL_IPS
-from ...core.service import ServiceHelper
-from ...publishers import BotPublisher
+from publishers import BotPublisher
 from ...tasks.bot import BotDefaultTask
 from .Types import TBotParam
 
@@ -89,7 +89,13 @@ class BotService(BaseService):
             "api_key",
             "value",
         ]
-        unpublishable_keys = ["api_url", "platform", "platform_running_type", "api_key", "value"]
+        unpublishable_keys = [
+            "api_url",
+            "platform",
+            "platform_running_type",
+            "api_key",
+            "value",
+        ]
 
         old_bot_record = {}
 

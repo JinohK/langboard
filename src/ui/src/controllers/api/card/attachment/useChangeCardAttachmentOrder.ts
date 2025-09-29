@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -15,7 +15,7 @@ const useChangeCardAttachmentOrder = (options?: TMutationOptions<IChangeCardAtta
     const { mutate } = useQueryMutation();
 
     const changeCardAttachmentOrder = async (params: IChangeCardAttachmentOrderForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.CHANGE_ORDER, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.ATTACHMENT.CHANGE_ORDER, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             attachment_uid: params.attachment_uid,

@@ -74,6 +74,8 @@ export const ROUTES = {
         CREATE_GLOBAL_RELATIONSHIP: "/settings/global-relationships/create",
         WEBHOOKS: "/settings/webhooks",
         CREATE_WEBHOOK: "/settings/webhooks/create",
+        OLLAMA: "/settings/ollama",
+        PULL_OLLAMA: "/settings/ollama/pull",
     },
     ERROR: (code: EHttpStatus | "*") => `/error/${code}`,
 } as const;

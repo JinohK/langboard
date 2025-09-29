@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotLogModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -19,7 +19,7 @@ const useBoardBotLogStackAddedHandlers = ({ callback, projectUID }: IUseBoardBot
         topicId: projectUID,
         eventKey: `board-bot-log-updated-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.BOT.LOG.STACK_ADDED,
+            name: SocketEvents.SERVER.BOARD.BOT.LOG.STACK_ADDED,
             callback,
             responseConverter: (data) => {
                 const botLog = BotLogModel.Model.getModel(data.uid);

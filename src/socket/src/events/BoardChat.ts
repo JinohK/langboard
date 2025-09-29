@@ -6,8 +6,9 @@ import { ESocketStatus, ESocketTopic } from "@langboard/core/enums";
 import ChatHistory from "@/models/ChatHistory";
 import { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
+import { SocketEvents } from "@langboard/core/constants";
 
-EventManager.on(ESocketTopic.Board, "board:chat:available", async ({ client, topicId }) => {
+EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE, async ({ client, topicId }) => {
     const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
     let isAvailable = false;
     if (internalBot) {
@@ -23,12 +24,12 @@ EventManager.on(ESocketTopic.Board, "board:chat:available", async ({ client, top
     client.send({
         topic: ESocketTopic.Board,
         topic_id: topicId,
-        event: "board:chat:available",
+        event: SocketEvents.SERVER.BOARD.CHAT.IS_AVAILABLE,
         data: { available: isAvailable, bot: apiBot },
     });
 });
 
-EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId, data }) => {
+EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async ({ client, topicId, data }) => {
     const { message, file_path, task_id } = data ?? {};
     if (!Utils.Type.isString(message) || !Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid message data", false);
@@ -50,7 +51,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
 
     if (!response) {
         client.send({
-            event: "board:chat:available",
+            event: SocketEvents.SERVER.BOARD.CHAT.IS_AVAILABLE,
             topic: ESocketTopic.Board,
             topic_id: topicId,
         });
@@ -74,7 +75,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
     }
 
     client.send({
-        event: "board:chat:sent",
+        event: SocketEvents.SERVER.BOARD.CHAT.SENT,
         topic: ESocketTopic.Board,
         topic_id: topicId,
         data: { user_message: userMessage.apiResponse },
@@ -84,7 +85,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
         return;
     }
 
-    const stream = client.stream(ESocketTopic.Board, topicId, "board:chat:stream");
+    const stream = client.stream(ESocketTopic.Board, topicId, SocketEvents.SERVER.BOARD.CHAT.STREAM);
     const aiMessage = await ChatHistory.create({
         filterable_table: userMessage.filterable_table,
         filterable_id: userMessage.filterable_id,
@@ -157,7 +158,7 @@ EventManager.on(ESocketTopic.Board, "board:chat:send", async ({ client, topicId,
     });
 });
 
-EventManager.on(ESocketTopic.Board, "board:chat:cancel", async ({ client, data }) => {
+EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.CANCEL, async ({ client, data }) => {
     const { task_id } = data ?? {};
     if (!Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid task ID", false);

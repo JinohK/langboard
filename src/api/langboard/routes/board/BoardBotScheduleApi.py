@@ -3,6 +3,7 @@ from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from core.types import SafeDateTime
 from fastapi import Depends, status
+from helpers import BotHelper, ServiceHelper
 from models import (
     Bot,
     BotSchedule,
@@ -15,11 +16,9 @@ from models import (
 )
 from models.BotSchedule import BotScheduleRunningType
 from models.ProjectRole import ProjectRoleAction
+from publishers import ProjectBotPublisher
 from ...ai import BotScheduleHelper
-from ...core.service import ServiceHelper
-from ...core.utils.BotUtils import BotUtils
 from ...filter import RoleFilter
-from ...publishers import ProjectBotPublisher
 from ...security import RoleFinder
 from ...services import Service
 from .forms import (
@@ -37,7 +36,12 @@ from .forms import (
     description="Get all bot cron schedules for a specific card.",
     responses=(
         OpenApiSchema()
-        .suc({"schedules": [(BotSchedule, {"schema": CardBotSchedule.api_schema()})], "target": Card})
+        .suc(
+            {
+                "schedules": [(BotSchedule, {"schema": CardBotSchedule.api_schema()})],
+                "target": Card,
+            }
+        )
         .auth()
         .forbidden()
         .err(404, ApiErrorCode.NF2014)
@@ -47,7 +51,10 @@ from .forms import (
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_bot_schedules_by_card(
-    bot_uid: str, card_uid: str, pagination: BotSchedulePagination = Depends(), service: Service = Service.scope()
+    bot_uid: str,
+    card_uid: str,
+    pagination: BotSchedulePagination = Depends(),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     bot = await service.bot.get_by_uid(bot_uid)
     if not bot:
@@ -77,7 +84,12 @@ async def get_bot_schedules_by_card(
     description="Get all bot cron schedules for a specific column.",
     responses=(
         OpenApiSchema()
-        .suc({"schedules": [(BotSchedule, {"schema": ProjectColumnBotSchedule.api_schema()})], "target": ProjectColumn})
+        .suc(
+            {
+                "schedules": [(BotSchedule, {"schema": ProjectColumnBotSchedule.api_schema()})],
+                "target": ProjectColumn,
+            }
+        )
         .auth()
         .forbidden()
         .err(404, ApiErrorCode.NF2013)
@@ -87,7 +99,10 @@ async def get_bot_schedules_by_card(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def get_bot_schedules_by_column(
-    bot_uid: str, column_uid: str, pagination: BotSchedulePagination = Depends(), service: Service = Service.scope()
+    bot_uid: str,
+    column_uid: str,
+    pagination: BotSchedulePagination = Depends(),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     bot = await service.bot.get_by_uid(bot_uid)
     if not bot:
@@ -120,7 +135,10 @@ async def get_bot_schedules_by_column(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def schedule_bot_crons(
-    project_uid: str, bot_uid: str, form: CreateBotCronTimeForm, service: Service = Service.scope()
+    project_uid: str,
+    bot_uid: str,
+    form: CreateBotCronTimeForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     form.interval_str = BotScheduleHelper.convert_valid_interval_str(form.interval_str)
     if not form.interval_str:
@@ -134,7 +152,7 @@ async def schedule_bot_crons(
     ):
         return JsonResponse(content=ApiErrorCode.VA3002, status_code=status.HTTP_400_BAD_REQUEST)
 
-    result = BotUtils.get_target_model_by_param("schedule", form.target_table, form.target_uid)
+    result = BotHelper.get_target_model_by_param("schedule", form.target_table, form.target_uid)
     if not result:
         return JsonResponse(content=ApiErrorCode.VA3004, status_code=status.HTTP_400_BAD_REQUEST)
     target_model_class, target_model = result
@@ -175,7 +193,11 @@ async def schedule_bot_crons(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def reschedule_bot_crons(
-    project_uid: str, bot_uid: str, schedule_uid: str, form: UpdateBotCronTimeForm, service: Service = Service.scope()
+    project_uid: str,
+    bot_uid: str,
+    schedule_uid: str,
+    form: UpdateBotCronTimeForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     if not BotScheduleHelper.get_default_status_with_dates(
         running_type=form.running_type, start_at=form.start_at, end_at=form.end_at
@@ -187,7 +209,7 @@ async def reschedule_bot_crons(
         return JsonResponse(content=ApiErrorCode.NF2015, status_code=status.HTTP_404_NOT_FOUND)
     project, _ = result
 
-    target_model_class = BotUtils.get_bot_model_class("schedule", form.target_table)
+    target_model_class = BotHelper.get_bot_model_class("schedule", form.target_table)
     if not target_model_class:
         return JsonResponse(content=ApiErrorCode.VA3003, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -223,14 +245,18 @@ async def reschedule_bot_crons(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def unschedule_bot_crons(
-    project_uid: str, bot_uid: str, schedule_uid: str, form: DeleteBotCronTimeForm, service: Service = Service.scope()
+    project_uid: str,
+    bot_uid: str,
+    schedule_uid: str,
+    form: DeleteBotCronTimeForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     result = await _get_project_with_bot(service, project_uid, bot_uid)
     if not result:
         return JsonResponse(content=ApiErrorCode.NF2015, status_code=status.HTTP_404_NOT_FOUND)
     project, _ = result
 
-    target_model_class = BotUtils.get_bot_model_class("schedule", form.target_table)
+    target_model_class = BotHelper.get_bot_model_class("schedule", form.target_table)
     if not target_model_class:
         return JsonResponse(content=ApiErrorCode.VA3003, status_code=status.HTTP_400_BAD_REQUEST)
 

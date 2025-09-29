@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { SOCKET_URL } from "@/constants";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -21,7 +21,7 @@ const useUploadProjectChatAttachment = (options?: TMutationOptions<IUploadProjec
     const { mutate } = useQueryMutation();
 
     const updateProjectChatComment = async (params: IUploadProjectChatAttachmentForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.UPLOAD, {
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.UPLOAD, {
             uid: params.project_uid,
         });
         const formData = new FormData();

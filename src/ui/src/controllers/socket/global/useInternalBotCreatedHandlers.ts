@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { Routing, SocketEvents } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { InternalBotModel } from "@/core/models";
@@ -15,10 +15,10 @@ const useInternalBotCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps
         topic: ESocketTopic.Global,
         eventKey: "internal-bot-created",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.INTERNAL_BOTS.CREATED,
+            name: SocketEvents.SERVER.GLOBALS.INTERNAL_BOTS.CREATED,
             callback,
             responseConverter: (data) => {
-                const url = Utils.String.format(API_ROUTES.GLBOAL.INTERNAL_BOTS.GET, { bot_uid: data.uid });
+                const url = Utils.String.format(Routing.API.GLOBAL.INTERNAL_BOTS.GET, { bot_uid: data.uid });
                 api.get(url, {
                     env: { interceptToast: true } as any,
                 }).then((res) => {

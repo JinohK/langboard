@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -15,7 +15,7 @@ const useCardifyCardCheckitem = (options?: TMutationOptions<ICardifyCardCheckite
     const { mutate } = useQueryMutation();
 
     const cardifyCheckitem = async (params: ICardifyCardCheckitemForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.CHECKITEM.CARDIFY, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.CHECKITEM.CARDIFY, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             checkitem_uid: params.checkitem_uid,

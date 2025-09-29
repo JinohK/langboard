@@ -1,5 +1,5 @@
 import { Toast } from "@/components/base";
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, User } from "@/core/models";
 import { t } from "i18next";
@@ -20,7 +20,7 @@ const useSelectedUsersDeletedHandlers = ({ currentUser, signOut, callback }: IUs
         topicId: GLOBAL_TOPIC_ID,
         eventKey: "selected-user-deleted",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.USERS.SELECTION_DELETED,
+            name: SocketEvents.SERVER.SETTINGS.USERS.SELECTION_DELETED,
             callback,
             responseConverter: (data) => {
                 if (data.uids.includes(currentUser.uid)) {

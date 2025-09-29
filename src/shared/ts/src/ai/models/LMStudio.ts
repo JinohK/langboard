@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { TGetModelOptions } from "@/ai/models/types";
 import { Utils } from "@/utils";
 import axios from "axios";
 
-export const getLMStudioModels = async (values: Record<string, any>) => {
+export const getLMStudioModels = async ({ values }: TGetModelOptions) => {
     if (!values.base_url) {
         return [];
     }

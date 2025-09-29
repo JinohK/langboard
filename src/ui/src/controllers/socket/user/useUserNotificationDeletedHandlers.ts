@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, UserNotification } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useUserNotificationDeletedHandlers = ({ callback, currentUser }: IUseUserN
         topicId: currentUser.uid,
         eventKey: `user-notification-deleted-${currentUser.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.USER.NOTIFICATION_DELETED,
+            name: SocketEvents.SERVER.USER.NOTIFICATION_DELETED,
             callback,
             responseConverter: (data) => {
                 UserNotification.Model.deleteModel(data.notification_uid);

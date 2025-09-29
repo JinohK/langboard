@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { GlobalRelationshipType } from "@/core/models";
@@ -12,7 +12,7 @@ const useDeleteSelectedGlobalRelationships = (options?: TMutationOptions<IDelete
     const { mutate } = useQueryMutation();
 
     const deleteSelectedGlobalRelationships = async (params: IDeleteSelectedGlobalRelationshipsForm) => {
-        const res = await api.delete(API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.DELETE_SELECTED, {
+        const res = await api.delete(Routing.API.SETTINGS.GLOBAL_RELATIONSHIPS.DELETE_SELECTED, {
             data: params,
             env: {
                 interceptToast: options?.interceptToast,

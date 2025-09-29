@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -16,7 +16,7 @@ const useChangeProjectLabelOrder = (options?: TMutationOptions<IChangeProjectLab
     const { mutate } = useQueryMutation();
 
     const changeProjectLabelOrder = async (params: IChangeProjectLabelOrderForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.LABEL.CHANGE_ORDER, {
+        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.LABEL.CHANGE_ORDER, {
             uid: params.project_uid,
             label_uid: params.label_uid,
         });

@@ -2,12 +2,19 @@ from abc import ABC, abstractmethod
 from inspect import iscoroutinefunction
 from json import dumps as json_dumps
 from json import loads as json_loads
+from pathlib import Path
 from typing import Any, Callable
 from pydantic import BaseModel
 from ..utils.Converter import json_default
 
 
 class BaseCache(ABC):
+    def __init__(self):
+        self._cache_dir: Path | None = None
+
+    def set_cache_dir(self, cache_dir: str | Path) -> None:
+        self._cache_dir = Path(cache_dir)
+
     @abstractmethod
     async def get(self, key: str, caster: Callable[[Any], Any] | None = None) -> Any | None:
         """Gets value from cache by key

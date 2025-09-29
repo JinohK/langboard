@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useUpdateCardLabels = (options?: TMutationOptions<IUpdateCardLabelsForm>) 
     const { mutate } = useQueryMutation();
 
     const updateCardLabels = async (params: IUpdateCardLabelsForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.UPDATE_LABELS, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.UPDATE_LABELS, {
             uid: params.project_uid,
             card_uid: params.card_uid,
         });

@@ -1,13 +1,12 @@
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.types import SafeDateTime
+from helpers import BotHelper, ModelHelper
 from models import Bot, Card, Project, ProjectColumn
 from models.bases import BaseBotScheduleModel
 from models.BotSchedule import BotSchedule, BotScheduleRunningType, BotScheduleStatus
+from publishers import ProjectBotPublisher
 from ...ai import BotDefaultTrigger, BotScheduleHelper
 from ...core.broker import Broker
-from ...core.utils.BotUtils import BotUtils
-from ...core.utils.ModelUtils import get_models_by_base_class
-from ...publishers import ProjectBotPublisher
 from .utils import BotTaskDataHelper, BotTaskHelper
 from .utils.BotTaskHelper import logger
 
@@ -36,13 +35,16 @@ async def run_scheduled_bots_cron(interval_str: str):
         logger.error(f"Invalid interval string: {interval_str}")
         return
 
-    model_classes = get_models_by_base_class(BaseBotScheduleModel)
+    model_classes = ModelHelper.get_models_by_base_class(BaseBotScheduleModel)
     records: list[tuple[BaseBotScheduleModel, BotSchedule, Bot]] = []
     with DbSession.use(readonly=True) as db:
         for model_class in model_classes:
             result = db.exec(
                 SqlBuilder.select.tables(model_class, BotSchedule, Bot)
-                .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
+                .join(
+                    BotSchedule,
+                    model_class.column("bot_schedule_id") == BotSchedule.column("id"),
+                )
                 .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
                 .where(
                     (BotSchedule.column("interval_str") == interval_str)
@@ -58,13 +60,16 @@ async def run_scheduled_bots_cron(interval_str: str):
 
 async def _check_bot_schedule_runnable(interval_str: str):
     current_time = SafeDateTime.now()
-    model_classes = get_models_by_base_class(BaseBotScheduleModel)
+    model_classes = ModelHelper.get_models_by_base_class(BaseBotScheduleModel)
     records: list[tuple[BaseBotScheduleModel, BotSchedule, Bot]] = []
     with DbSession.use(readonly=True) as db:
         for model_class in model_classes:
             result = db.exec(
                 SqlBuilder.select.tables(model_class, BotSchedule, Bot)
-                .join(BotSchedule, model_class.column("bot_schedule_id") == BotSchedule.column("id"))
+                .join(
+                    BotSchedule,
+                    model_class.column("bot_schedule_id") == BotSchedule.column("id"),
+                )
                 .join(Bot, BotSchedule.column("bot_id") == Bot.column("id"))
                 .where(
                     (BotSchedule.column("status") == BotScheduleStatus.Pending)
@@ -97,10 +102,13 @@ async def _check_bot_schedule_runnable(interval_str: str):
                 continue
 
         await BotScheduleHelper.change_status(
-            schedule_model.__class__, schedule_model, BotScheduleStatus.Started, bot_schedule=bot_schedule
+            schedule_model.__class__,
+            schedule_model,
+            BotScheduleStatus.Started,
+            bot_schedule=bot_schedule,
         )
 
-        model = BotUtils.get_target_model_by_bot_model("schedule", schedule_model)
+        model = BotHelper.get_target_model_by_bot_model("schedule", schedule_model)
         if not model:
             continue
 
@@ -117,13 +125,16 @@ async def _check_bot_schedule_runnable(interval_str: str):
 
 
 async def _run_scheduler(
-    bot: Bot, bot_schedule: BotSchedule, schedule_model: BaseBotScheduleModel, model: BaseSqlModel | None = None
+    bot: Bot,
+    bot_schedule: BotSchedule,
+    schedule_model: BaseBotScheduleModel,
+    model: BaseSqlModel | None = None,
 ):
     if bot_schedule.status != BotScheduleStatus.Started:
         return
 
     if not model:
-        model = BotUtils.get_target_model_by_bot_model("schedule", schedule_model)
+        model = BotHelper.get_target_model_by_bot_model("schedule", schedule_model)
         if not model:
             return
 

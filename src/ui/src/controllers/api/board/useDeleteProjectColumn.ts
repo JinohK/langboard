@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -13,7 +13,7 @@ const useDeleteProjectColumn = (options?: TMutationOptions<IDeleteProjectColumnF
     const { mutate } = useQueryMutation();
 
     const deleteProjectColumn = async (params: IDeleteProjectColumnForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.COLUMN.DELETE, {
+        const url = Utils.String.format(Routing.API.BOARD.COLUMN.DELETE, {
             uid: params.project_uid,
             column_uid: params.column_uid,
         });

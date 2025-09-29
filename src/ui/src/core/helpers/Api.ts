@@ -1,7 +1,7 @@
 import axios, { AxiosRequestConfig } from "axios";
 import pako from "pako";
 import { API_URL } from "@/constants";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { getAuthStore } from "@/core/stores/AuthStore";
 import { Utils } from "@langboard/core/utils";
@@ -30,7 +30,7 @@ export const refresh = async (): Promise<bool> => {
     const authStore = getAuthStore();
 
     try {
-        const response = await api.post(API_ROUTES.AUTH.REFRESH);
+        const response = await api.post(Routing.API.AUTH.REFRESH);
 
         if (response.status !== EHttpStatus.HTTP_200_OK) {
             authStore.removeToken();
@@ -59,7 +59,7 @@ api.interceptors.request.use(
     (error) => Promise.reject(error),
     {
         runWhen: (config) => {
-            return !config.url?.endsWith(API_ROUTES.AUTH.REFRESH);
+            return !config.url?.endsWith(Routing.API.AUTH.REFRESH);
         },
     }
 );

@@ -1,4 +1,4 @@
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -7,10 +7,10 @@ const useDeleteUserNotificationHandlers = () => {
         topic: ESocketTopic.None,
         eventKey: "delete-user-notification",
         onProps: {
-            name: SOCKET_CLIENT_EVENTS.USER.DELETE_NOTIFICATION,
+            name: SocketEvents.CLIENT.USER.DELETE_NOTIFICATION,
         },
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.USER.DELETE_NOTIFICATION,
+            name: SocketEvents.CLIENT.USER.DELETE_NOTIFICATION,
         },
     });
 };

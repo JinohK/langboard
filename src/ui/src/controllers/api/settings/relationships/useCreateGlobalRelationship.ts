@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { GlobalRelationshipType } from "@/core/models";
@@ -15,7 +15,7 @@ const useCreateGlobalRelationship = (options?: TMutationOptions<ICreateGlobalRel
 
     const createGlobalRelationship = async (params: ICreateGlobalRelationshipForm) => {
         const res = await api.post(
-            API_ROUTES.SETTINGS.GLOBAL_RELATIONSHIPS.CREATE,
+            Routing.API.SETTINGS.GLOBAL_RELATIONSHIPS.CREATE,
             {
                 ...params,
             },

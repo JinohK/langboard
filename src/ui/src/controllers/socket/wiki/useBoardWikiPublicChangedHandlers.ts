@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, ProjectWiki } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -19,7 +19,7 @@ const useBoardWikiPublicChangedHandlers = ({ callback, projectUID, currentUser, 
         topicId: projectUID,
         eventKey: `board-wiki-public-changed-${wiki.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.WIKI.PUBLIC_CHANGED,
+            name: SocketEvents.SERVER.BOARD.WIKI.PUBLIC_CHANGED,
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {

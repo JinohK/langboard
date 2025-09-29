@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectWiki } from "@/core/models";
@@ -18,7 +18,7 @@ const useCreateWiki = (options?: TMutationOptions<ICreateWikiForm, ICreateWikiRe
     const { mutate } = useQueryMutation();
 
     const createWiki = async (params: ICreateWikiForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CREATE, {
+        const url = Utils.String.format(Routing.API.BOARD.WIKI.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

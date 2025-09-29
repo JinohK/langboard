@@ -2,9 +2,9 @@ from typing import Any
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.storage import FileModel
+from helpers import ServiceHelper
 from models import Card, CardAttachment, Project, User
-from ...core.service import ServiceHelper
-from ...publishers import CardAttachmentPublisher
+from publishers import CardAttachmentPublisher
 from ...tasks.activities import CardAttachmentActivityTask
 from ...tasks.bot import CardAttachmentBotTask
 from .Types import TAttachmentParam, TCardParam, TProjectParam
@@ -29,8 +29,15 @@ class CardAttachmentService(BaseService):
                 SqlBuilder.select.tables(CardAttachment, User)
                 .join(User, CardAttachment.column("user_id") == User.column("id"))
                 .where(CardAttachment.column("card_id") == card.id)
-                .order_by(CardAttachment.column("order").asc(), CardAttachment.column("id").desc())
-                .group_by(CardAttachment.column("id"), CardAttachment.column("order"), User.column("id"))
+                .order_by(
+                    CardAttachment.column("order").asc(),
+                    CardAttachment.column("id").desc(),
+                )
+                .group_by(
+                    CardAttachment.column("id"),
+                    CardAttachment.column("order"),
+                    User.column("id"),
+                )
             )
             card_attachments = result.all()
 
@@ -40,7 +47,11 @@ class CardAttachmentService(BaseService):
         ]
 
     async def create(
-        self, user: User, project: TProjectParam, card: TCardParam, attachment: FileModel
+        self,
+        user: User,
+        project: TProjectParam,
+        card: TCardParam,
+        attachment: FileModel,
     ) -> CardAttachment | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
@@ -67,7 +78,11 @@ class CardAttachmentService(BaseService):
         return card_attachment
 
     async def change_order(
-        self, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam, order: int
+        self,
+        project: TProjectParam,
+        card: TCardParam,
+        card_attachment: TAttachmentParam,
+        order: int,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (CardAttachment, card_attachment)
@@ -96,7 +111,12 @@ class CardAttachmentService(BaseService):
         return True
 
     async def change_name(
-        self, user: User, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam, name: str
+        self,
+        user: User,
+        project: TProjectParam,
+        card: TCardParam,
+        card_attachment: TAttachmentParam,
+        name: str,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (CardAttachment, card_attachment)
@@ -118,7 +138,11 @@ class CardAttachmentService(BaseService):
         return True
 
     async def delete(
-        self, user: User, project: TProjectParam, card: TCardParam, card_attachment: TAttachmentParam
+        self,
+        user: User,
+        project: TProjectParam,
+        card: TCardParam,
+        card_attachment: TAttachmentParam,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params(
             (Project, project), (Card, card), (CardAttachment, card_attachment)

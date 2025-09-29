@@ -8,13 +8,13 @@ from core.schema import Pagination
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.decorators import staticclass
 from crontab import SPECIALS, CronItem, CronTab, OrderedVariableList
+from helpers import ServiceHelper
 from models import Bot, BotSchedule
 from models.bases import BaseBotScheduleModel
 from models.BotSchedule import BotScheduleRunningType, BotScheduleStatus
 from psutil import process_iter
 from sqlalchemy import tuple_
 from ..Constants import CRON_TAB_FILE
-from ..core.service import ServiceHelper
 
 
 _TBotScheduleModel = TypeVar("_TBotScheduleModel", bound=BaseBotScheduleModel)
@@ -56,7 +56,8 @@ class BotScheduleHelper:
         refer_time: SafeDateTime | None = None,
     ) -> list[tuple[_TBotScheduleModel, BotSchedule]] | list[dict[str, Any]]:
         query = SqlBuilder.select.tables(schedule_model_class, BotSchedule).join(
-            BotSchedule, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id")
+            BotSchedule,
+            BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"),
         )
 
         if isinstance(scope_model, list):
@@ -140,7 +141,9 @@ class BotScheduleHelper:
 
     @staticmethod
     def get_default_status_with_dates(
-        running_type: BotScheduleRunningType | None, start_at: SafeDateTime | None, end_at: SafeDateTime | None
+        running_type: BotScheduleRunningType | None,
+        start_at: SafeDateTime | None,
+        end_at: SafeDateTime | None,
     ) -> tuple[BotScheduleStatus, SafeDateTime | None, SafeDateTime | None] | None:
         if not running_type or running_type == BotScheduleRunningType.Infinite:
             return BotScheduleStatus.Started, None, None
@@ -259,7 +262,11 @@ class BotScheduleHelper:
                 model["end_at"] = end_at
 
                 cron, has_changed = await BotScheduleHelper.change_status(
-                    schedule_model_class, schedule_model, status, no_update=True, bot_schedule=bot_schedule
+                    schedule_model_class,
+                    schedule_model,
+                    status,
+                    no_update=True,
+                    bot_schedule=bot_schedule,
                 )
             else:
                 if bot_schedule.start_at != start_at or bot_schedule.end_at != end_at:
@@ -315,7 +322,8 @@ class BotScheduleHelper:
 
     @staticmethod
     async def unschedule(
-        schedule_model_class: type[_TBotScheduleModel], schedule_model: _TBotScheduleModel | _TBaseParam
+        schedule_model_class: type[_TBotScheduleModel],
+        schedule_model: _TBotScheduleModel | _TBaseParam,
     ) -> tuple[BotSchedule, _TBotScheduleModel] | None:
         schedule_model = ServiceHelper.get_by_param(schedule_model_class, schedule_model)
         if not schedule_model:
@@ -346,7 +354,10 @@ class BotScheduleHelper:
         with DbSession.use(readonly=True) as db:
             query = (
                 SqlBuilder.select.columns(BotSchedule.id, BotSchedule.interval_str, BotSchedule.status)
-                .join(schedule_model_class, BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"))
+                .join(
+                    schedule_model_class,
+                    BotSchedule.column("id") == schedule_model_class.column("bot_schedule_id"),
+                )
                 .where(schedule_model_class.column(f"{scope_model.__tablename__}_id") == scope_model.id)
             )
             result = db.exec(query)
@@ -470,7 +481,11 @@ class BotScheduleHelper:
         return cron
 
     @staticmethod
-    def __create_job(cron: CronTab, interval_str: str, running_type: BotScheduleRunningType | None = None) -> bool:
+    def __create_job(
+        cron: CronTab,
+        interval_str: str,
+        running_type: BotScheduleRunningType | None = None,
+    ) -> bool:
         comment = None
         if running_type:
             if BotSchedule.RUNNING_TYPES_WITH_START_AT.count(running_type) > 0:
@@ -486,7 +501,11 @@ class BotScheduleHelper:
         if has_job:
             return False
 
-        job = cron.new(command=f"/app/scripts/run_bot_cron.sh '{comment}'", comment=comment, user="/bin/bash")
+        job = cron.new(
+            command=f"/app/scripts/run_bot_cron.sh '{comment}'",
+            comment=comment,
+            user="/bin/bash",
+        )
         job.setall(interval_str)
         return True
 
@@ -502,10 +521,13 @@ class BotScheduleHelper:
     def __has_interval_schedule(interval_str: str, status: BotScheduleStatus) -> bool: ...
     @overload
     @staticmethod
-    def __has_interval_schedule(interval_str: list[tuple[str, BotScheduleStatus]]) -> list[SnowflakeID]: ...
+    def __has_interval_schedule(
+        interval_str: list[tuple[str, BotScheduleStatus]],
+    ) -> list[SnowflakeID]: ...
     @staticmethod
     def __has_interval_schedule(
-        interval_str: str | list[tuple[str, BotScheduleStatus]], status: BotScheduleStatus | None = None
+        interval_str: str | list[tuple[str, BotScheduleStatus]],
+        status: BotScheduleStatus | None = None,
     ) -> bool | list[SnowflakeID]:
         if status is None:
             interval_str = cast(list[tuple[str, BotScheduleStatus]], interval_str)
@@ -562,12 +584,18 @@ class BotScheduleHelper:
 
         if diff_minutes != 0 and cron_item.minutes != "*":
             cron_chunks[0] = BotScheduleHelper.__adjust_interval_for_utc_chunk(
-                str(cron_item.minutes), diff_minutes, BotScheduleHelper.__ensure_valid_minute, is_minute=True
+                str(cron_item.minutes),
+                diff_minutes,
+                BotScheduleHelper.__ensure_valid_minute,
+                is_minute=True,
             )
 
         if diff_hours != 0 and cron_item.hours != "*":
             cron_chunks[1] = BotScheduleHelper.__adjust_interval_for_utc_chunk(
-                str(cron_item.hours), diff_hours, BotScheduleHelper.__ensure_valid_hour, is_minute=False
+                str(cron_item.hours),
+                diff_hours,
+                BotScheduleHelper.__ensure_valid_hour,
+                is_minute=False,
             )
 
         return " ".join(cron_chunks)

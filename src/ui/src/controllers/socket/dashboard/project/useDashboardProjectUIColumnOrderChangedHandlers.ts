@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -17,7 +17,7 @@ const useDashboardProjectUIColumnOrderChangedHandlers = ({ callback, projectUID 
         topicId: projectUID,
         eventKey: `dashboard-project-ui-column-order-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.COLUMN.ORDER_CHANGED,
+            name: SocketEvents.SERVER.DASHBOARD.PROJECT.COLUMN.ORDER_CHANGED,
             params: { uid: projectUID },
             callback,
         },

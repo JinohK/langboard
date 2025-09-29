@@ -1,13 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Any
 from core.db import BaseSqlModel, DbSession
-from langboard.publishers import ProjectBotPublisher
+from helpers import BotHelper
 from models import Bot, BotLog, Project
 from models.BaseBotModel import BotPlatform
 from models.bases import BaseBotLogModel
 from models.BotLog import BotLogMessage, BotLogType
+from publishers import ProjectBotPublisher
 from .....core.logger import Logger
-from .....core.utils.BotUtils import BotUtils
 
 
 logger = Logger.use("BotTask")
@@ -50,7 +50,9 @@ class BaseBotRequest(ABC):
 
     async def _create_log(self, log_type: BotLogType, message: str):
         bot_log = BotLog(
-            bot_id=self._bot.id, log_type=log_type, message_stack=[BotLogMessage(message=message, log_type=log_type)]
+            bot_id=self._bot.id,
+            log_type=log_type,
+            message_stack=[BotLogMessage(message=message, log_type=log_type)],
         )
 
         with DbSession.use(readonly=False) as db:
@@ -59,7 +61,7 @@ class BaseBotRequest(ABC):
         if not self._scope_model:
             return bot_log, None
 
-        log_class = BotUtils.get_bot_model_class("log", self._scope_model.__tablename__)
+        log_class = BotHelper.get_bot_model_class("log", self._scope_model.__tablename__)
         if not log_class:
             return bot_log, None
 
@@ -77,7 +79,10 @@ class BaseBotRequest(ABC):
         return bot_log, scope_log
 
     async def _update_log(
-        self, bot_log: tuple[BotLog, BaseBotLogModel | None], log_type: BotLogType, stack: str
+        self,
+        bot_log: tuple[BotLog, BaseBotLogModel | None],
+        log_type: BotLogType,
+        stack: str,
     ) -> None:
         log, scope_log = bot_log
         log.log_type = log_type

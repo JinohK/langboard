@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { InternalBotModel } from "@/core/models";
 import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useInternalBotSettingDefaultChangedHandlers = ({ internalBot, callback }: 
         topicId: GLOBAL_TOPIC_ID,
         eventKey: `internal-bot-setting-default-changed-${internalBot.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.INTERNAL_BOTS.DEFAULT_CHANGED,
+            name: SocketEvents.SERVER.SETTINGS.INTERNAL_BOTS.DEFAULT_CHANGED,
             params: { uid: internalBot.uid },
             callback,
             responseConverter: (data) => {

@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useDashboardCardTitleChangedHandlers = ({ callback, projectUID }: IUseDash
         topicId: projectUID,
         eventKey: `dashboard-card-title-changed-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.TITLE_CHANGED,
+            name: SocketEvents.SERVER.DASHBOARD.CARD.TITLE_CHANGED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

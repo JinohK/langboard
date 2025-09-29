@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectWiki } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
@@ -24,7 +24,7 @@ const useBoardWikiDetailsChangedHandlers = ({ callback, projectUID, wiki, isPriv
         topicId,
         eventKey: `board-wiki-details-changed-${topic}-${wiki.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.WIKI.DETAILS_CHANGED,
+            name: SocketEvents.SERVER.BOARD.WIKI.DETAILS_CHANGED,
             params: { uid: wiki.uid },
             callback,
             responseConverter: (data) => {

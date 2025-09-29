@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useChangeProjectColumnName = (options?: TMutationOptions<IChangeProjectCol
     const { mutate } = useQueryMutation();
 
     const changeProjectColumnName = async (params: IChangeProjectColumnNameForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.COLUMN.CHANGE_NAME, {
+        const url = Utils.String.format(Routing.API.BOARD.COLUMN.CHANGE_NAME, {
             uid: params.project_uid,
             column_uid: params.column_uid,
         });

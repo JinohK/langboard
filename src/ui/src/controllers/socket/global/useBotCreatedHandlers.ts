@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -12,7 +12,7 @@ const useBotCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<{}>) =>
         topic: ESocketTopic.Global,
         eventKey: "bot-created",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.BOTS.CREATED,
+            name: SocketEvents.SERVER.GLOBALS.BOTS.CREATED,
             callback,
             responseConverter: (data) => {
                 BotModel.Model.fromOne(data.bot, true);

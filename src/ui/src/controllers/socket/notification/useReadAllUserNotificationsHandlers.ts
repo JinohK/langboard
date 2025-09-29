@@ -1,4 +1,4 @@
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -7,10 +7,10 @@ const useReadAllUserNotificationsHandlers = () => {
         topic: ESocketTopic.None,
         eventKey: "read-all-user-notifications",
         onProps: {
-            name: SOCKET_CLIENT_EVENTS.USER.READ_ALL_NOTIFICATIONS,
+            name: SocketEvents.CLIENT.USER.READ_ALL_NOTIFICATIONS,
         },
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.USER.READ_ALL_NOTIFICATIONS,
+            name: SocketEvents.CLIENT.USER.READ_ALL_NOTIFICATIONS,
         },
     });
 };

@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { MetadataModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -30,7 +30,7 @@ const useMetadataUpdatedHandlers = ({ callback, type, uid }: IUseMetadataUpdated
         topicId: uid,
         eventKey: `metadata-updated-${topic}-${uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.METADATA.UPDATED,
+            name: SocketEvents.SERVER.METADATA.UPDATED,
             params: { uid },
             callback,
             responseConverter: (data) => {

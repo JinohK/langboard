@@ -1,27 +1,26 @@
 from datetime import timedelta
-from threading import Lock
+from sqlite3 import Connection
 from typing import Any, Callable, TypeVar, overload
 from ..types import SafeDateTime
 from .BaseCache import BaseCache
 
 
-_TValue = tuple[Any, int]
 _TCastReturn = TypeVar("_TCastReturn")
 
 
 class InMemoryCache(BaseCache):
-    def __init__(self):
-        self._cache: dict[str, _TValue] = {}
-        self._lock = Lock()
-
     @overload
     async def get(self, key: str) -> Any | None: ...
     @overload
     async def get(self, key: str, caster: Callable[[Any], _TCastReturn]) -> _TCastReturn | None: ...
     async def get(self, key: str, caster: Callable[[Any], _TCastReturn] | None = None) -> Any | None:
         await self._expire()
-        with self._lock:
-            raw_value, ttl = self._cache.get(key, (None, None))
+        with self._get_cache_db() as conn:
+            cursor = conn.execute(
+                "SELECT value, expiry FROM cache WHERE key = ? AND expiry > ?",
+                (key, int(SafeDateTime.now().timestamp())),
+            )
+            raw_value, ttl = cursor.fetchone() or (None, None)
             if raw_value is None or ttl is None:
                 return None
 
@@ -30,29 +29,50 @@ class InMemoryCache(BaseCache):
 
     async def has(self, key: str) -> bool:
         await self._expire()
-        with self._lock:
-            result = key in self._cache
+        result = False
+        with self._get_cache_db() as conn:
+            cursor = conn.execute(
+                "SELECT 1 FROM cache WHERE key = ? AND expiry > ?", (key, int(SafeDateTime.now().timestamp()))
+            )
+            result = cursor.fetchone() is not None
         return result
 
     async def set(self, key: str, value: Any, ttl: int = 0) -> None:
         await self._expire()
-        with self._lock:
-            expiry = int((SafeDateTime.now() + timedelta(seconds=ttl)).timestamp())
+        with self._get_cache_db() as conn:
             casted_value = await self._cast_set(value)
-            self._cache[key] = (casted_value, expiry)
+            expiry = int((SafeDateTime.now() + timedelta(seconds=ttl)).timestamp())
+            conn.execute("REPLACE INTO cache (key, value, expiry) VALUES (?, ?, ?)", (key, casted_value, expiry))
+            conn.commit()
 
     async def delete(self, key: str) -> None:
         await self._expire()
-        with self._lock:
-            if key in self._cache:
-                del self._cache[key]
+        with self._get_cache_db() as conn:
+            conn.execute("DELETE FROM cache WHERE key = ?", (key,))
+            conn.commit()
 
     async def clear(self) -> None:
-        with self._lock:
-            self._cache.clear()
+        with self._get_cache_db() as conn:
+            conn.execute("DELETE FROM cache")
+            conn.commit()
 
     async def _expire(self) -> None:
-        with self._lock:
-            for key, (_, ttl) in self._cache.copy().items():
-                if ttl <= int(SafeDateTime.now().timestamp()):
-                    del self._cache[key]
+        with self._get_cache_db() as conn:
+            conn.execute("DELETE FROM cache WHERE expiry <= ?", (int(SafeDateTime.now().timestamp()),))
+            conn.commit()
+
+    def _get_cache_db(self) -> Connection:
+        if self._cache_dir is None:
+            raise ValueError("Cache directory is not set")
+
+        self._cache_dir.mkdir(parents=True, exist_ok=True)
+        db_path = self._cache_dir / "cache.db"
+        conn = Connection(db_path)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS cache (
+                key TEXT PRIMARY KEY,
+                value TEXT NOT NULL,
+                expiry INTEGER NOT NULL
+            )
+        """)
+        return conn

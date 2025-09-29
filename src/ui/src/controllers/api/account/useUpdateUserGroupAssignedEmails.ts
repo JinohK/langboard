@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User, UserGroup } from "@/core/models";
@@ -13,7 +13,7 @@ const useUpdateUserGroupAssignedEmails = (group: UserGroup.TModel, options?: TMu
     const { mutate } = useQueryMutation();
 
     const updateUserGroupAssignedEmails = async (params: IUpdateUserGroupAssignedEmailsForm) => {
-        const url = Utils.String.format(API_ROUTES.ACCOUNT.USER_GROUP.UPDATE_ASSIGNED_EMAILS, {
+        const url = Utils.String.format(Routing.API.ACCOUNT.USER_GROUP.UPDATE_ASSIGNED_EMAILS, {
             group_uid: group.uid,
         });
         const res = await api.put(

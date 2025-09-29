@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Project, ProjectCard } from "@/core/models";
@@ -22,7 +22,7 @@ const useGetDashboardCards = (limit: number = 30, options?: TMutationOptions) =>
 
         ++pageRef.current;
 
-        const res = await api.get(API_ROUTES.DASHBOARD.CARDS, {
+        const res = await api.get(Routing.API.DASHBOARD.CARDS, {
             params: {
                 refer_time: lastCurrentDateRef.current,
                 page: pageRef.current,

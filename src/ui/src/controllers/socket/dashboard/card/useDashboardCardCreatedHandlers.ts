@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, ProjectColumn } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useDashboardCardCreatedHandlers = ({ callback, project }: IUseDashboardCar
         topicId: project.uid,
         eventKey: `dashboard-card-created-${project.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.CARD.CREATED,
+            name: SocketEvents.SERVER.DASHBOARD.CARD.CREATED,
             params: { uid: project.uid },
             callback,
             responseConverter: (data) => {

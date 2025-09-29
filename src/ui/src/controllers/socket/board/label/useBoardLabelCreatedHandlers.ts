@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, ProjectLabel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useBoardLabelCreatedHandlers = ({ callback, project }: IUseBoardLabelCreat
         topicId: project.uid,
         eventKey: `board-label-created-${project.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.CREATED,
+            name: SocketEvents.SERVER.BOARD.LABEL.CREATED,
             params: { uid: project.uid },
             callback,
             responseConverter: (data) => {

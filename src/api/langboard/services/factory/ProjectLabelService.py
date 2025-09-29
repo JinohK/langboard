@@ -2,9 +2,9 @@ from typing import Any, Literal, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.utils.Converter import convert_python_data
+from helpers import ServiceHelper
 from models import Bot, Card, CardAssignedProjectLabel, Project, ProjectLabel
-from ...core.service import ServiceHelper
-from ...publishers import ProjectLabelPublisher
+from publishers import ProjectLabelPublisher
 from ...tasks.activities import ProjectLabelActivityTask
 from .Types import TCardParam, TProjectLabelParam, TProjectParam, TUserOrBot
 
@@ -116,7 +116,12 @@ class ProjectLabelService(BaseService):
         return labels
 
     async def create(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, name: str, color: str, description: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        name: str,
+        color: str,
+        description: str,
     ) -> tuple[ProjectLabel, dict[str, Any]] | None:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
@@ -145,7 +150,11 @@ class ProjectLabelService(BaseService):
         return label, label.api_response()
 
     async def update(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, label: TProjectLabelParam, form: dict
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        label: TProjectLabelParam,
+        form: dict,
     ) -> dict[str, Any] | Literal[True] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectLabel, label))
         if not params:

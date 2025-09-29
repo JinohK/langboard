@@ -1,11 +1,11 @@
 from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse, SocketTopic
 from fastapi import Depends, status
+from helpers import ServiceHelper
 from models import Card, CardMetadata, Project, ProjectRole
 from models.ProjectRole import ProjectRoleAction
-from ...core.service import ServiceHelper
+from publishers import MetadataPublisher
 from ...filter import RoleFilter
-from ...publishers import MetadataPublisher
 from ...security import RoleFinder
 from ...services import Service
 from .MetadataForm import MetadataDeleteForm, MetadataForm, MetadataGetModel
@@ -41,7 +41,10 @@ async def get_card_metadata(project_uid: str, card_uid: str, service: Service = 
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_card_metadata_by_key(
-    project_uid: str, card_uid: str, get_query: MetadataGetModel = Depends(), service: Service = Service.scope()
+    project_uid: str,
+    card_uid: str,
+    get_query: MetadataGetModel = Depends(),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
@@ -64,7 +67,10 @@ async def get_card_metadata_by_key(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def save_card_metadata(
-    project_uid: str, card_uid: str, form: MetadataForm, service: Service = Service.scope()
+    project_uid: str,
+    card_uid: str,
+    form: MetadataForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:
@@ -89,7 +95,10 @@ async def save_card_metadata(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.CardUpdate], RoleFinder.project)
 @AuthFilter.add()
 async def delete_card_metadata(
-    form: MetadataDeleteForm, project_uid: str, card_uid: str, service: Service = Service.scope()
+    form: MetadataDeleteForm,
+    project_uid: str,
+    card_uid: str,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (Card, card_uid))
     if not params:

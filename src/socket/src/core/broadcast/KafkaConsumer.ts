@@ -1,14 +1,14 @@
-import { BROADCAST_URLS, CACHE_URL, PROJECT_NAME } from "@/Constants";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { BROADCAST_URLS, PROJECT_NAME } from "@/Constants";
 import BaseConsumer from "@/core/broadcast/BaseConsumer";
+import Cache from "@/core/caching/Cache";
 import Logger from "@/core/utils/Logger";
 import { Utils } from "@langboard/core/utils";
 import { Consumer, Kafka } from "kafkajs";
-import { createClient } from "redis";
 
 class KafkaConsumer extends BaseConsumer {
     #client: Kafka;
     #consumer!: Consumer;
-    #redisClient!: ReturnType<typeof createClient>;
 
     constructor() {
         super();
@@ -34,15 +34,6 @@ class KafkaConsumer extends BaseConsumer {
 
         while (true) {
             try {
-                if (!this.#redisClient?.isOpen || !this.#redisClient?.isReady || this.#redisClient?.isClosed) {
-                    this.#redisClient = await createClient({
-                        url: CACHE_URL,
-                        pingInterval: 10000,
-                    })
-                        .on("error", (err) => Logger.red("Redis Client Error", err, "\n"))
-                        .connect();
-                }
-
                 await this.#consumer.connect();
 
                 const topics = this.getEmitterNames();
@@ -66,15 +57,7 @@ class KafkaConsumer extends BaseConsumer {
                                 return;
                             }
 
-                            const cachedData = await this.#redisClient.get(cacheKey);
-                            let data;
-                            if (cachedData) {
-                                const cachedModel = Utils.Json.Parse(cachedData);
-                                if (cachedModel) {
-                                    data = cachedModel;
-                                }
-                            }
-
+                            const data = await Cache.get<Record<string, any>>(cacheKey);
                             if (!data) {
                                 return;
                             }
@@ -96,7 +79,6 @@ class KafkaConsumer extends BaseConsumer {
     }
 
     public async stop() {
-        await this.#redisClient?.quit();
         await this.#consumer?.disconnect();
     }
 }

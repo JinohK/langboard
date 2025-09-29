@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useCardAttachmentNameChangedHandlers = ({ callback, cardUID, attachmentUID
         topicId: cardUID,
         eventKey: `board-card-attachment-name-changed-${attachmentUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.NAME_CHANGED,
+            name: SocketEvents.SERVER.BOARD.CARD.ATTACHMENT.NAME_CHANGED,
             params: { uid: attachmentUID },
             callback,
             responseConverter: (data) => {

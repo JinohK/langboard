@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCardAttachment } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useCardAttachmentDeletedHandlers = ({ callback, cardUID }: IUseCardAttachm
         topicId: cardUID,
         eventKey: `board-card-attachment-deleted-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.ATTACHMENT.DELETED,
+            name: SocketEvents.SERVER.BOARD.CARD.ATTACHMENT.DELETED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

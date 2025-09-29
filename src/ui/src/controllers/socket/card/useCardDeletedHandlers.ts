@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -14,7 +14,7 @@ const useCardDeletedHandlers = ({ callback, projectUID, cardUID }: IUseCardDelet
         topicId: projectUID,
         eventKey: `card-deleted-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.DELETED,
+            name: SocketEvents.SERVER.BOARD.CARD.DELETED,
             params: { uid: cardUID },
             callback,
             responseConverter: () => {

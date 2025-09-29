@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { InternalBotModel } from "@/core/models";
@@ -9,7 +9,7 @@ const useDeleteInternalBot = (bot: InternalBotModel.TModel, options?: TMutationO
     const { mutate } = useQueryMutation();
 
     const deleteInternalBot = async () => {
-        const url = Utils.String.format(API_ROUTES.SETTINGS.INTERNAL_BOTS.DELETE, { bot_uid: bot.uid });
+        const url = Utils.String.format(Routing.API.SETTINGS.INTERNAL_BOTS.DELETE, { bot_uid: bot.uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

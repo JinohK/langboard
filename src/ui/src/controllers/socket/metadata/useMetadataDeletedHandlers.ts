@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { MetadataModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -28,7 +28,7 @@ const useMetadataDeletedHandlers = ({ callback, type, uid }: IUseMetadataDeleted
         topicId: uid,
         eventKey: `metadata-deleted-${topic}-${uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.METADATA.DELETED,
+            name: SocketEvents.SERVER.METADATA.DELETED,
             params: { uid },
             callback,
             responseConverter: (data) => {

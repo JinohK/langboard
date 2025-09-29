@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
@@ -25,7 +25,7 @@ const useBotSettingUpdatedHandlers = ({ callback, bot }: IUseBotSettingUpdatedHa
         topicId: GLOBAL_TOPIC_ID,
         eventKey: `bot-setting-updated-${bot.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.BOTS.UPDATED,
+            name: SocketEvents.SERVER.SETTINGS.BOTS.UPDATED,
             params: { uid: bot.uid },
             callback,
             responseConverter: (data) => {

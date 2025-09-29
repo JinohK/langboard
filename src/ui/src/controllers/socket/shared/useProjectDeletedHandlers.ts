@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import { deleteProjectModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -14,7 +14,7 @@ const useProjectDeletedHandlers = ({ callback, topic, projectUID }: IUseProjectD
         topicId: projectUID,
         eventKey: `project-deleted-${topic}-${projectUID}`,
         onProps: {
-            name: topic === ESocketTopic.Board ? SOCKET_SERVER_EVENTS.BOARD.DELETED : SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.DELETED,
+            name: topic === ESocketTopic.Board ? SocketEvents.SERVER.BOARD.DELETED : SocketEvents.SERVER.DASHBOARD.PROJECT.DELETED,
             params: { uid: projectUID },
             callback,
             responseConverter: () => {

@@ -1,0 +1,40 @@
+services:
+  ollama:
+    init: true
+    container_name: ${PROJECT_NAME}_ollama
+    image: ollama/ollama:latest
+    environment:
+      - OLLAMA_HOST=${PROJECT_NAME}_ollama:11434
+      - OLLAMA_KEEP_ALIVE=${OLLAMA_KEEP_ALIVE:-30m}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - net
+    restart: always
+
+  ui:
+    environment:
+      - IS_OLLAMA_RUNNING=true
+
+  api:
+    environment:
+      - OLLAMA_API_URL=http://${PROJECT_NAME}_ollama:11434
+
+  celeryworker:
+    environment:
+      - OLLAMA_API_URL=http://${PROJECT_NAME}_ollama:11434
+
+  socket:
+    environment:
+      - OLLAMA_API_URL=http://${PROJECT_NAME}_ollama:11434
+
+volumes:
+  ollama_data:
+    driver: local

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectLabel } from "@/core/models";
@@ -20,7 +20,7 @@ const useCreateProjectLabel = (options?: TMutationOptions<ICreateProjectLabelFor
     const { mutate } = useQueryMutation();
 
     const createProjectLabel = async (params: ICreateProjectLabelForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.LABEL.CREATE, {
+        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.LABEL.CREATE, {
             uid: params.project_uid,
         });
         const res = await api.post(

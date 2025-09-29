@@ -5,10 +5,10 @@ from core.service import BaseService
 from core.types import SnowflakeID
 from core.utils.Converter import convert_python_data
 from core.utils.String import generate_random_string
+from helpers import ServiceHelper
 from models import AppSetting, GlobalCardRelationshipType
 from models.AppSetting import AppSettingType
-from ...core.service import ServiceHelper
-from ...publishers import AppSettingPublisher
+from publishers import AppSettingPublisher
 from .Types import TGlobalCardRelationshipTypeParam, TSettingParam
 
 
@@ -83,7 +83,10 @@ class AppSettingService(BaseService):
         return setting
 
     async def update(
-        self, setting: TSettingParam, setting_name: str | None = None, setting_value: Any | None = None
+        self,
+        setting: TSettingParam,
+        setting_name: str | None = None,
+        setting_value: Any | None = None,
     ) -> AppSetting | Literal[True] | None:
         setting = ServiceHelper.get_by_param(AppSetting, setting)
         if not setting:

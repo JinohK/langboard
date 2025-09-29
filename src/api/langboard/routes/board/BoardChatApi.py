@@ -4,8 +4,8 @@ from core.schema import OpenApiSchema
 from fastapi import Depends, status
 from models import ChatHistory, ChatTemplate, Project, ProjectRole, User
 from models.ProjectRole import ProjectRoleAction
+from publishers import ProjectPublisher
 from ...filter import RoleFilter
-from ...publishers import ProjectPublisher
 from ...security import Auth, RoleFinder
 from ...services import Service
 from .forms import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate
@@ -37,7 +37,9 @@ async def get_project_chat(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
 async def clear_project_chat(
-    project_uid: str, user: User = Auth.scope("api_user"), service: Service = Service.scope()
+    project_uid: str,
+    user: User = Auth.scope("api_user"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     await service.chat.clear(user, Project.__tablename__, project_uid)
 
@@ -86,7 +88,10 @@ async def create_chat_template(
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add("user")
 async def update_chat_template(
-    project_uid: str, template_uid: str, form: UpdateChatTemplate, service: Service = Service.scope()
+    project_uid: str,
+    template_uid: str,
+    form: UpdateChatTemplate,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     project = await service.project.get_by_uid(project_uid)
     if not project:

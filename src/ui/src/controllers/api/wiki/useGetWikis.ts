@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectWiki, User } from "@/core/models";
@@ -18,7 +18,7 @@ const useGetWikis = (params: IGetWikisForm, options?: TQueryOptions<unknown, IGe
     const { query } = useQueryMutation();
 
     const getWikis = async () => {
-        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
+        const url = Utils.String.format(Routing.API.BOARD.WIKI.GET_ALL, { uid: params.project_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

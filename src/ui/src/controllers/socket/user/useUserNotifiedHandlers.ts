@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, UserNotification } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useUserNotifiedHandlers = ({ callback, currentUser }: IUseUserNotifiedHand
         topicId: currentUser.uid,
         eventKey: `user-notified-${currentUser.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.USER.NOTIFIED,
+            name: SocketEvents.SERVER.USER.NOTIFIED,
             callback,
             responseConverter: (data) => {
                 UserNotification.Model.fromOne(data.notification, true);

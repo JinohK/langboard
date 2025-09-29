@@ -120,6 +120,17 @@ const config = {
                         transform: "translateX(100%) scaleX(0.2)",
                     },
                 },
+                shine: {
+                    "0%": {
+                        "background-position": "0% 0%",
+                    },
+                    "50%": {
+                        "background-position": "100% 100%",
+                    },
+                    "100%": {
+                        "background-position": "0% 0%",
+                    },
+                },
             },
             animation: {
                 "accordion-down": "accordion-down 0.3s ease-out",
@@ -128,6 +139,7 @@ const config = {
                 "collapse-up": "collapse-up 0.3s ease-out",
                 "caret-blink": "caret-blink 1.25s ease-out infinite",
                 progress: "progress 3s infinite linear",
+                shine: "shine var(--duration) infinite linear",
             },
             screens: {
                 "main-hover": {

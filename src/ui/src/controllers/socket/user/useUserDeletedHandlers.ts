@@ -1,5 +1,5 @@
 import { Toast } from "@/components/base";
-import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { Routing, SocketEvents } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AuthUser, User } from "@/core/models";
@@ -25,12 +25,12 @@ const useUserDeletedHandlers = ({ user, callback }: IUseUserDeletedHandlersProps
         topicId: user.uid,
         eventKey: `user-deleted-${user.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.USER.DELETED,
+            name: SocketEvents.SERVER.USER.DELETED,
             params: { uid: user.uid },
             callback,
             responseConverter: async () => {
                 if (user.MODEL_NAME === "AuthUser") {
-                    await api.post(API_ROUTES.AUTH.SIGN_OUT);
+                    await api.post(Routing.API.AUTH.SIGN_OUT);
                     cleanModels();
                     getAuthStore().removeToken();
                     Toast.Add.error(t("auth.You have been deleted."));

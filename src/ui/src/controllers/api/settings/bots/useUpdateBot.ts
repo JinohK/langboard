@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
@@ -23,7 +23,7 @@ const useUpdateBot = (bot: BotModel.TModel, options?: TMutationOptions<IUpdateBo
     const { mutate } = useQueryMutation();
 
     const updateBot = async (params: IUpdateBotForm) => {
-        const url = Utils.String.format(API_ROUTES.SETTINGS.BOTS.UPDATE, { bot_uid: bot.uid });
+        const url = Utils.String.format(Routing.API.SETTINGS.BOTS.UPDATE, { bot_uid: bot.uid });
         const formData = new FormData();
         Object.entries(params).forEach(([key, value]) => {
             if (!value) {

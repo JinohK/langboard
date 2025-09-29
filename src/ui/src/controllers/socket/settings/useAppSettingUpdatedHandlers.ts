@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AppSettingModel } from "@/core/models";
 import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
@@ -23,7 +23,7 @@ const useAppSettingUpdatedHandlers = ({ callback, setting }: IUseAppSettingUpdat
         topicId: GLOBAL_TOPIC_ID,
         eventKey: `app-setting-updated-${setting.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.UPDATED,
+            name: SocketEvents.SERVER.SETTINGS.UPDATED,
             params: { uid: setting.uid },
             callback,
             responseConverter: (data) => {

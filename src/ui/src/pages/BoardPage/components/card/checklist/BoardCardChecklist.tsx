@@ -25,7 +25,7 @@ export interface IBoardCardChecklistProps {
 }
 
 const stateStyles: { [Key in TColumnState["type"]]: string } = {
-    idle: "cursor-grab ",
+    idle: "",
     "is-row-over": "ring-2 ring-primary",
     "is-dragging": "opacity-40",
     "is-column-over": "",

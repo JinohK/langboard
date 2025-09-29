@@ -1,4 +1,4 @@
-import { Box, Dialog, Flex, Skeleton, Toast } from "@/components/base";
+import { Box, Dialog, Flex, ShineBorder, Skeleton, Toast } from "@/components/base";
 import useGetCardDetails from "@/controllers/api/card/useGetCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { BoardCardProvider, useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -24,6 +24,7 @@ import { AuthUser, ProjectCardAttachment, ProjectChecklist } from "@/core/models
 import useCardDeletedHandlers from "@/controllers/socket/card/useCardDeletedHandlers";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 import { getEditorStore } from "@/core/stores/EditorStore";
+import { useHasRunningBot } from "@/core/stores/BotStatusStore";
 
 export interface IBoardCardProps {
     projectUID: string;
@@ -157,6 +158,7 @@ function BoardCardResult(): JSX.Element {
     const { card } = useBoardCard();
     const attachments = ProjectCardAttachment.Model.useModels((model) => model.card_uid === card.uid);
     const checklists = ProjectChecklist.Model.useModels((model) => model.card_uid === card.uid);
+    const hasRunningBot = useHasRunningBot({ type: "card", targetUID: card.uid });
 
     useEffect(() => {
         return () => {
@@ -166,6 +168,7 @@ function BoardCardResult(): JSX.Element {
 
     return (
         <>
+            {hasRunningBot && <ShineBorder className="z-[999999]" />}
             <Dialog.Header className="sticky top-0 z-[100] mb-3 border-b-2 bg-background pb-3 text-left sm:-top-2">
                 <BoardCardTitle key={`board-card-title-${card.uid}`} />
                 <Flex gap="3">

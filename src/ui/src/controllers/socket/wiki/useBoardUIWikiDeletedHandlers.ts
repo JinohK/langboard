@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectWiki } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -14,7 +14,7 @@ const useBoardUIWikiDeletedHandlers = ({ callback, projectUID, wiki }: IUseBoard
         topicId: projectUID,
         eventKey: `board-ui-wiki-deleted-${wiki.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.WIKI.DELETED,
+            name: SocketEvents.SERVER.BOARD.WIKI.DELETED,
             params: { uid: wiki.uid },
             callback,
         },

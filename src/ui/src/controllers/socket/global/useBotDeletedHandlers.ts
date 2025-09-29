@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { BotModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -12,7 +12,7 @@ const useBotDeletedHandlers = ({ callback, bot }: IUseBotDeletedHandlersProps) =
         topic: ESocketTopic.Global,
         eventKey: `bot-deleted-${bot.uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.BOTS.DELETED,
+            name: SocketEvents.SERVER.GLOBALS.BOTS.DELETED,
             params: { uid: bot.uid },
             callback,
             responseConverter: () => {

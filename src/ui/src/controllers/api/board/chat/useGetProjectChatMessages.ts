@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ChatMessageModel } from "@/core/models";
@@ -23,7 +23,7 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
 
         ++pageRef.current;
 
-        const url = Utils.String.format(API_ROUTES.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
         const res = await api.get(url, {
             params: {
                 refer_time: lastCurrentDateRef.current,

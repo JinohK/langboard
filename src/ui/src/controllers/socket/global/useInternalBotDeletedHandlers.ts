@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { InternalBotModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -12,7 +12,7 @@ const useInternalBotDeletedHandlers = ({ callback }: IBaseUseSocketHandlersProps
         topic: ESocketTopic.Global,
         eventKey: "internal-bot-deleted",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.INTERNAL_BOTS.DELETED,
+            name: SocketEvents.SERVER.GLOBALS.INTERNAL_BOTS.DELETED,
             callback,
             responseConverter: (data) => {
                 InternalBotModel.Model.deleteModel(data.uid);

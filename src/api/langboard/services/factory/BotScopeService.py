@@ -1,10 +1,10 @@
 from typing import Any, Callable, TypeVar
 from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.service import BaseService
+from helpers import ServiceHelper
 from models import Bot
 from models.bases import BaseBotScopeModel, BotTriggerCondition
 from sqlmodel.sql.expression import SelectOfScalar
-from ...core.service import ServiceHelper
 from .Types import TBaseParam, TBotParam
 
 
@@ -66,7 +66,10 @@ class BotScopeService(BaseService):
         return model
 
     async def toggle_trigger_condition(
-        self, model_class: type[_TBotScopeModel], model: _TBotScopeModel | TBaseParam, condition: BotTriggerCondition
+        self,
+        model_class: type[_TBotScopeModel],
+        model: _TBotScopeModel | TBaseParam,
+        condition: BotTriggerCondition,
     ):
         model = ServiceHelper.get_by_param(model_class, model)
         if not model:

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { Routing, SocketEvents } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { AppSettingModel } from "@/core/models";
@@ -16,10 +16,10 @@ const useAppSettingCreatedHandlers = ({ callback }: IBaseUseSocketHandlersProps<
         topicId: GLOBAL_TOPIC_ID,
         eventKey: "app-setting-created",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.SETTINGS.CREATED,
+            name: SocketEvents.SERVER.SETTINGS.CREATED,
             callback,
             responseConverter: (data) => {
-                const url = Utils.String.format(API_ROUTES.SETTINGS.GET, { uid: data.uid });
+                const url = Utils.String.format(Routing.API.SETTINGS.GET, { uid: data.uid });
                 api.get(url, {
                     env: { interceptToast: true } as any,
                 }).then((res) => {

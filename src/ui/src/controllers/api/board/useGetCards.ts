@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { deleteCardModel } from "@/core/helpers/ModelHelper";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
@@ -18,7 +18,7 @@ const useGetCards = (params: IGetCardsForm, options?: TQueryOptions<unknown, IGe
     const { query } = useQueryMutation();
 
     const getCards = async () => {
-        const url = Utils.String.format(API_ROUTES.BOARD.GET_CARDS, { uid: params.project_uid });
+        const url = Utils.String.format(Routing.API.BOARD.GET_CARDS, { uid: params.project_uid });
         const res = await api.get(url, {
             env: {
                 interceptToast: options?.interceptToast,

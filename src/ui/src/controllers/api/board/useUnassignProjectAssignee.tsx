@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -15,7 +15,7 @@ const useUnassignProjectAssignee = (options?: TMutationOptions<IUnassignProjectA
     const { mutate } = useQueryMutation();
 
     const unassignProjectAssignee = async (params: IUnassignProjectAssigneeForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.UNASSIGN_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
+        const url = Utils.String.format(Routing.API.BOARD.UNASSIGN_ASSIGNEE, { uid: params.project_uid, assignee_uid: params.assignee_uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,

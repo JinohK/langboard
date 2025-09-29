@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCheckitem } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -18,7 +18,7 @@ const useCardCheckitemCreatedHandlers = ({ callback, cardUID, checklistUID }: IU
         topicId: cardUID,
         eventKey: `board-card-checkitem-created-${checklistUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.CHECKITEM.CREATED,
+            name: SocketEvents.SERVER.BOARD.CARD.CHECKITEM.CREATED,
             params: { uid: checklistUID },
             callback,
             responseConverter: (data) => {

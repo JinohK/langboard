@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TReactionEmoji } from "@/components/ReactionCounter";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -16,7 +16,7 @@ const useReactCardComment = (options?: TMutationOptions<IReactCardCommentForm>) 
     const { mutate } = useQueryMutation();
 
     const reactCardComment = async (params: IReactCardCommentForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.CARD.COMMENT.REACT, {
+        const url = Utils.String.format(Routing.API.BOARD.CARD.COMMENT.REACT, {
             uid: params.project_uid,
             card_uid: params.card_uid,
             comment_uid: params.comment_uid,

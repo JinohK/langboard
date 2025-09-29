@@ -4,6 +4,7 @@ from core.schema import Pagination
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.Converter import convert_python_data
+from helpers import ServiceHelper
 from models import (
     BotSchedule,
     Card,
@@ -22,10 +23,9 @@ from models import (
     User,
 )
 from models.Checkitem import CheckitemStatus
+from publishers import CardPublisher
 from sqlalchemy import func
 from langboard.ai import BotScheduleHelper
-from ...core.service import ServiceHelper
-from ...publishers import CardPublisher
 from ...tasks.activities import CardActivityTask
 from ...tasks.bot import CardBotTask
 from .BotScopeService import BotScopeService
@@ -143,7 +143,10 @@ class CardService(BaseService):
                 & (ProjectColumn.column("project_id") == Project.column("id")),
             )
             .join(ProjectRole, Project.column("id") == ProjectRole.column("project_id"))
-            .outerjoin(CardAssignedUser, Card.column("id") == CardAssignedUser.column("card_id"))
+            .outerjoin(
+                CardAssignedUser,
+                Card.column("id") == CardAssignedUser.column("card_id"),
+            )
             .where(
                 (ProjectRole.column("user_id") == user.id)
                 & (
@@ -159,7 +162,12 @@ class CardService(BaseService):
             )
             .where(Checkitem.column("created_at") <= refer_time)
             .order_by(Card.column("created_at").desc())
-            .group_by(Card.column("id"), Card.column("created_at"), ProjectColumn.column("id"), Project.column("id"))
+            .group_by(
+                Card.column("id"),
+                Card.column("created_at"),
+                ProjectColumn.column("id"),
+                Project.column("id"),
+            )
         )
         query = ServiceHelper.paginate(query, pagination.page, pagination.limit)
 
@@ -191,7 +199,10 @@ class CardService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.tables(Card, ProjectColumn)
-                .join(ProjectColumn, Card.column("project_column_id") == ProjectColumn.column("id"))
+                .join(
+                    ProjectColumn,
+                    Card.column("project_column_id") == ProjectColumn.column("id"),
+                )
                 .where(Card.column("project_id") == project.id)
                 .order_by(Card.column("order").asc())
             )
@@ -239,9 +250,10 @@ class CardService(BaseService):
             query = SqlBuilder.select.tables(User, CardAssignedUser)
         with DbSession.use(readonly=True) as db:
             result = db.exec(
-                query.join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id")).where(
-                    CardAssignedUser.column("card_id") == card.id
-                )
+                query.join(
+                    CardAssignedUser,
+                    User.column("id") == CardAssignedUser.column("user_id"),
+                ).where(CardAssignedUser.column("card_id") == card.id)
             )
             raw_users = result.all()
         if not as_api:
@@ -265,7 +277,10 @@ class CardService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.tables(User, CardAssignedUser)
-                .join(CardAssignedUser, User.column("id") == CardAssignedUser.column("user_id"))
+                .join(
+                    CardAssignedUser,
+                    User.column("id") == CardAssignedUser.column("user_id"),
+                )
                 .join(Card, CardAssignedUser.column("card_id") == Card.column("id"))
                 .join(Project, Card.column("project_id") == Project.column("id"))
                 .where(Project.column("id") == project.id)
@@ -363,7 +378,9 @@ class CardService(BaseService):
                     users.append(assign_user)
                     db.insert(
                         CardAssignedUser(
-                            project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=assign_user.id
+                            project_assigned_id=project_assigned_user.id,
+                            card_id=card.id,
+                            user_id=assign_user.id,
                         )
                     )
 
@@ -381,7 +398,11 @@ class CardService(BaseService):
         return card, api_card
 
     async def update(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, form: dict
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        form: dict,
     ) -> dict[str, Any] | Literal[True] | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
@@ -544,7 +565,11 @@ class CardService(BaseService):
             for user, project_assigned_user in raw_users:
                 with DbSession.use(readonly=False) as db:
                     db.insert(
-                        CardAssignedUser(project_assigned_id=project_assigned_user.id, card_id=card.id, user_id=user.id)
+                        CardAssignedUser(
+                            project_assigned_id=project_assigned_user.id,
+                            card_id=card.id,
+                            user_id=user.id,
+                        )
                     )
                     users.append(user)
 
@@ -567,7 +592,11 @@ class CardService(BaseService):
         return users
 
     async def update_labels(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, card: TCardParam, label_uids: list[str]
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        card: TCardParam,
+        label_uids: list[str],
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
@@ -619,7 +648,10 @@ class CardService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.table(Checkitem)
-                .join(Checklist, Checkitem.column("checklist_id") == Checklist.column("id"))
+                .join(
+                    Checklist,
+                    Checkitem.column("checklist_id") == Checklist.column("id"),
+                )
                 .where(
                     (Checklist.column("card_id") == card.id) & (Checkitem.column("status") == CheckitemStatus.Started)
                 )
@@ -630,7 +662,13 @@ class CardService(BaseService):
         current_time = SafeDateTime.now()
         for checkitem in started_checkitems:
             await checkitem_service.change_status(
-                user_or_bot, project, card, checkitem, CheckitemStatus.Stopped, current_time, should_publish=False
+                user_or_bot,
+                project,
+                card,
+                checkitem,
+                CheckitemStatus.Stopped,
+                current_time,
+                should_publish=False,
             )
 
         with DbSession.use(readonly=False) as db:

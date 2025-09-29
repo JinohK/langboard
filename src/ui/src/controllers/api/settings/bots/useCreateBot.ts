@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { BotModel } from "@/core/models";
@@ -44,7 +44,7 @@ const useCreateBot = (options?: TMutationOptions<ICreateBotForm, ICreateBotRespo
             }
         });
 
-        const res = await api.post(API_ROUTES.SETTINGS.BOTS.CREATE, formData, {
+        const res = await api.post(Routing.API.SETTINGS.BOTS.CREATE, formData, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

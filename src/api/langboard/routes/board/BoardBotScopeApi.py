@@ -2,12 +2,11 @@ from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from fastapi import status
+from helpers import BotHelper, ServiceHelper
 from models import ProjectRole
 from models.ProjectRole import ProjectRoleAction
-from ...core.service import ServiceHelper
-from ...core.utils.BotUtils import BotUtils
+from publishers import ProjectBotPublisher
 from ...filter import RoleFilter
-from ...publishers import ProjectBotPublisher
 from ...security import RoleFinder
 from ...services import Service
 from .forms import CreateBotScopeForm, DeleteBotScopeForm, ToggleBotTriggerConditionForm
@@ -22,9 +21,12 @@ from .forms import CreateBotScopeForm, DeleteBotScopeForm, ToggleBotTriggerCondi
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
 @AuthFilter.add()
 async def create_bot_scope_in_project(
-    project_uid: str, bot_uid: str, form: CreateBotScopeForm, service: Service = Service.scope()
+    project_uid: str,
+    bot_uid: str,
+    form: CreateBotScopeForm,
+    service: Service = Service.scope(),
 ) -> JsonResponse:
-    result = BotUtils.get_target_model_by_param("scope", form.target_table, form.target_uid)
+    result = BotHelper.get_target_model_by_param("scope", form.target_table, form.target_uid)
     if not result:
         return JsonResponse(content=ApiErrorCode.VA3003, status_code=status.HTTP_400_BAD_REQUEST)
     scope_model_class, target_scope = result
@@ -59,7 +61,7 @@ async def toggle_bot_trigger_condition(
     form: ToggleBotTriggerConditionForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    scope_model_class = BotUtils.get_bot_model_class("scope", form.target_table)
+    scope_model_class = BotHelper.get_bot_model_class("scope", form.target_table)
     if not scope_model_class:
         return JsonResponse(content=ApiErrorCode.VA3003, status_code=status.HTTP_400_BAD_REQUEST)
 
@@ -93,7 +95,7 @@ async def delete_bot_scope(
     form: DeleteBotScopeForm,
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    scope_model_class = BotUtils.get_bot_model_class("scope", form.target_table)
+    scope_model_class = BotHelper.get_bot_model_class("scope", form.target_table)
     if not scope_model_class:
         return JsonResponse(content=ApiErrorCode.VA3003, status_code=status.HTTP_400_BAD_REQUEST)
 

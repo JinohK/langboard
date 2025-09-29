@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { EHttpStatus } from "@langboard/core/enums";
@@ -24,7 +24,7 @@ const useBatchApi = (options?: TMutationOptions<IBatchApiForm>) => {
     const { mutate } = useQueryMutation();
 
     const batch = async (params: IBatchApiForm) => {
-        const res = await api.post(API_ROUTES.BATCH, params, {
+        const res = await api.post(Routing.API.BATCH, params, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

@@ -38,6 +38,7 @@ export * as ScrollArea from "@/components/base/ScrollArea";
 export * as Select from "@/components/base/Select";
 export { default as Separator } from "@/components/base/Separator";
 export * as Sheet from "@/components/base/Sheet";
+export { default as ShineBorder } from "@/components/base/ShineBorder";
 export { default as Skeleton } from "@/components/base/Skeleton";
 export { default as SubmitButton } from "@/components/base/SubmitButton";
 export { default as SuspenseComponent } from "@/components/base/SuspenseComponent";

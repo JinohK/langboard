@@ -1,4 +1,4 @@
-import { SOCKET_CLIENT_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ESocketTopic } from "@langboard/core/enums";
 
@@ -12,7 +12,7 @@ const useBoardChatCancelHandlers = ({ projectUID }: IUseBoardChatCancelHandlersP
         topicId: projectUID,
         eventKey: `board-chat-cancel-${projectUID}`,
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CHAT.CANCEL,
+            name: SocketEvents.CLIENT.BOARD.CHAT.CANCEL,
         },
     });
 };

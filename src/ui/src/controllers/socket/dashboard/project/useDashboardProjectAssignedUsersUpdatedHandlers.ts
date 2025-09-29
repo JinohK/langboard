@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { Project, User } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
@@ -21,7 +21,7 @@ const useDashboardProjectAssignedUsersUpdatedHandlers = ({ callback, projectUID 
         topicId: projectUID,
         eventKey: `dashboard-project-assigned-users-updated-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.DASHBOARD.PROJECT.ASSIGNED_USERS_UPDATED,
+            name: SocketEvents.SERVER.DASHBOARD.PROJECT.ASSIGNED_USERS_UPDATED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

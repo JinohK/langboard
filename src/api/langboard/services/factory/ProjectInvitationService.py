@@ -6,12 +6,19 @@ from core.Env import UI_QUERY_NAMES, Env
 from core.service import BaseService
 from core.types import SnowflakeID
 from core.utils.String import concat, generate_random_string
-from models import Project, ProjectAssignedUser, ProjectInvitation, User, UserEmail, UserNotification
+from helpers import ServiceHelper
+from models import (
+    Project,
+    ProjectAssignedUser,
+    ProjectInvitation,
+    User,
+    UserEmail,
+    UserNotification,
+)
 from models.UserNotification import NotificationType
+from publishers import ProjectInvitationPublisher, ProjectPublisher
 from sqlalchemy import String
 from sqlalchemy import cast as sql_cast
-from ...core.service import ServiceHelper
-from ...publishers import ProjectInvitationPublisher, ProjectPublisher
 from ...tasks.activities import ProjectActivityTask, UserActivityTask
 from .EmailService import EmailService
 from .NotificationService import NotificationService
@@ -101,7 +108,10 @@ class ProjectInvitationService(BaseService):
         for invitation in invitations:
             if invitation.email not in emails:
                 user, subemail = await user_service.get_by_email(invitation.email)
-                invitation_result.emails_should_remove[invitation.email] = (invitation, user)
+                invitation_result.emails_should_remove[invitation.email] = (
+                    invitation,
+                    user,
+                )
 
         for email in emails:
             user, subemail = await user_service.get_by_email(email)
@@ -202,7 +212,10 @@ class ProjectInvitationService(BaseService):
         with DbSession.use(readonly=True) as db:
             result = db.exec(
                 SqlBuilder.select.tables(ProjectInvitation, Project)
-                .join(Project, ProjectInvitation.column("project_id") == Project.column("id"))
+                .join(
+                    Project,
+                    ProjectInvitation.column("project_id") == Project.column("id"),
+                )
                 .where(
                     (ProjectInvitation.column("email") == user.email) & (ProjectInvitation.column("token") != None)  # noqa
                 )
@@ -299,7 +312,10 @@ class ProjectInvitationService(BaseService):
         return token_url
 
     async def __get_invitation_by_token(self, user: User, token: str) -> ProjectInvitation | None:
-        invitation_token, invitation_id = ProjectInvitation.validate_token(token) or (None, None)
+        invitation_token, invitation_id = ProjectInvitation.validate_token(token) or (
+            None,
+            None,
+        )
         if not invitation_token or not invitation_id:
             return None
 

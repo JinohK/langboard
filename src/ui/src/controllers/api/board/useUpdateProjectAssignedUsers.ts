@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -13,7 +13,7 @@ const useUpdateProjectAssignedUsers = (options?: TMutationOptions<IUpdateProject
     const { mutate } = useQueryMutation();
 
     const updateProjectAssignedUsers = async (params: IUpdateProjectAssignedUsersForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.UPDATE_ASSIGNED_USERS, {
+        const url = Utils.String.format(Routing.API.BOARD.UPDATE_ASSIGNED_USERS, {
             uid: params.uid,
         });
         const res = await api.put(

@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -14,7 +14,7 @@ const useDeleteProject = (options?: TMutationOptions<IDeleteProjectForm, IDelete
     const { mutate } = useQueryMutation();
 
     const deleteProject = async (params: IDeleteProjectForm) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.SETTINGS.DELETE_PROJECT, {
+        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.DELETE_PROJECT, {
             uid: params.project_uid,
         });
         const res = await api.delete(url, {

@@ -1,11 +1,11 @@
 from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse, SocketTopic
 from fastapi import Depends, status
+from helpers import ServiceHelper
 from models import Bot, Project, ProjectRole, ProjectWiki, ProjectWikiMetadata, User
 from models.ProjectRole import ProjectRoleAction
-from ...core.service import ServiceHelper
+from publishers import MetadataPublisher
 from ...filter import RoleFilter
-from ...publishers import MetadataPublisher
 from ...security import Auth, RoleFinder
 from ...services import Service
 from .MetadataForm import MetadataDeleteForm, MetadataForm, MetadataGetModel
@@ -22,14 +22,17 @@ from .MetadataHelper import create_metadata_api_schema
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add()
 async def get_wiki_metadata(
-    project_uid: str, wiki_uid: str, user_or_bot: User | Bot = Auth.scope("api"), service: Service = Service.scope()
+    project_uid: str,
+    wiki_uid: str,
+    user_or_bot: User | Bot = Auth.scope("api"),
+    service: Service = Service.scope(),
 ) -> JsonResponse:
     params = ServiceHelper.get_records_with_foreign_by_params((Project, project_uid), (ProjectWiki, wiki_uid))
     if not params:
         return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
     _, wiki = params
 
-    if not await service.project_wiki.is_assigned(user_or_bot, wiki):
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, wiki):
         return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     metadata = await service.metadata.get_list(ProjectWikiMetadata, wiki, as_api=True, as_dict=True)
@@ -57,7 +60,7 @@ async def get_wiki_metadata_by_key(
         return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
     _, wiki = params
 
-    if not await service.project_wiki.is_assigned(user_or_bot, wiki):
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, wiki):
         return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     metadata = await service.metadata.get_by_key(ProjectWikiMetadata, wiki, get_query.key, as_api=False)
@@ -87,7 +90,7 @@ async def save_wiki_metadata(
         return JsonResponse(content=ApiErrorCode.NF2017, status_code=status.HTTP_404_NOT_FOUND)
     _, wiki = params
 
-    if not await service.project_wiki.is_assigned(user_or_bot, wiki):
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, wiki):
         return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     metadata = await service.metadata.save(ProjectWikiMetadata, wiki, form.key, form.value, form.old_key)
@@ -119,7 +122,7 @@ async def delete_wiki_metadata(
         return JsonResponse(content=ApiErrorCode.NF2008, status_code=status.HTTP_404_NOT_FOUND)
     _, wiki = params
 
-    if not await service.project_wiki.is_assigned(user_or_bot, wiki):
+    if isinstance(user_or_bot, User) and not await service.project_wiki.is_assigned(user_or_bot, wiki):
         return JsonResponse(content=ApiErrorCode.PE2005, status_code=status.HTTP_403_FORBIDDEN)
 
     await service.metadata.delete(ProjectWikiMetadata, wiki, form.keys)

@@ -5,16 +5,16 @@ from urllib.parse import urlparse
 from core.caching import Cache
 from core.db import DbSession, SqlBuilder
 from core.Env import UI_QUERY_NAMES, Env
+from core.resources.locales.LangEnum import LangEnum
 from core.service import BaseService
 from core.storage import FileModel
 from core.types import SafeDateTime, SnowflakeID
 from core.utils.Converter import convert_python_data
 from core.utils.Encryptor import Encryptor
 from core.utils.String import concat, generate_random_string
+from helpers import ServiceHelper
 from models import User, UserEmail, UserProfile
-from ...core.service import ServiceHelper
-from ...publishers import AppSettingPublisher, UserPublisher
-from ...resources.locales.LangEnum import LangEnum
+from publishers import AppSettingPublisher, UserPublisher
 from ...security import Auth
 from ...tasks.activities import UserActivityTask
 
@@ -124,7 +124,11 @@ class UserService(BaseService):
         return subemails
 
     async def create_token_url(
-        self, user: User, cache_key: str, token_query_name: UI_QUERY_NAMES, extra_token_data: dict | None = None
+        self,
+        user: User,
+        cache_key: str,
+        token_query_name: UI_QUERY_NAMES,
+        extra_token_data: dict | None = None,
     ) -> str:
         token = generate_random_string(32)
         token_expire_hours = 24

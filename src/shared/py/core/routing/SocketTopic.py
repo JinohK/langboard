@@ -15,5 +15,6 @@ class SocketTopic(Enum):
     User = "user"
     UserPrivate = "user_private"
     AppSettings = "app_settings"
+    OllamaManager = "ollama_manager"
     Global = "global"
     NoneTopic = "none"

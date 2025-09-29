@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { User } from "@/core/models";
@@ -33,7 +33,7 @@ const useUpdateProfile = (options?: TMutationOptions<IUpdateProfileForm>) => {
             }
         });
 
-        const res = await api.put(API_ROUTES.ACCOUNT.UPDATE_PROFILE, formData, {
+        const res = await api.put(Routing.API.ACCOUNT.UPDATE_PROFILE, formData, {
             env: {
                 interceptToast: options?.interceptToast,
             } as any,

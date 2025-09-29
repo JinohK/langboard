@@ -2,11 +2,19 @@ from typing import Any, Literal, cast, overload
 from core.db import DbSession, SqlBuilder
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
-from models import BotSchedule, Card, Project, ProjectColumn, ProjectColumnBotSchedule, ProjectColumnBotScope, User
+from helpers import ServiceHelper
+from models import (
+    BotSchedule,
+    Card,
+    Project,
+    ProjectColumn,
+    ProjectColumnBotSchedule,
+    ProjectColumnBotScope,
+    User,
+)
+from publishers import ProjectColumnPublisher
 from sqlalchemy import func
 from langboard.ai import BotScheduleHelper
-from ...core.service import ServiceHelper
-from ...publishers import ProjectColumnPublisher
 from ...tasks.activities import ProjectColumnActivityTask
 from ...tasks.bot import ProjectColumnBotTask
 from .BotScopeService import BotScopeService
@@ -112,7 +120,8 @@ class ProjectColumnService(BaseService):
         scopes = await bot_scope_service.get_list(
             ProjectColumnBotScope,
             lambda q: q.join(
-                ProjectColumn, ProjectColumn.column("id") == ProjectColumnBotScope.column("project_column_id")
+                ProjectColumn,
+                ProjectColumn.column("id") == ProjectColumnBotScope.column("project_column_id"),
             ).where(ProjectColumn.column("project_id") == project.id),
         )
 
@@ -120,14 +129,23 @@ class ProjectColumnService(BaseService):
 
     @overload
     async def get_bot_schedules_by_project(
-        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: Literal[False]
+        self,
+        project: TProjectParam,
+        columns: list[dict] | list[ProjectColumn] | None,
+        as_api: Literal[False],
     ) -> list[tuple[ProjectColumnBotSchedule, BotSchedule]]: ...
     @overload
     async def get_bot_schedules_by_project(
-        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: Literal[True]
+        self,
+        project: TProjectParam,
+        columns: list[dict] | list[ProjectColumn] | None,
+        as_api: Literal[True],
     ) -> list[dict[str, Any]]: ...
     async def get_bot_schedules_by_project(
-        self, project: TProjectParam, columns: list[dict] | list[ProjectColumn] | None, as_api: bool
+        self,
+        project: TProjectParam,
+        columns: list[dict] | list[ProjectColumn] | None,
+        as_api: bool,
     ) -> list[tuple[ProjectColumnBotSchedule, BotSchedule]] | list[dict[str, Any]]:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
@@ -196,7 +214,11 @@ class ProjectColumnService(BaseService):
         return column
 
     async def change_name(
-        self, user_or_bot: TUserOrBot, project: TProjectParam, column: TColumnParam, name: str
+        self,
+        user_or_bot: TUserOrBot,
+        project: TProjectParam,
+        column: TColumnParam,
+        name: str,
     ) -> bool | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
         if not params:
@@ -261,7 +283,8 @@ class ProjectColumnService(BaseService):
 
             ordered_cards_cte = (
                 SqlBuilder.select.columns(
-                    Card.column("id"), (func.row_number().over(order_by=Card.column("order")) - 1).label("new_order")
+                    Card.column("id"),
+                    (func.row_number().over(order_by=Card.column("order")) - 1).label("new_order"),
                 )
                 .where(Card.column("project_column_id") == column.id)
                 .cte("ordered_cards")

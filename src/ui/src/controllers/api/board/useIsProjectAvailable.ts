@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TQueryOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
@@ -16,7 +16,7 @@ const useIsProjectAvailable = (form: IIsProjectAvailableForm, options?: TQueryOp
     const { query } = useQueryMutation();
 
     const isProjectAvailable = async () => {
-        const url = Utils.String.format(API_ROUTES.BOARD.IS_AVAILABLE, { uid: form.uid });
+        const url = Utils.String.format(Routing.API.BOARD.IS_AVAILABLE, { uid: form.uid });
         const res = await api.post(url, undefined, {
             env: {
                 interceptToast: options?.interceptToast,

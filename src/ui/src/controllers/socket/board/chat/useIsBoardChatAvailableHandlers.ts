@@ -1,4 +1,4 @@
-import { SOCKET_CLIENT_EVENTS, SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { InternalBotModel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -47,7 +47,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
         topicId: projectUID,
         eventKey: `is-board-chat-available-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CHAT.IS_AVAILABLE,
+            name: SocketEvents.SERVER.BOARD.CHAT.IS_AVAILABLE,
             callback,
             responseConverter: (data) => {
                 let bot = undefined;
@@ -62,7 +62,7 @@ const useIsBoardChatAvailableHandlers = ({ callback, projectUID }: IUseIsBoardCh
             },
         },
         sendProps: {
-            name: SOCKET_CLIENT_EVENTS.BOARD.CHAT.IS_AVAILABLE,
+            name: SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE,
         },
     });
 };

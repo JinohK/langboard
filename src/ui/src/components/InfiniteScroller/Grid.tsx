@@ -130,7 +130,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                         return null;
                     }
 
-                    const rowItems = items[virtualRow.index] as React.ReactElement[];
+                    const rowItems = (items[virtualRow.index] || items[index]) as React.ReactElement[];
                     if (!rowItems) {
                         return null;
                     }

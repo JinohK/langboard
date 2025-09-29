@@ -1,12 +1,19 @@
 from typing import Literal, Self, overload
 from core.db import BaseSqlModel, DbSession, SqlBuilder
+from core.publisher import NotificationPublishModel
 from core.service import BaseService
-from models import Card, Project, ProjectColumn, ProjectWiki, User, UserNotificationUnsubscription
+from helpers import ServiceHelper
+from models import (
+    Card,
+    Project,
+    ProjectColumn,
+    ProjectWiki,
+    User,
+    UserNotificationUnsubscription,
+)
 from models.UserNotification import NotificationType
 from models.UserNotificationUnsubscription import NotificationChannel, NotificationScope
 from sqlmodel.sql.expression import SelectOfScalar
-from ...core.publisher import NotificationPublishModel
-from ...core.service import ServiceHelper
 from .Types import TCardParam, TColumnParam, TProjectParam, TWikiParam
 
 
@@ -41,7 +48,11 @@ class UserNotificationSettingService(BaseService):
             def where_scope(self, scope: Literal[NotificationScope.Specific], model: BaseSqlModel) -> Self: ...
             @overload
             def where_scope(self, scope: Literal[NotificationScope.Specific], model: tuple[str, int]) -> Self: ...
-            def where_scope(self, scope: NotificationScope, model: BaseSqlModel | tuple[str, int] | None = None):
+            def where_scope(
+                self,
+                scope: NotificationScope,
+                model: BaseSqlModel | tuple[str, int] | None = None,
+            ):
                 query = self.__query.where(UserNotificationUnsubscription.scope_type == scope)
 
                 if scope == NotificationScope.Specific and model:
@@ -230,7 +241,11 @@ class UserNotificationSettingService(BaseService):
         return await self.subscribe(**params)
 
     async def toggle_type(
-        self, user: User, channel: NotificationChannel, notification_type: NotificationType, is_unsubscribed: bool
+        self,
+        user: User,
+        channel: NotificationChannel,
+        notification_type: NotificationType,
+        is_unsubscribed: bool,
     ) -> list[NotificationType]:
         params = {
             "user": user,
@@ -249,10 +264,18 @@ class UserNotificationSettingService(BaseService):
     ) -> list[NotificationType]: ...
     @overload
     async def toggle_project(
-        self, user: User, channel: NotificationChannel, is_unsubscribed: bool, project: TProjectParam
+        self,
+        user: User,
+        channel: NotificationChannel,
+        is_unsubscribed: bool,
+        project: TProjectParam,
     ) -> list[NotificationType]: ...
     async def toggle_project(
-        self, user: User, channel: NotificationChannel, is_unsubscribed: bool, project: TProjectParam | None = None
+        self,
+        user: User,
+        channel: NotificationChannel,
+        is_unsubscribed: bool,
+        project: TProjectParam | None = None,
     ) -> list[NotificationType]:
         params = {
             "user": user,
@@ -333,7 +356,12 @@ class UserNotificationSettingService(BaseService):
     ) -> list[NotificationType]: ...
     @overload
     async def toggle_card(
-        self, user: User, channel: NotificationChannel, is_unsubscribed: bool, project: TProjectParam, card: TCardParam
+        self,
+        user: User,
+        channel: NotificationChannel,
+        is_unsubscribed: bool,
+        project: TProjectParam,
+        card: TCardParam,
     ) -> list[NotificationType]: ...
     async def toggle_card(
         self,
@@ -375,7 +403,12 @@ class UserNotificationSettingService(BaseService):
     ) -> list[NotificationType]: ...
     @overload
     async def toggle_wiki(
-        self, user: User, channel: NotificationChannel, is_unsubscribed: bool, project: TProjectParam, wiki: TWikiParam
+        self,
+        user: User,
+        channel: NotificationChannel,
+        is_unsubscribed: bool,
+        project: TProjectParam,
+        wiki: TWikiParam,
     ) -> list[NotificationType]: ...
     async def toggle_wiki(
         self,

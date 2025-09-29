@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { GlobalRelationshipType } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -12,7 +12,7 @@ const useGlobalRelationshipCreatedHandlers = ({ callback }: IBaseUseSocketHandle
         topic: ESocketTopic.Global,
         eventKey: "global-relationship-created",
         onProps: {
-            name: SOCKET_SERVER_EVENTS.GLOBALS.GLOBAL_RELATIONSHIPS.CREATED,
+            name: SocketEvents.SERVER.GLOBALS.GLOBAL_RELATIONSHIPS.CREATED,
             callback,
             responseConverter: (data) => {
                 GlobalRelationshipType.Model.fromOne(data.global_relationship, true);

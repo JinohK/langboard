@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect } from "react";
 import { APP_SHORT_NAME } from "@/constants";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api, refresh } from "@/core/helpers/Api";
 import { useQueryMutation } from "@/core/helpers/QueryMutation";
 import { AuthUser } from "@/core/models";
@@ -91,7 +91,7 @@ export const AuthProvider = ({ children }: IAuthProviderProps): React.ReactNode 
     };
 
     const signOut = async () => {
-        await api.post(API_ROUTES.AUTH.SIGN_OUT);
+        await api.post(Routing.API.AUTH.SIGN_OUT);
         cleanModels();
         removeToken();
         queryClient.clear();

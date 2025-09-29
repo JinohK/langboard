@@ -2,7 +2,7 @@
 import { createContext, useContext, useMemo } from "react";
 import { AuthUser } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
 
 export type TEditorType = "view" | "card-description" | "card-comment" | "card-new-comment" | "wiki-content";
@@ -127,13 +127,13 @@ export const EditorDataProvider = ({
     const uploadPath = useMemo(() => {
         switch (editorType) {
             case "card-description":
-                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(Routing.API.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "card-comment":
-                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(Routing.API.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "card-new-comment":
-                return Utils.String.format(API_ROUTES.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
+                return Utils.String.format(Routing.API.BOARD.CARD.ATTACHMENT.UPLOAD, { uid: form.project_uid, card_uid: form.card_uid });
             case "wiki-content":
-                return Utils.String.format(API_ROUTES.BOARD.WIKI.UPLOAD, { uid: form.project_uid, wiki_uid: form.wiki_uid });
+                return Utils.String.format(Routing.API.BOARD.WIKI.UPLOAD, { uid: form.project_uid, wiki_uid: form.wiki_uid });
             default:
         }
     }, [editorType, form]);

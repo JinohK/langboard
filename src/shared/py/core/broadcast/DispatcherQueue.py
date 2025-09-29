@@ -1,5 +1,7 @@
-from typing import Any, cast, overload
+from pathlib import Path
+from typing import Any, overload
 from pydantic import BaseModel
+from ..Env import Env
 from ..utils.decorators import class_instance, thread_safe_singleton
 from .BaseDispatcherQueue import BaseDispatcherQueue
 
@@ -14,12 +16,21 @@ class DispatcherQueue(BaseDispatcherQueue):
         return self.__instance.is_closed
 
     def __init__(self):
-        self.__instance: BaseDispatcherQueue = cast(BaseDispatcherQueue, None)
+        if Env.BROADCAST_TYPE == "in-memory":
+            from .memory import MemoryDispatcherQueue
 
-    def set_queue(self, queue: BaseDispatcherQueue):
-        if not isinstance(queue, BaseDispatcherQueue):
-            raise TypeError("queue must be an instance of BaseDispatcherQueue")
-        self.__instance = queue
+            instance = MemoryDispatcherQueue()
+        elif Env.BROADCAST_TYPE == "kafka":
+            from .kafka import KafkaDispatcherQueue
+
+            instance = KafkaDispatcherQueue()
+        else:
+            raise ValueError(f"Unsupported BROADCAST_TYPE: {Env.BROADCAST_TYPE}")
+
+        self.__instance: BaseDispatcherQueue = instance
+
+    def set_broadcast_dir(self, broadcast_dir: Path):
+        self.__instance.set_broadcast_dir(broadcast_dir)
 
     @overload
     async def put(self, event: str, data: dict[str, Any]): ...

@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectLabel } from "@/core/models";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -17,7 +17,7 @@ const useBoardLabelDeletedHandlers = ({ callback, projectUID }: IUseBoardLabelDe
         topicId: projectUID,
         eventKey: `board-label-deleted-${projectUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.LABEL.DELETED,
+            name: SocketEvents.SERVER.BOARD.LABEL.DELETED,
             params: { uid: projectUID },
             callback,
             responseConverter: (data) => {

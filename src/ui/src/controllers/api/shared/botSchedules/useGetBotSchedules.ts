@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TBotScheduleRelatedParams } from "@/controllers/api/shared/botSchedules/types";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCardBotSchedule, ProjectColumnBotSchedule, ProjectCard, ProjectColumn } from "@/core/models";
@@ -22,14 +22,14 @@ const useGetBotSchedules = (botUID: string, params: TUseGetBotSchedulesForm, lim
     let url;
     switch (params.target_table) {
         case "project_column":
-            url = Utils.String.format(API_ROUTES.BOARD.BOT.SCHEDULE.GET_ALL_BY_COLUMN, {
+            url = Utils.String.format(Routing.API.BOARD.BOT.SCHEDULE.GET_ALL_BY_COLUMN, {
                 uid: params.project_uid,
                 bot_uid: botUID,
                 column_uid: params.target_uid,
             });
             break;
         case "card":
-            url = Utils.String.format(API_ROUTES.BOARD.BOT.SCHEDULE.GET_ALL_BY_CARD, {
+            url = Utils.String.format(Routing.API.BOARD.BOT.SCHEDULE.GET_ALL_BY_CARD, {
                 uid: params.project_uid,
                 bot_uid: botUID,
                 card_uid: params.target_uid,

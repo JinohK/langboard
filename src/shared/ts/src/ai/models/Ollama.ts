@@ -1,19 +1,29 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+import { TGetModelOptions } from "@/ai/models/types";
 import { Utils } from "@/utils";
 import axios from "axios";
 
-export const getOllamaModels = async (values: Record<string, any>) => {
+export const OLLAMA_DEFAULT_VALUE = "default";
+
+export const getOllamaModels = async ({ values, envs }: TGetModelOptions) => {
     if (!values.base_url) {
         return [];
     }
 
+    let baseURL = values.base_url.endsWith("/") ? values.base_url.slice(0, -1) : values.base_url;
+    let listEndpoint = "/api/tags";
+    let detailsEndpoint = "/api/show";
+    if (values.base_url === OLLAMA_DEFAULT_VALUE) {
+        baseURL = envs.API_URL;
+        listEndpoint = "/settings/ollama/models";
+        detailsEndpoint = "/settings/ollama/model/details";
+    }
+
     const availableModels: string[] = [];
-    const baseURL = values.base_url.endsWith("/") ? values.base_url.slice(0, -1) : values.base_url;
     const api = axios.create({
         baseURL,
     });
     try {
-        const response = await api.get("/api/tags");
+        const response = await api.get(listEndpoint);
 
         const models: { name: string }[] = response.data?.models;
         if (!Utils.Type.isArray(models)) {
@@ -24,7 +34,7 @@ export const getOllamaModels = async (values: Record<string, any>) => {
             const modelName = models[i].name;
 
             try {
-                const modelResponse = await api.post("/api/show", {
+                const modelResponse = await api.post(detailsEndpoint, {
                     model: modelName,
                 });
 

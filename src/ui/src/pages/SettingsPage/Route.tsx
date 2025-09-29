@@ -53,6 +53,10 @@ const routes: RouteObject[] = [
                 element: <></>,
             },
             {
+                path: ROUTES.SETTINGS.OLLAMA,
+                element: <></>,
+            },
+            {
                 path: ROUTES.SETTINGS.CREATE_API_KEY,
                 element: <ModalPage />,
             },

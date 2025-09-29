@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { UserGroup } from "@/core/models";
@@ -17,7 +17,7 @@ const useCreateUserGroup = (options?: TMutationOptions<ICreateUserGroupForm, ICr
 
     const createUserGroup = async (params: ICreateUserGroupForm) => {
         const res = await api.post(
-            API_ROUTES.ACCOUNT.USER_GROUP.CREATE,
+            Routing.API.ACCOUNT.USER_GROUP.CREATE,
             {
                 name: params.name,
             },

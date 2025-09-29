@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectCard, ProjectCardComment } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
@@ -19,7 +19,7 @@ const useCardCommentAddedHandlers = ({ callback, projectUID, cardUID }: IUseCard
         topicId: projectUID,
         eventKey: `board-card-comment-added-${cardUID}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.CARD.COMMENT.ADDED,
+            name: SocketEvents.SERVER.BOARD.CARD.COMMENT.ADDED,
             params: { uid: cardUID },
             callback,
             responseConverter: (data) => {

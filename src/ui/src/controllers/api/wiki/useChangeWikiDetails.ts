@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { IEditorContent } from "@/core/models/Base";
@@ -23,7 +23,7 @@ const useChangeWikiDetails = <TDetail extends TChangeableDetail>(type: TDetail, 
     const { mutate } = useQueryMutation();
 
     const changeWikiDetails = async (params: TChangeWikiDetailsForm<TDetail>) => {
-        const url = Utils.String.format(API_ROUTES.BOARD.WIKI.CHANGE_DETAILS, {
+        const url = Utils.String.format(Routing.API.BOARD.WIKI.CHANGE_DETAILS, {
             uid: params.project_uid,
             wiki_uid: params.wiki_uid,
         });

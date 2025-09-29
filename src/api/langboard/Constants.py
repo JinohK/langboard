@@ -1,6 +1,7 @@
 from os.path import dirname
 from pathlib import Path
 from sys import executable
+from core.caching import Cache
 from core.Env import Env
 
 
@@ -26,5 +27,9 @@ CRON_TAB_FILE = Path(Env.get_from_env("CRON_TAB_FILE", DATA_DIR / "cron.tab"))
 
 # App Config
 APP_CONFIG_FILE = DATA_DIR / "api_config.json"
+
+# Cache
+CACHE_DIR = DATA_DIR / "cache"
+Cache.set_cache_dir(CACHE_DIR)
 
 EMAIL_REGEX = r"^.+@.+\..+$"

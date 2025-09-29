@@ -1,4 +1,4 @@
-import { SOCKET_SERVER_EVENTS } from "@/controllers/constants";
+import { SocketEvents } from "@langboard/core/constants";
 import { deleteProjectColumnModel } from "@/core/helpers/ModelHelper";
 import useSocketHandler, { IBaseUseSocketHandlersProps } from "@/core/helpers/SocketHandler";
 import { ProjectColumn } from "@/core/models";
@@ -22,7 +22,7 @@ const useBoardColumnDeletedHandlers = ({ callback, column }: IUseBoardColumnDele
         topicId: column.project_uid,
         eventKey: `board-column-deleted-${column.project_uid}`,
         onProps: {
-            name: SOCKET_SERVER_EVENTS.BOARD.COLUMN.DELETED,
+            name: SocketEvents.SERVER.BOARD.COLUMN.DELETED,
             params: { uid: column.uid },
             callback,
             responseConverter: (data) => {

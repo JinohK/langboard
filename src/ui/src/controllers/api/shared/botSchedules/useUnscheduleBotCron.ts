@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { TBotScheduleRelatedParams } from "@/controllers/api/shared/botSchedules/types";
-import { API_ROUTES } from "@/controllers/constants";
+import { Routing } from "@langboard/core/constants";
 import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ProjectCardBotSchedule, ProjectColumnBotSchedule } from "@/core/models";
@@ -19,7 +19,7 @@ const useUnscheduleBotCron = (params: TUnscheduleBotCronParams, options?: TMutat
         switch (params.target_table) {
             case "project_column":
             case "card":
-                url = Utils.String.format(API_ROUTES.BOARD.BOT.SCHEDULE.UNSCHEDULE, {
+                url = Utils.String.format(Routing.API.BOARD.BOT.SCHEDULE.UNSCHEDULE, {
                     uid: params.project_uid,
                     bot_uid: params.bot_uid,
                     schedule_uid: params.schedule_uid,

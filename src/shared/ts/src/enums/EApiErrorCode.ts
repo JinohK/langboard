@@ -51,6 +51,8 @@ export enum EApiErrorCode {
     NF3002 = "Settings not found.",
     NF3003 = "Global relationships not found.",
     NF3004 = "Internal bot not found.",
+    NF9000 = "Ollama API not found.",
+    NF9001 = "Ollama model not found.",
 
     // Validation Errors
     VA0000 = "Invalid request.",

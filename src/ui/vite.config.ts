@@ -60,9 +60,10 @@ export default defineConfig(({ mode }) => {
             "process.env.IS_PRODUCTION": JSON.stringify(mode === "production"),
             "process.env.PROJECT_NAME": JSON.stringify(process.env.PROJECT_NAME),
             "process.env.PROJECT_SHORT_NAME": JSON.stringify(process.env.PROJECT_SHORT_NAME),
-            "process.env.SOCKET_URL": JSON.stringify(isLocal ? SOCKET_SERVER : process.env.SOCKET_URL),
             "process.env.API_URL": JSON.stringify(isLocal ? API_SERVER : process.env.API_URL),
             "process.env.PUBLIC_UI_URL": JSON.stringify(isLocal ? UI_SERVER : process.env.PUBLIC_UI_URL),
+            "process.env.SOCKET_URL": JSON.stringify(isLocal ? SOCKET_SERVER : process.env.SOCKET_URL),
+            "process.env.IS_OLLAMA_RUNNING": JSON.stringify(process.env.IS_OLLAMA_RUNNING || (process.env.OLLAMA_API_URL ? "true" : "false")),
             "process.env.MAX_FILE_SIZE_MB": JSON.stringify(process.env.MAX_FILE_SIZE_MB || 50),
         },
         build: {

@@ -6,7 +6,7 @@ import BoardColumnCard, { BoardColumnCardShadow, SkeletonBoardColumnCard } from 
 import { useBoard } from "@/core/providers/BoardProvider";
 import { Project, ProjectColumn } from "@/core/models";
 import { BoardAddCardProvider } from "@/core/providers/BoardAddCardProvider";
-import { Box, Card, Flex, ScrollArea, Skeleton } from "@/components/base";
+import { Box, Card, Flex, ScrollArea, ShineBorder, Skeleton } from "@/components/base";
 import BoardColumnHeader from "@/pages/BoardPage/components/board/BoardColumnHeader";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardColumnAddCard from "@/pages/BoardPage/components/board/BoardColumnAddCard";
@@ -19,6 +19,7 @@ import { TColumnState } from "@/core/helpers/dnd/types";
 import { BLOCK_BOARD_PANNING_ATTR, BOARD_DND_SETTINGS, BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardConstants";
 import { COLUMN_IDLE } from "@/core/helpers/dnd/createDndColumnEvents";
 import useRowReordered from "@/core/hooks/useRowReordered";
+import { useHasRunningBot } from "@/core/stores/BotStatusStore";
 
 export function SkeletonBoardColumn({ cardCount }: { cardCount: number }) {
     return (
@@ -59,6 +60,7 @@ function BoardColumn({ column, updateBoard }: IBoardColumnProps) {
     const innerRef = useRef<HTMLDivElement | null>(null);
     const [state, setState] = useState<TColumnState>(COLUMN_IDLE);
     const order = column.useField("order");
+    const hasRunningBot = useHasRunningBot({ type: "project_column", targetUID: column.uid });
 
     useEffect(() => {
         const outer = outerFullHeightRef.current;
@@ -98,10 +100,11 @@ function BoardColumn({ column, updateBoard }: IBoardColumnProps) {
             <Card.Root
                 ref={outerFullHeightRef}
                 className={cn(
-                    "my-1 w-72 flex-shrink-0 snap-center shadow-md shadow-black/30 ring-primary dark:shadow-border/90 sm:w-80",
+                    "relative my-1 w-72 flex-shrink-0 snap-center shadow-md shadow-black/30 ring-primary dark:shadow-border/90 sm:w-80",
                     stateStyles[state.type]
                 )}
             >
+                {hasRunningBot && <ShineBorder />}
                 <BoardColumnHeader isDragging={state.type !== "idle"} column={column} headerProps={{ ref: headerRef }} />
                 <ScrollArea.Root viewportRef={scrollableRef} viewportClassName="!overflow-y-auto">
                     <Card.Content
