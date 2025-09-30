@@ -4,10 +4,9 @@ COMPOSE_PREFIX := ./docker/docker-compose
 COMPOSE_ARGS := -f $(COMPOSE_PREFIX).kafka.yaml -f $(COMPOSE_PREFIX).pg.yaml -f $(COMPOSE_PREFIX).redis.yaml -f $(COMPOSE_PREFIX).server.yaml --env-file ./.env
 DOCS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).docs.yaml
 UI_WATCHER_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ui-watcher.yaml
-FLOWS_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).flows.yaml
 OLLAMA_SHARED_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.shared.yaml
-OLLAMA_CPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.cpu.yaml
-OLLAMA_GPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.gpu.yaml
+OLLAMA_CPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.cpu.yaml $(OLLAMA_SHARED_COMPOSE_ARGS)
+OLLAMA_GPU_COMPOSE_ARGS := -f $(COMPOSE_PREFIX).ollama.gpu.yaml $(OLLAMA_SHARED_COMPOSE_ARGS)
 UI_DIR := src/ui
 API_DIR := src/api
 FLOWS_DIR := src/flows
@@ -34,11 +33,9 @@ ifeq ($(WITH_UI_WATCHER), true)
 endif
 ifeq ($(WITH_OLLAMA_CPU), true)
 	COMPOSE_ARGS += $(OLLAMA_CPU_COMPOSE_ARGS)
-	COMPOSE_ARGS += $(OLLAMA_SHARED_COMPOSE_ARGS)
 endif
 ifeq ($(WITH_OLLAMA_GPU), true)
 	COMPOSE_ARGS += $(OLLAMA_GPU_COMPOSE_ARGS)
-	COMPOSE_ARGS += $(OLLAMA_SHARED_COMPOSE_ARGS)
 endif
 
 

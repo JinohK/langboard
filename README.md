@@ -15,6 +15,32 @@ Langboard’s mission is to enable enterprises to harness AI efficiency without 
 
 ---
 
+## 🚀 Quick Start
+
+- For Windows users
+
+  - You can double-click one of `quickstart.bat`, `quickstart-ollama-cpu.bat`, and `quickstart-ollama-gpu.bat` in `scripts` directory
+  - You can run bat scripts below
+
+  ```batch
+  cd .\scripts
+  .\quickstart.bat    REM default
+  .\quickstart-ollama-cpu.bat   REM if you want CPU mode
+  .\quickstart-ollama-gpu.bat   REM if you want GPU mode
+  ```
+
+- For other OS users,
+
+  - You can double-click one of `quickstart.sh`, `quickstart-ollama-cpu.sh`, and `quickstart-ollama-gpu.sh` in `scripts` directory
+  - You can run bash scripts below
+
+  ```bash
+  cd ./scripts
+  ./quickstart.sh              # default
+  ./quickstart-ollama-cpu.sh   # if you want CPU mode
+  ./quickstart-ollama-gpu.sh   # if you want GPU mode
+  ```
+
 ## ✨ Core Features
 
 1. **Kanban Board Interface**
@@ -74,47 +100,6 @@ Langboard’s mission is to enable enterprises to harness AI efficiency without 
 - **vs DeepAuto**: DeepAuto focuses on full automation (Query Router, LongContext AI). Langboard emphasizes human approval and governance.
 - **vs LangChain (library)**: Langboard provides a **UI-driven orchestration layer** with Kanban visualization and collaboration.
 - **vs Flowise / LangFlow (open-source UI)**: These tools are great for prototyping, but lack enterprise features such as RBAC, audit logs, SSO, and approval gates. Langboard extends them into a production-grade solution.
-
----
-
-## 💰 Pricing Model
-
-Langboard uses a **dual revenue model**:
-
-### 1. Platform Subscription (per Organization / Workspace)
-
-| Plan           | Price                            | Deployment                                                                                                                            | Key Features                                                                                                                                                                            | Limitations                                   |
-| -------------- | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
-| **Free**       | ₩0                               | Self-hosted                                                                                                                           | Basic board/project/card, simple automation (webhooks & basic API), community support                                                                                                   | Max 3 boards, 5 projects, logs stored 7 days  |
-| **Basic**      | ₩290,000 / year                  |
-| (₩29 / month)  | SaaS                             | Team collaboration, basic RBAC (Viewer/Editor/Admin), audit logs (30 days), SLA (business hours), email/forum support                 | File storage & logs 30 days                                                                                                                                                             |
-| **Standard**   | ₩500,000 / year                  |
-| (₩50 / month)  | SaaS + On-premises               | Advanced RBAC (per-project roles), audit logs (180 days), SSO (SAML/OIDC), dedicated subdomain, priority support, monthly ops reports | Unlimited boards/projects, file & logs 180 days                                                                                                                                         |
-| **Enterprise** | Negotiated (₩3,000,000+ / month) | Full on-premises / VPC                                                                                                                | Data governance & KMS integration, SSO & SCIM provisioning, long-term logs (1+ years), enterprise-wide policy enforcement, dedicated TAM, performance/security audits, custom solutions | Network isolation, agent body on-prem support |
-
----
-
-### 2. Template Agents (Mon)
-
-| Package             | Monthly Price | Monthly Calls | Notes                                              |
-| ------------------- | ------------- | ------------- | -------------------------------------------------- |
-| **T1 – Starter**    | ₩100,000      | 10,000 calls  | Up to 5 min runtime or 20 tool calls per execution |
-| **T3 – Growth**     | ₩250,000      | 50,000 calls  | Popular among SMEs                                 |
-| **T5 – Scale**      | ₩520,000      | 120,000 calls | For larger organizations                           |
-| **T∞ – Enterprise** | Contract      | Unlimited     | Custom SLA & negotiated pricing                    |
-
-- Credits reset monthly (no rollover).
-- Overages: ₩16,000 per additional 1,000 calls.
-- Available for all platform plans (Free → Enterprise).
-
----
-
-### 3. Add-ons & Services
-
-- **On-premises setup**: ₩20,000,000 (one-time)
-- **Custom Agent development**: ₩2,000,000 per agent (+₩200,000 monthly maintenance)
-- **Workflow consulting**: From ₩3,000,000 per project
-- **Enterprise governance & compliance consulting**: Custom quotes
 
 ---
 
