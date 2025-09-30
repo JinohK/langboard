@@ -1,5 +1,6 @@
 import { Button, Checkbox, Flex, Floating, IconComponent, Label, Select } from "@/components/base";
 import { useBotValueDefaultInput } from "@/components/bots/BotValueInput/DefaultProvider";
+import { API_URL } from "@/constants";
 import { TAgentFormInput, IStringAgentFormInput, ISelectAgentFormInput, IIntegerAgentFormInput } from "@langboard/core/ai";
 import { Utils } from "@langboard/core/utils";
 import { useCallback, useEffect, useState } from "react";
@@ -28,7 +29,7 @@ function DefaultTypedInput({ input }: IDefaultTypedInputProps) {
 function DefaultStringInput({ input }: { input: IStringAgentFormInput }) {
     const [t] = useTranslation();
     const { valuesRef, setInputRef, setValue, isValidating, required } = useBotValueDefaultInput();
-    const [isDefault, setIsDefault] = useState(valuesRef.current[input.name] === input.checkDefault);
+    const [isDefault, setIsDefault] = useState(!!input.checkDefault && valuesRef.current[input.name] === input.checkDefault);
 
     const inputComp = (
         <Floating.LabelInput
@@ -79,7 +80,7 @@ function DefaultSelectInput({ input }: { input: ISelectAgentFormInput }) {
             return;
         }
 
-        const newOptions = await input.getOptions(valuesRef.current);
+        const newOptions = await input.getOptions({ values: valuesRef.current, envs: { API_URL } });
         setOptions(() => newOptions);
         input.options = newOptions;
         if (!newOptions.includes(currentValue)) {
