@@ -10,7 +10,7 @@ x-db-env: &db-env
 services:
   db-bouncer:
     init: true
-    image: bitnami/pgbouncer:latest
+    image: bitnamilegacy/pgbouncer:latest
     container_name: ${PROJECT_NAME}_db_bouncer
     ports:
       - 6432:6432
@@ -42,7 +42,7 @@ services:
 
   db:
     init: true
-    image: bitnami/postgresql:latest
+    image: bitnamilegacy/postgresql:latest
     container_name: ${PROJECT_NAME}_db
     ports:
       - ${MASTER_POSTGRES_PORT}:5432
@@ -59,7 +59,7 @@ services:
 
   db-replica:
     init: true
-    image: bitnami/postgresql:latest
+    image: bitnamilegacy/postgresql:latest
     container_name: ${PROJECT_NAME}_db_replica
     ports:
       - ${REPLICA_POSTGRES_PORT}:5432
