@@ -108,7 +108,7 @@ install_api: ## install the api dependencies
 install_ts_core: ## install the ts core dependencies
 	@echo 'Installing ts core dependencies'
 	cd $(TS_CORE_DIR) && yarn install
-	yarn run build -w
+	yarn run build
 
 install_ui: ## install ui dependencies
 	@echo 'Installing ui dependencies'
