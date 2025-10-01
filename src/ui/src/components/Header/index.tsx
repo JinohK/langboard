@@ -112,12 +112,6 @@ function Header({ navs, title }: IHeaderProps) {
                     md: "auto",
                 }}
             >
-                {currentUser ? (
-                    <UserPreferenceLanguageSwitcher currentUser={currentUser} variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
-                ) : (
-                    <LanguageSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
-                )}
-                {separator}
                 <ThemeSwitcher variant="ghost" hideTriggerIcon buttonClassNames="p-2" />
                 {currentUser ? (
                     <>
