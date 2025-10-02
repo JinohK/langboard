@@ -18,8 +18,6 @@ if ! command -v docker >/dev/null 2>&1 || ! command -v docker-compose >/dev/null
     exit 1
 fi
 
-cd ../
-
 COMPOSE_PREFIX="./docker/docker-compose"
 COMPOSE_ARGS="-f $COMPOSE_PREFIX.kafka.yaml -f $COMPOSE_PREFIX.pg.yaml -f $COMPOSE_PREFIX.redis.yaml -f $COMPOSE_PREFIX.server.yaml --env-file ./.env"
 DOCS_COMPOSE_ARGS="-f $COMPOSE_PREFIX.docs.yaml"
@@ -40,5 +38,11 @@ for arg in "$@"; do
         COMPOSE_ARGS="$COMPOSE_ARGS $OLLAMA_GPU_COMPOSE_ARGS"
     fi
 done
+
+cd ../
+
+if [ ! -f .env ]; then
+    cp .env.example .env
+fi
 
 docker compose -f $COMPOSE_PREFIX.prod.yaml $COMPOSE_ARGS up -d --build

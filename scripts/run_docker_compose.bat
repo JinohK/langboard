@@ -33,6 +33,10 @@ for %%A in (%*) do (
 
 cd ..\
 
+if not exist ".env" (
+    copy /Y .env.example .env >nul
+)
+
 docker compose -f %COMPOSE_PREFIX%.prod.yaml %COMPOSE_ARGS% up -d --build
 
 echo.

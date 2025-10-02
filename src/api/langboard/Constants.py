@@ -9,6 +9,7 @@ from core.Env import Env
 BASE_DIR = Path(dirname(__file__ if not Env.IS_EXECUTABLE else executable))
 ROOT_DIR = BASE_DIR / ".." / ".." / ".."
 DATA_DIR = ROOT_DIR / "local" if not Env.IS_EXECUTABLE else BASE_DIR / "data"
+DATA_DIR.mkdir(exist_ok=True)
 SCHEMA_DIR = DATA_DIR / "schemas"
 SCHEMA_DIR.mkdir(exist_ok=True)
 
