@@ -1,9 +1,12 @@
-import { Avatar, Box, Flex, IconComponent, Select, Toast } from "@/components/base";
+import { Avatar, Box, Button, Checkbox, Dialog, Flex, Floating, IconComponent, Label, Select, SubmitButton, Toast } from "@/components/base";
 import useChangeProjectInternalBot from "@/controllers/api/board/settings/useChangeProjectInternalBot";
+import useChangeProjectInternalBotSettings from "@/controllers/api/board/settings/useChangeProjectInternalBotSettings";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { InternalBotModel } from "@/core/models";
+import { InternalBotModel, Project } from "@/core/models";
 import { useBoardSettings } from "@/core/providers/BoardSettingsProvider";
-import { memo, useMemo, useState } from "react";
+import { Utils } from "@langboard/core/utils";
+import { CheckedState } from "@radix-ui/react-checkbox";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 interface IBoardSettingsInternalBotProps {
@@ -56,18 +59,21 @@ const BoardSettingsInternalBot = memo(({ botType }: IBoardSettingsInternalBotPro
             <Box weight="semibold" textSize="base">
                 {t(`internalBot.botTypes.${botType}`)}
             </Box>
-            <Select.Root value={currentInternalBot.uid} onValueChange={handleValueChange}>
-                <Select.Trigger>
-                    <Select.Value />
-                </Select.Trigger>
-                <Select.Content>
-                    {internalBots.map((bot) => (
-                        <Select.Item key={`board-settings-internal-bot-select-${bot.uid}`} value={bot.uid}>
-                            <BoardSettingsInternalBotItem internalBot={bot} />
-                        </Select.Item>
-                    ))}
-                </Select.Content>
-            </Select.Root>
+            <Flex items="center" justify="between" gap="3">
+                <Select.Root value={currentInternalBot.uid} onValueChange={handleValueChange}>
+                    <Select.Trigger>
+                        <Select.Value />
+                    </Select.Trigger>
+                    <Select.Content>
+                        {internalBots.map((bot) => (
+                            <Select.Item key={`board-settings-internal-bot-select-${bot.uid}`} value={bot.uid}>
+                                <BoardSettingsInternalBotItem internalBot={bot} />
+                            </Select.Item>
+                        ))}
+                    </Select.Content>
+                </Select.Root>
+                <BoardSettingsInternalBotSettings botType={botType} />
+            </Flex>
         </Box>
     );
 });
@@ -92,5 +98,151 @@ const BoardSettingsInternalBotItem = memo(({ internalBot }: IBoardSettingsIntern
         </Flex>
     );
 });
+
+interface IBoardSettingsInternalBotSettingsProps {
+    botType: InternalBotModel.EInternalBotType;
+}
+
+const BoardSettingsInternalBotSettings = memo(({ botType }: IBoardSettingsInternalBotSettingsProps) => {
+    const [t] = useTranslation();
+    const { project } = useBoardSettings();
+    const internalBotSettings = project.useField("internal_bot_settings");
+    const settings = useMemo(() => internalBotSettings[botType] || { prompt: "", use_default_prompt: true }, [internalBotSettings, botType]);
+    const [isValidating, setIsValidating] = useState(false);
+    const { mutateAsync } = useChangeProjectInternalBotSettings(project.uid);
+
+    const handleChangeDefault = (checked: CheckedState) => {
+        if (Utils.Type.isString(checked)) {
+            return;
+        }
+
+        if (isValidating || checked === settings.use_default_prompt) {
+            return;
+        }
+
+        setIsValidating(true);
+
+        const promise = mutateAsync({
+            bot_type: botType,
+            use_default_prompt: checked,
+        });
+
+        Toast.Add.promise(promise, {
+            loading: t("common.Changing..."),
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
+            success: () => {
+                return t("successes.Internal bot settings changed successfully.");
+            },
+            finally: () => {
+                setIsValidating(false);
+            },
+        });
+    };
+
+    return (
+        <Flex items="center" gap="1.5">
+            <BoardSettingsInternalBotSettingsPromptDialog botType={botType} settings={settings} />
+            <Label display="flex" items="center" gap="1.5" w="24" cursor="pointer">
+                <Checkbox checked={settings.use_default_prompt} onCheckedChange={handleChangeDefault} />
+                {t("common.Use default")}
+            </Label>
+        </Flex>
+    );
+});
+
+interface IBoardSettingsInternalBotSettingsPromptDialogProps {
+    botType: InternalBotModel.EInternalBotType;
+    settings: Project.TModel["internal_bot_settings"][InternalBotModel.EInternalBotType];
+}
+
+function BoardSettingsInternalBotSettingsPromptDialog({ botType, settings }: IBoardSettingsInternalBotSettingsPromptDialogProps) {
+    const [t] = useTranslation();
+    const { project } = useBoardSettings();
+    const [isOpened, setIsOpened] = useState(false);
+    const promptInputRef = useRef<HTMLTextAreaElement>(null);
+    const [isValidating, setIsValidating] = useState(false);
+    const { mutateAsync } = useChangeProjectInternalBotSettings(project.uid);
+
+    const save = () => {
+        if (isValidating || !promptInputRef.current) {
+            return;
+        }
+
+        setIsValidating(true);
+
+        const promise = mutateAsync({
+            bot_type: botType,
+            prompt: promptInputRef.current.value,
+        });
+
+        Toast.Add.promise(promise, {
+            loading: t("common.Saving..."),
+            error: (error) => {
+                const messageRef = { message: "" };
+                const { handle } = setupApiErrorHandler({}, messageRef);
+
+                handle(error);
+                return messageRef.message;
+            },
+            success: () => {
+                return t("successes.Internal bot settings changed successfully.");
+            },
+            finally: () => {
+                setIsValidating(false);
+            },
+        });
+    };
+
+    useEffect(() => {
+        if (isOpened && settings.use_default_prompt) {
+            Toast.Add.error(t("project.Cannot edit prompt when using default prompt."));
+            setIsOpened(false);
+        }
+    }, [isOpened, settings]);
+
+    return (
+        <Dialog.Root open={isOpened} onOpenChange={setIsOpened}>
+            <Dialog.Trigger asChild>
+                <Button type="button" size="sm" disabled={settings.use_default_prompt}>
+                    {t("project.Prompt")}
+                </Button>
+            </Dialog.Trigger>
+            <Dialog.Content className="sm:max-w-md" aria-describedby="">
+                <Dialog.Header>
+                    <Dialog.Title>{t("project.Edit prompt")}</Dialog.Title>
+                </Dialog.Header>
+                <Box mt="4">
+                    <Floating.LabelTextarea
+                        label={t("project.Prompt")}
+                        defaultValue={settings.prompt}
+                        autoFocus
+                        resize="none"
+                        className="h-36"
+                        autoComplete="off"
+                        disabled={isValidating}
+                        required
+                        ref={promptInputRef}
+                    />
+                </Box>
+                <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
+                    <Dialog.Close asChild>
+                        <Button type="button" variant="secondary" disabled={isValidating}>
+                            {t("common.Cancel")}
+                        </Button>
+                    </Dialog.Close>
+                    <SubmitButton type="button" isValidating={isValidating} onClick={save}>
+                        {t("common.Save")}
+                    </SubmitButton>
+                </Dialog.Footer>
+            </Dialog.Content>
+        </Dialog.Root>
+    );
+}
 
 export default BoardSettingsInternalBot;

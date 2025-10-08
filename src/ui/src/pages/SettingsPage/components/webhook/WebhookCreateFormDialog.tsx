@@ -127,7 +127,7 @@ function WebhookCreateFormDialog({ opened, setOpened }: IWebhookCreateFormDialog
                 </Box>
                 <Dialog.Footer className="mt-6 flex-col gap-2 sm:justify-end sm:gap-0">
                     <Dialog.Close asChild>
-                        <Button type="button" variant="destructive" disabled={isValidating}>
+                        <Button type="button" variant="secondary" disabled={isValidating}>
                             {t("common.Cancel")}
                         </Button>
                     </Dialog.Close>

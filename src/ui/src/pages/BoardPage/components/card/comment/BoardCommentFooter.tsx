@@ -85,12 +85,12 @@ function BoardCommentFooterEditButtons() {
 
     return (
         <>
-            <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
-                {t("common.Save")}
-            </SubmitButton>
             <Button variant="secondary" onClick={cancelEditing} disabled={isValidating}>
                 {t("common.Cancel")}
             </Button>
+            <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
+                {t("common.Save")}
+            </SubmitButton>
         </>
     );
 }

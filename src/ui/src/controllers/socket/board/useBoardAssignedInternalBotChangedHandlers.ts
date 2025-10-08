@@ -16,7 +16,7 @@ const useBoardAssignedInternalBotChangedHandlers = ({ callback, projectUID }: IU
         topicId: projectUID,
         eventKey: `board-assigned-internal-bot-changed-${projectUID}`,
         onProps: {
-            name: SocketEvents.SERVER.BOARD.ASSIGNED_INTERNAL_BOT_CHANGED,
+            name: SocketEvents.SERVER.BOARD.SETTINGS.INTERNAL_BOT.ASSIGNED_BOT_CHANGED,
             params: { uid: projectUID },
             callback,
         },

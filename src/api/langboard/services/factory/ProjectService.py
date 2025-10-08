@@ -17,6 +17,7 @@ from models import (
 )
 from models.bases import ALL_GRANTED
 from models.Checkitem import CheckitemStatus
+from models.InternalBot import InternalBotType
 from models.ProjectRole import ProjectRoleAction
 from publishers import ProjectPublisher
 from sqlalchemy.orm import aliased
@@ -537,6 +538,55 @@ class ProjectService(BaseService):
             )
 
         await ProjectPublisher.internal_bot_changed(project, internal_bot.id)
+
+        return True
+
+    async def change_internal_bot_settings(
+        self,
+        project: TProjectParam,
+        bot_type: InternalBotType,
+        use_default_prompt: bool | None = None,
+        prompt: str | None = None,
+    ):
+        project = ServiceHelper.get_by_param(Project, project)
+        if not project:
+            return False
+
+        assigned_internal_bot = None
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(
+                SqlBuilder.select.table(ProjectAssignedInternalBot)
+                .join(
+                    InternalBot,
+                    ProjectAssignedInternalBot.column("internal_bot_id") == InternalBot.column("id"),
+                )
+                .where(
+                    (ProjectAssignedInternalBot.column("project_id") == project.id)
+                    & (InternalBot.column("bot_type") == bot_type)
+                )
+                .limit(1)
+            )
+            assigned_internal_bot = result.first()
+
+        if not assigned_internal_bot:
+            return False
+
+        should_update = False
+        if use_default_prompt is not None and assigned_internal_bot.use_default_prompt != use_default_prompt:
+            assigned_internal_bot.use_default_prompt = use_default_prompt
+            should_update = True
+
+        if prompt is not None and assigned_internal_bot.prompt != prompt:
+            assigned_internal_bot.prompt = prompt
+            should_update = True
+
+        if not should_update:
+            return True
+
+        with DbSession.use(readonly=False) as db:
+            db.update(assigned_internal_bot)
+
+        await ProjectPublisher.internal_bot_settings_changed(project, bot_type, assigned_internal_bot)
 
         return True
 

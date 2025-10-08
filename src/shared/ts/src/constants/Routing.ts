@@ -169,13 +169,16 @@ const API = {
         SETTINGS: {
             UPDATE_DETAILS: "/board/{uid}/settings/details",
             UPDATE_USER_ROLES: "/board/{uid}/settings/roles/user/{user_uid}",
-            CHANGE_INTERNAL_BOT: "/board/{uid}/settings/internal-bot",
             DELETE_PROJECT: "/board/{uid}/settings/delete",
             LABEL: {
                 CREATE: "/board/{uid}/settings/label",
                 CHANGE_DETAILS: "/board/{uid}/settings/label/{label_uid}/details",
                 CHANGE_ORDER: "/board/{uid}/settings/label/{label_uid}/order",
                 DELETE: "/board/{uid}/settings/label/{label_uid}",
+            },
+            INTERNAL_BOT: {
+                CHANGE_BOT: "/board/{uid}/settings/internal-bot",
+                CHANGE_SETTINGS: "/board/{uid}/settings/internal-bot/settings",
             },
         },
     },

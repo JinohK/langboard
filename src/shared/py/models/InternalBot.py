@@ -23,12 +23,13 @@ class InternalBot(BaseBotModel, table=True):
     avatar: FileModel | None = Field(default=None, sa_type=ModelColumnType(FileModel))
 
     @staticmethod
-    def api_schema(is_setting: bool = False) -> dict[str, Any]:
+    def api_schema(schema: dict | None = None, is_setting: bool = False) -> dict[str, Any]:
         schema = {
             "uid": "string",
             "bot_type": f"Literal[{', '.join([bot_type.value for bot_type in InternalBotType])}]",
             "display_name": "string",
             "avatar": "string?",
+            **(schema or {}),
         }
 
         if is_setting:

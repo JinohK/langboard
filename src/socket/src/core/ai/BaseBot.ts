@@ -5,6 +5,27 @@ import InternalBot, { EInternalBotType } from "@/models/InternalBot";
 import formidable from "formidable";
 import { createRequest } from "@/core/ai/requests/utils";
 import { IStreamResponse } from "@/core/ai/requests/types";
+import { IProjectAssignedInternalBotSettings } from "@/models/ProjectAssignedInternalBot";
+
+interface IBaseBotOptions {
+    internalBot: InternalBot;
+    internalBotSettings?: IProjectAssignedInternalBotSettings;
+}
+
+export interface IBotRunOptions extends IBaseBotOptions {
+    data: Record<string, any>;
+}
+
+export interface IBotRunAbortableOptions extends IBaseBotOptions {
+    taskID: string;
+    data: Record<string, any>;
+}
+
+export interface IBotIsAvailableOptions extends IBaseBotOptions {}
+
+export interface IBotUploadOptions extends IBaseBotOptions {
+    file: formidable.File;
+}
 
 abstract class BaseBot {
     public static get BOT_TYPE(): EInternalBotType {
@@ -16,10 +37,10 @@ abstract class BaseBot {
         this.#abortableTasks = new Map();
     }
 
-    public abstract run(internalBot: InternalBot, data: Record<string, any>): Promise<string | IStreamResponse | null>;
-    public abstract runAbortable(internalBot: InternalBot, data: Record<string, any>, taskID: string): Promise<string | IStreamResponse | null>;
-    public abstract isAvailable(internalBot: InternalBot): Promise<bool>;
-    public abstract upload(internalBot: InternalBot, file: formidable.File): Promise<string | null>;
+    public abstract run(options: IBotRunOptions): Promise<string | IStreamResponse | null>;
+    public abstract runAbortable(options: IBotRunAbortableOptions): Promise<string | IStreamResponse | null>;
+    public abstract isAvailable(options: IBotIsAvailableOptions): Promise<bool>;
+    public abstract upload(options: IBotUploadOptions): Promise<string | null>;
 
     public async abort(taskID: string): Promise<void> {
         const task = this.#abortableTasks.get(taskID);
@@ -41,8 +62,8 @@ abstract class BaseBot {
         return task.signal.aborted;
     }
 
-    protected async canRequest(internalBot: InternalBot): Promise<bool> {
-        const request = createRequest(internalBot);
+    protected async canRequest({ internalBot, internalBotSettings }: IBaseBotOptions): Promise<bool> {
+        const request = createRequest(internalBot, internalBotSettings);
         if (!request) {
             return false;
         }
@@ -50,12 +71,13 @@ abstract class BaseBot {
         return await request.isAvailable();
     }
 
-    protected async request(
-        internalBot: InternalBot,
-        requestModel: IBotRequestModel,
-        useStream: bool = false
-    ): Promise<string | IStreamResponse | null> {
-        const request = createRequest(internalBot);
+    protected async request({
+        internalBot,
+        internalBotSettings,
+        requestModel,
+        useStream = false,
+    }: IBaseBotOptions & { requestModel: IBotRequestModel; useStream?: bool }): Promise<string | IStreamResponse | null> {
+        const request = createRequest(internalBot, internalBotSettings);
         if (!request) {
             return null;
         }
@@ -63,13 +85,14 @@ abstract class BaseBot {
         return request.request(requestModel, useStream);
     }
 
-    protected async requestAbortable(
-        internalBot: InternalBot,
-        taskID: string,
-        requestModel: IBotRequestModel,
-        useStream: bool = false
-    ): Promise<string | IStreamResponse | null> {
-        const request = createRequest(internalBot);
+    protected async requestAbortable({
+        internalBot,
+        internalBotSettings,
+        taskID,
+        requestModel,
+        useStream = false,
+    }: IBaseBotOptions & { taskID: string; requestModel: IBotRequestModel; useStream?: bool }): Promise<string | IStreamResponse | null> {
+        const request = createRequest(internalBot, internalBotSettings);
         if (!request) {
             return null;
         }
@@ -85,8 +108,8 @@ abstract class BaseBot {
         return request.requestAbortable([abortController, onAbort], requestModel, useStream);
     }
 
-    protected async uploadFile(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
-        const request = createRequest(internalBot);
+    protected async uploadFile({ internalBot, internalBotSettings, file }: IBaseBotOptions & { file: formidable.File }): Promise<string | null> {
+        const request = createRequest(internalBot, internalBotSettings);
         if (!request) {
             return null;
         }

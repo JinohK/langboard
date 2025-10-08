@@ -15,6 +15,9 @@
   "invited": "invited",
   "Delete column": "Delete column",
   "All cards in this column will be archived.": "All cards in this column will be archived.",
+  "Prompt": "Prompt",
+  "Cannot edit prompt when using default prompt.": "Cannot edit prompt when using default prompt.",
+  "Edit prompt": "Edit prompt",
   "invitations": {
     "You have been invited to join <highlight>{projectTitle}</highlight>": "You have been invited to join <highlight>{{projectTitle}}</highlight>",
     "Do you want to join this project?": "Do you want to join this project?",

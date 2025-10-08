@@ -7,8 +7,8 @@ export enum ELangflowConstants {
 }
 
 abstract class BaseLangflowComponent {
-    abstract toTweaks(): Record<string, any>;
-    abstract toData(): Record<string, any>;
+    public abstract toTweaks(): Record<string, any>;
+    public abstract toData(): Record<string, any>;
 }
 
 export class LangboardCalledVariablesComponent extends BaseLangflowComponent {
@@ -38,15 +38,11 @@ export class LangboardCalledVariablesComponent extends BaseLangflowComponent {
         };
     }
 
-    setApiNames(apiNames: string[]) {
-        this.#model.api_names = apiNames;
-    }
-
-    toTweaks(): Record<string, any> {
+    public toTweaks(): Record<string, any> {
         return { LangboardCalledVariablesComponent: this.toData() };
     }
 
-    toData(): Record<string, any> {
+    public toData(): Record<string, any> {
         return { ...this.#model };
     }
 }

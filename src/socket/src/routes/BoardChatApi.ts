@@ -19,10 +19,12 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
         return ApiErrorResponse(EApiErrorCode.PE1001, EHttpStatus.HTTP_403_FORBIDDEN);
     }
 
-    const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, projectUID);
-    if (!internalBot) {
+    const internalBotResult = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, projectUID);
+    if (!internalBotResult) {
         return ApiErrorResponse(EApiErrorCode.NF3004, EHttpStatus.HTTP_404_NOT_FOUND);
     }
+
+    const [internalBot, _] = internalBotResult;
 
     const form = new IncomingForm({
         keepExtensions: true,
@@ -37,7 +39,7 @@ Routes.post("/board/{projectUID}/chat/upload", async ({ req, user, params }) => 
             return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
         }
 
-        const filePath = await BotRunner.upload(internalBot, file);
+        const filePath = await BotRunner.upload({ internalBot, file });
         if (!filePath) {
             return ApiErrorResponse(EApiErrorCode.OP1002, EHttpStatus.HTTP_406_NOT_ACCEPTABLE);
         }

@@ -1,57 +1,61 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import { getBot } from "@/core/ai/BaseBot";
+import { getBot, IBotIsAvailableOptions, IBotRunAbortableOptions, IBotRunOptions, IBotUploadOptions } from "@/core/ai/BaseBot";
 import ISocketClient from "@/core/server/ISocketClient";
-import InternalBot, { EInternalBotType } from "@/models/InternalBot";
+import { EInternalBotType } from "@/models/InternalBot";
 import { ESocketTopic, GLOBAL_TOPIC_ID } from "@langboard/core/enums";
-import formidable from "formidable";
+
+export interface IBotAbortOptions {
+    botType: EInternalBotType;
+    taskID: string;
+    client?: ISocketClient;
+}
 
 class BotRunner {
-    public static async run(internalBot: InternalBot, data: Record<string, any>) {
+    public static async run({ internalBot, data }: IBotRunOptions) {
         const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.run(internalBot, data);
+        return await bot.run({ internalBot, data });
     }
 
-    public static async runAbortable(internalBot: InternalBot, task_id: string, data: Record<string, any>) {
+    public static async runAbortable({ internalBot, ...options }: IBotRunAbortableOptions) {
         const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.runAbortable(internalBot, data, task_id);
+        return await bot.runAbortable({ internalBot, ...options });
     }
 
-    public static async abort(botType: EInternalBotType, task_id: string, client?: ISocketClient): Promise<void> {
+    public static async abort({ botType, taskID, client }: IBotAbortOptions): Promise<void> {
         const bot = getBot(botType);
         if (!bot) {
             return;
         }
-        await bot.abort(task_id);
+        await bot.abort(taskID);
         client?.send({
             topic: ESocketTopic.Global,
             topic_id: GLOBAL_TOPIC_ID,
             event: "task:aborted",
             data: {
-                task_id,
+                task_id: taskID,
             },
         });
     }
 
-    public static async isAvailable(internalBot: InternalBot): Promise<bool> {
+    public static async isAvailable({ internalBot }: IBotIsAvailableOptions): Promise<bool> {
         const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return false;
         }
-        return await bot.isAvailable(internalBot);
+        return await bot.isAvailable({ internalBot });
     }
 
-    public static async upload(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
+    public static async upload({ internalBot, file }: IBotUploadOptions): Promise<string | null> {
         const bot = getBot(internalBot.bot_type);
         if (!bot) {
             return null;
         }
-        return await bot.upload(internalBot, file);
+        return await bot.upload({ internalBot, file });
     }
 
     public static isAborted(botType: EInternalBotType, task_id: string): bool {

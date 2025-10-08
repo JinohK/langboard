@@ -4,7 +4,7 @@ import { getBotStatusMap } from "@/core/ai/requests/utils";
 import { SocketEvents } from "@langboard/core/constants";
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.BOT.STATUS_MAP, async ({ client, topicId }) => {
-    const botStatusMap = await getBotStatusMap();
+    const botStatusMap = await getBotStatusMap(topicId);
 
     client.send({
         event: SocketEvents.SERVER.BOARD.BOT.STATUS_MAP,

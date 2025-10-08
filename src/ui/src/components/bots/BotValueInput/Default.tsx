@@ -50,7 +50,7 @@ function BotValueDefaultInput({ value, newValueRef, isValidating, required, chan
 
             inputs.forEach((input) => {
                 const value = valuesRef.current[input.name];
-                if (!value) {
+                if (!value && !input.nullable) {
                     newErrors[input.name] = t(`bot.agent.errors.missing.${input.name}`);
                     if (!focusable) {
                         focusable = inputsRef.current[input.name];

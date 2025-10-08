@@ -32,9 +32,6 @@ const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelatio
     }
 
     const changeIsOpened = (isOpened: bool) => {
-        if (selectedRelationshipUID && !isOpened) {
-            card.isCollapseOpened = true;
-        }
         setCardSelection(card.uid, selectedRelationshipUID);
         setIsOpened(isOpened);
     };

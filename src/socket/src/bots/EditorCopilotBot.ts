@@ -1,18 +1,16 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import BaseBot, { registerBot } from "@/core/ai/BaseBot";
+import BaseBot, { IBotIsAvailableOptions, IBotRunAbortableOptions, IBotRunOptions, IBotUploadOptions, registerBot } from "@/core/ai/BaseBot";
 import SnowflakeID from "@/core/db/SnowflakeID";
-import InternalBot, { EInternalBotType } from "@/models/InternalBot";
-import formidable from "formidable";
+import { EInternalBotType } from "@/models/InternalBot";
 
 class EditorCopilotBot extends BaseBot {
     public static get BOT_TYPE(): EInternalBotType {
         return EInternalBotType.EditorCopilot;
     }
 
-    public async run(internalBot: InternalBot, data: Record<string, any>) {
-        return await this.request(
-            internalBot,
-            {
+    public async run({ data, ...options }: IBotRunOptions) {
+        return await this.request({
+            ...options,
+            requestModel: {
                 message: data.prompt,
                 projectUID: data.project_uid,
                 userId: data.user_id,
@@ -22,15 +20,14 @@ class EditorCopilotBot extends BaseBot {
                 restData: data.rest_data,
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
-            false
-        );
+            useStream: false,
+        });
     }
 
-    public async runAbortable(internalBot: InternalBot, data: Record<string, any>, taskID: string) {
-        return await this.requestAbortable(
-            internalBot,
-            taskID,
-            {
+    public async runAbortable({ data, ...options }: IBotRunAbortableOptions) {
+        return await this.requestAbortable({
+            ...options,
+            requestModel: {
                 message: data.prompt,
                 projectUID: data.project_uid,
                 userId: data.user_id,
@@ -40,16 +37,16 @@ class EditorCopilotBot extends BaseBot {
                 restData: data.rest_data,
                 sessionId: `${new SnowflakeID(data.user_id).toShortCode()}-${data.project_uid}`,
             },
-            false
-        );
+            useStream: false,
+        });
     }
 
-    public async isAvailable(internalBot: InternalBot) {
-        return await this.canRequest(internalBot);
+    public async isAvailable(options: IBotIsAvailableOptions): Promise<bool> {
+        return await this.canRequest(options);
     }
 
-    public async upload(internalBot: InternalBot, file: formidable.File): Promise<string | null> {
-        return await this.uploadFile(internalBot, file);
+    public async upload(options: IBotUploadOptions): Promise<string | null> {
+        return await this.uploadFile(options);
     }
 }
 

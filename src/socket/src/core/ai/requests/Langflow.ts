@@ -192,8 +192,23 @@ class LangflowRequest extends BaseRequest {
             requestModel.restData
         );
 
+        const reqData = {
+            input_value: requestModel.message,
+            input_type: requestModel.inputType,
+            output_type: requestModel.outputType,
+            session: sessionId,
+            session_id: sessionId,
+            run_type: "internal_bot",
+            uid: this.internalBot.uid,
+            tweaks: {
+                ...requestModel.tweaks,
+                ...component.toTweaks(),
+                ...component.toData(),
+            },
+        };
+
         if (this.internalBot.platform === EBotPlatform.Default && this.internalBot.platform_running_type === EBotPlatformRunningType.Default) {
-            requestModel.tweaks = this.#setDefaultTweaks(component, requestModel.tweaks);
+            reqData.tweaks = this.#setDefaultTweaks(reqData.tweaks);
         }
 
         return {
@@ -204,20 +219,7 @@ class LangflowRequest extends BaseRequest {
                 ...headers,
             },
             oneTimeToken,
-            reqData: {
-                input_value: requestModel.message,
-                input_type: requestModel.inputType,
-                output_type: requestModel.outputType,
-                session: sessionId,
-                session_id: sessionId,
-                run_type: "internal_bot",
-                uid: this.internalBot.uid,
-                tweaks: {
-                    ...requestModel.tweaks,
-                    ...component.toTweaks(),
-                    ...component.toData(),
-                },
-            },
+            reqData,
         };
     }
 
@@ -225,7 +227,7 @@ class LangflowRequest extends BaseRequest {
         return response.outputs?.[0]?.outputs?.[0]?.results?.message?.data?.text ?? "";
     }
 
-    #setDefaultTweaks(component: LangboardCalledVariablesComponent, tweaks: Record<string, any>) {
+    #setDefaultTweaks(tweaks: Record<string, any>) {
         try {
             const botValue: Record<string, any> = Utils.Json.Parse(this.internalBot.value ?? "{}");
             if (!botValue.agent_llm) {
@@ -246,7 +248,7 @@ class LangflowRequest extends BaseRequest {
                 delete tweaks.base_url;
             }
 
-            if (tweaks.Ollama && tweaks.Ollama.base_url === "default_docker") {
+            if (tweaks.Ollama?.base_url === "default") {
                 tweaks.Ollama.base_url = OLLAMA_API_URL;
             }
 
@@ -256,7 +258,12 @@ class LangflowRequest extends BaseRequest {
                 const agentData = possibleKey ? (tweaks[possibleKey] ?? {}) : tweaks;
 
                 if (agentData.system_prompt) {
-                    const systemPrompt = agentData.system_prompt;
+                    let systemPrompt;
+                    if (this.internalBotSettings) {
+                        systemPrompt = this.internalBotSettings.prompt;
+                    } else {
+                        systemPrompt = agentData.system_prompt;
+                    }
                     delete agentData.system_prompt;
                     tweaks.Prompt = {
                         prompt: systemPrompt,
@@ -266,7 +273,7 @@ class LangflowRequest extends BaseRequest {
                 if (agentData.api_names) {
                     const apiNames = agentData.api_names;
                     delete agentData.api_names;
-                    component.setApiNames(apiNames);
+                    tweaks[LangboardCalledVariablesComponent.name].api_names = apiNames;
                 }
             }
         } catch {

@@ -3,14 +3,27 @@ from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from core.utils.Converter import convert_python_data
 from fastapi import status
-from models import Bot, Card, ChatTemplate, InternalBot, Project, ProjectColumn, ProjectLabel, ProjectRole, User
+from models import (
+    Bot,
+    Card,
+    ChatTemplate,
+    InternalBot,
+    Project,
+    ProjectAssignedInternalBot,
+    ProjectColumn,
+    ProjectLabel,
+    ProjectRole,
+    User,
+)
 from models.bases import ALL_GRANTED
+from models.InternalBot import InternalBotType
 from models.ProjectRole import ProjectRoleAction
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
 from .forms import (
     ChangeInternalBotForm,
+    ChangeInternalBotSettingsForm,
     ChangeRootOrderForm,
     CreateProjectLabelForm,
     UpdateProjectDetailsForm,
@@ -35,6 +48,7 @@ from .forms import (
                             "all_members": [User],
                             "invited_member_uids": "string[]",
                             "internal_bots": [InternalBot],
+                            "internal_bot_settings": {InternalBotType: ProjectAssignedInternalBot},
                             "current_auth_role_actions": [ALL_GRANTED, ProjectRoleAction],
                             "labels": [ProjectLabel],
                             "member_roles": {"<user uid>": [ALL_GRANTED, ProjectRoleAction]},
@@ -64,7 +78,12 @@ async def get_project_details(
     project, response = result
     response["description"] = project.description
     response["ai_description"] = project.ai_description
-    response["internal_bots"] = await service.project.get_assigned_internal_bots(project, as_api=True)
+    assigned_internal_bots = await service.project.get_assigned_internal_bots(project, as_api=False)
+    response["internal_bots"] = [internal_bot.api_response() for internal_bot, _ in assigned_internal_bots]
+    response["internal_bot_settings"] = {
+        internal_bot.bot_type.value: assigned_bot.api_response()
+        for internal_bot, assigned_bot in assigned_internal_bots
+    }
 
     internal_bots = await service.internal_bot.get_list(as_api=True, is_setting=False)
     columns = await service.project_column.get_all_by_project(project.id, as_api=True)
@@ -116,6 +135,26 @@ async def change_project_internal_bot(
     project_uid: str, form: ChangeInternalBotForm, service: Service = Service.scope()
 ) -> JsonResponse:
     result = await service.project.change_internal_bot(project_uid, form.internal_bot_uid)
+    if not result:
+        return JsonResponse(content=ApiErrorCode.NF2019, status_code=status.HTTP_404_NOT_FOUND)
+
+    return JsonResponse()
+
+
+@AppRouter.api.put(
+    "/board/{project_uid}/settings/internal-bot/settings",
+    tags=["Board.Settings"],
+    description="Change internal bot settings for a project.",
+    responses=OpenApiSchema().auth().forbidden().err(404, ApiErrorCode.NF2019).get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Update], RoleFinder.project)
+@AuthFilter.add("user")
+async def change_project_internal_bot_settings(
+    project_uid: str, form: ChangeInternalBotSettingsForm, service: Service = Service.scope()
+) -> JsonResponse:
+    result = await service.project.change_internal_bot_settings(
+        project_uid, form.bot_type, form.use_default_prompt, form.prompt
+    )
     if not result:
         return JsonResponse(content=ApiErrorCode.NF2019, status_code=status.HTTP_404_NOT_FOUND)
 

@@ -16,6 +16,7 @@ from .Column import ColumnForm
 from .Comment import ToggleCardCommentReactionForm
 from .Project import (
     ChangeInternalBotForm,
+    ChangeInternalBotSettingsForm,
     ChatHistoryPagination,
     InviteProjectMemberForm,
     ProjectInvitationForm,
@@ -64,4 +65,5 @@ __all__ = [
     "ChangeWikiDetailsForm",
     "ChangeWikiPublicForm",
     "ChangeInternalBotForm",
+    "ChangeInternalBotSettingsForm",
 ]

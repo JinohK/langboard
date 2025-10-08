@@ -3,12 +3,14 @@ import { IStreamResponse } from "@/core/ai/requests/types";
 import { IBotRequestModel } from "@/core/ai/types";
 import { EBotPlatform } from "@/models/bot.related.types";
 import InternalBot from "@/models/InternalBot";
+import { IProjectAssignedInternalBotSettings } from "@/models/ProjectAssignedInternalBot";
 import formidable from "formidable";
 
 abstract class BaseRequest {
     constructor(
         protected internalBot: InternalBot,
-        protected baseURL: string
+        protected baseURL: string,
+        protected internalBotSettings?: IProjectAssignedInternalBotSettings
     ) {
         this.baseURL = !baseURL.endsWith("/") ? baseURL : baseURL.slice(0, -1);
     }

@@ -1,6 +1,7 @@
 from core.routing import BaseFormModel, form_model
 from core.schema import Pagination
 from core.types import SafeDateTime
+from models.InternalBot import InternalBotType
 from models.ProjectRole import ProjectRoleAction
 from pydantic import Field
 
@@ -34,3 +35,10 @@ class UpdateRolesForm(BaseFormModel):
 @form_model
 class ChangeInternalBotForm(BaseFormModel):
     internal_bot_uid: str
+
+
+@form_model
+class ChangeInternalBotSettingsForm(BaseFormModel):
+    bot_type: InternalBotType
+    use_default_prompt: bool | None = None
+    prompt: str | None = None

@@ -36,6 +36,7 @@ import useBoardBotCronUnscheduledHandlers from "@/controllers/socket/board/botSc
 import useBoardBotLogCreatedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogCreatedHandlers";
 import useBoardBotLogStackAddedHandlers from "@/controllers/socket/board/botLogs/useBoardBotLogStackAddeddHandlers";
 import useBoardBotStatusChangedHandlers from "@/controllers/socket/board/useBoardBotStatusChangedHandlers";
+import useBoardAssignedInternalBotSettingsChangedHandlers from "@/controllers/socket/board/useBoardAssignedInternalBotSettingsChangedHandlers";
 
 export enum ERoleAction {
     Read = "read",
@@ -60,6 +61,13 @@ export interface IStore extends Interface {
     invited_member_uids: string[];
     starred: bool;
     internal_bots: InternalBotModel.Interface[];
+    internal_bot_settings: Record<
+        InternalBotModel.EInternalBotType,
+        {
+            prompt: string;
+            use_default_prompt: bool;
+        }
+    >;
     current_auth_role_actions: TRoleActions[];
     labels: ProjectLabel.Interface[];
     description: string;
@@ -121,6 +129,7 @@ class Project extends BaseModel<IStore> {
                 useDashboardCheckitemDeletedHandlers,
                 useProjectDeletedHandlers,
                 useBoardBotStatusChangedHandlers,
+                useBoardAssignedInternalBotSettingsChangedHandlers,
             ],
             {
                 projectUID: this.uid,
@@ -135,6 +144,15 @@ class Project extends BaseModel<IStore> {
         }
         if (Utils.Type.isString(model.last_viewed_at)) {
             model.last_viewed_at = new Date(model.last_viewed_at);
+        }
+
+        if (!Utils.Type.isNullOrUndefined(model.internal_bot_settings)) {
+            const newSettings = {} as IStore["internal_bot_settings"];
+            Object.entries(model.internal_bot_settings).forEach(([key, value]) => {
+                key = Utils.String.convertSafeEnum(InternalBotModel.EInternalBotType, key);
+                newSettings[key] = value;
+            });
+            model.internal_bot_settings = newSettings;
         }
         return model;
     }
@@ -200,6 +218,13 @@ class Project extends BaseModel<IStore> {
     }
     public set internal_bots(value: (InternalBotModel.TModel | InternalBotModel.Interface)[]) {
         this.update({ internal_bots: value });
+    }
+
+    public get internal_bot_settings() {
+        return this.getValue("internal_bot_settings");
+    }
+    public set internal_bot_settings(value) {
+        this.update({ internal_bot_settings: value });
     }
 
     public get current_auth_role_actions() {

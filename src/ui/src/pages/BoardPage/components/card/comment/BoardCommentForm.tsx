@@ -232,12 +232,12 @@ const BoardCommentForm = memo((): JSX.Element => {
                             />
                         </Box>
                         <Flex items="center" gap="2" justify="start" p="1">
-                            <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
-                                {t("common.Save")}
-                            </SubmitButton>
                             <Button variant="secondary" onClick={() => getEditorStore().setCurrentEditor(null)} disabled={isValidating}>
                                 {t("common.Cancel")}
                             </Button>
+                            <SubmitButton type="button" onClick={saveComment} isValidating={isValidating}>
+                                {t("common.Save")}
+                            </SubmitButton>
                         </Flex>
                     </Flex>
                 </Drawer.Content>

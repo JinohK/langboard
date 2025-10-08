@@ -59,7 +59,6 @@
   "Pull a model": "Pull a model",
   "Model name": "Model name",
   "Running": "Running",
-  "Use Default": "Use Default",
   "errors": {
     "Cannot delete a running model.": "Cannot delete a running model.",
     "missing": {

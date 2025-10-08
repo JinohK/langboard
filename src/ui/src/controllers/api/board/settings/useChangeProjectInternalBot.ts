@@ -17,7 +17,7 @@ const useChangeProjectInternalBot = (
     const { mutate } = useQueryMutation();
 
     const changeProjectInternalBot = async (params: IChangeProjectInternalBotForm) => {
-        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.CHANGE_INTERNAL_BOT, { uid: projectUID });
+        const url = Utils.String.format(Routing.API.BOARD.SETTINGS.INTERNAL_BOT.CHANGE_BOT, { uid: projectUID });
         const res = await api.put(url, params, {
             env: {
                 interceptToast: options?.interceptToast,

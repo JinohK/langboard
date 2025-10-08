@@ -64,7 +64,7 @@ function DefaultStringInput({ input }: { input: IStringAgentFormInput }) {
                         setValue(input.name)(checked ? input.checkDefault : "");
                     }}
                 />
-                {t("settings.Use Default")}
+                {t("common.Use default")}
             </Label>
         </Flex>
     );

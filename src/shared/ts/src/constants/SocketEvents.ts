@@ -27,7 +27,6 @@ const SERVER = {
         ASSIGNED_USERS_UPDATED: "board:assigned-users:updated:{uid}",
         USER_ROLES_UPDATED: "board:roles:user:updated:{uid}",
         DETAILS_CHANGED: "board:details:changed:{uid}",
-        ASSIGNED_INTERNAL_BOT_CHANGED: "board:assigned-internal-bot:changed:{uid}",
         DELETED: "board:deleted:{uid}",
         CHAT: {
             IS_AVAILABLE: "board:chat:available",
@@ -118,6 +117,12 @@ const SERVER = {
             LOG: {
                 CREATED: "board:bot:log:created",
                 STACK_ADDED: "board:bot:log:stack:added",
+            },
+        },
+        SETTINGS: {
+            INTERNAL_BOT: {
+                ASSIGNED_BOT_CHANGED: "board:assigned-internal-bot:changed:{uid}",
+                SETTINGS_CHANGED: "board:assigned-internal-bot:settings:changed:{uid}",
             },
         },
     },

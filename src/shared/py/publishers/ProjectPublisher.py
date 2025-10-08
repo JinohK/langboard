@@ -3,7 +3,8 @@ from core.publisher import BaseSocketPublisher, SocketPublishModel
 from core.routing import SocketTopic
 from core.types import SnowflakeID
 from core.utils.decorators import staticclass
-from models import ChatTemplate, Project, User
+from models import ChatTemplate, Project, ProjectAssignedInternalBot, User
+from models.InternalBot import InternalBotType
 
 
 @staticclass
@@ -119,6 +120,21 @@ class ProjectPublisher(BaseSocketPublisher):
             topic=SocketTopic.Board,
             topic_id=topic_id,
             event=f"board:assigned-internal-bot:changed:{topic_id}",
+            data_keys=list(model.keys()),
+        )
+
+        await ProjectPublisher.put_dispather(model, publish_model)
+
+    @staticmethod
+    async def internal_bot_settings_changed(
+        project: Project, bot_type: InternalBotType, assigned_internal_bot: ProjectAssignedInternalBot
+    ):
+        topic_id = project.get_uid()
+        model = {"bot_type": bot_type.value, **assigned_internal_bot.api_response()}
+        publish_model = SocketPublishModel(
+            topic=SocketTopic.BoardSettings,
+            topic_id=topic_id,
+            event=f"board:assigned-internal-bot:settings:changed:{topic_id}",
             data_keys=list(model.keys()),
         )
 

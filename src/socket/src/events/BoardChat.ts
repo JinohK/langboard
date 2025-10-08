@@ -9,11 +9,11 @@ import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import { SocketEvents } from "@langboard/core/constants";
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE, async ({ client, topicId }) => {
-    const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
+    const [internalBot, _] = (await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId)) ?? [null, null];
     let isAvailable = false;
     if (internalBot) {
         try {
-            isAvailable = await BotRunner.isAvailable(internalBot);
+            isAvailable = await BotRunner.isAvailable({ internalBot });
         } catch {
             isAvailable = false;
         }
@@ -36,17 +36,24 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
         return;
     }
 
-    const internalBot = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
-    if (!internalBot) {
+    const internalBotResult = await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId);
+    if (!internalBotResult) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "No chat bot available for this project", false);
         return;
     }
 
-    const response = await BotRunner.runAbortable(internalBot, task_id, {
-        message,
-        file_path,
-        project_uid: topicId,
-        user_id: client.user.id,
+    const [internalBot, internalBotSettings] = internalBotResult;
+
+    const response = await BotRunner.runAbortable({
+        internalBot,
+        internalBotSettings,
+        taskID: task_id,
+        data: {
+            message,
+            file_path,
+            project_uid: topicId,
+            user_id: client.user.id,
+        },
     });
 
     if (!response) {
@@ -165,5 +172,5 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.CANCEL, async
         return;
     }
 
-    await BotRunner.abort(EInternalBotType.ProjectChat, task_id, client);
+    await BotRunner.abort({ botType: EInternalBotType.ProjectChat, taskID: task_id, client });
 });
