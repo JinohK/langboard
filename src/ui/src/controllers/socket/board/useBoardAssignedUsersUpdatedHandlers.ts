@@ -56,6 +56,7 @@ const useBoardAssignedUsersUpdatedHandlers = ({ callback, projectUID }: IUseBoar
                 if (data.invitation_uid) {
                     User.Model.deleteModel(data.invitation_uid);
                 }
+
                 return {
                     assigned_user_uids: data.assigned_members.map((user) => user.uid),
                 };

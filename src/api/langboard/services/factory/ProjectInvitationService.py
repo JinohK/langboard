@@ -182,12 +182,16 @@ class ProjectInvitationService(BaseService):
         email_service = self._get_service(EmailService)
         notification_service = self._get_service(NotificationService)
         for email in invitation_result.emails_should_invite:
+            preferred_lang = user.preferred_lang
+            target_user = invitation_result.users_by_email.get(email)
+            if user.is_admin and target_user:
+                await self.__assign_project_user(project, target_user)
+                continue
+
             invitation = ProjectInvitation(project_id=project.id, email=email, token=generate_random_string(32))
             with DbSession.use(readonly=False) as db:
                 db.insert(invitation)
 
-            preferred_lang = user.preferred_lang
-            target_user = invitation_result.users_by_email.get(email)
             if target_user:
                 preferred_lang = target_user.preferred_lang
                 await notification_service.notify_project_invited(user, target_user, project, invitation)
@@ -249,31 +253,7 @@ class ProjectInvitationService(BaseService):
         if not project:
             return False
 
-        await self.__delete_notification(user, project, invitation)
-
-        assign_user = ProjectAssignedUser(project_id=invitation.project_id, user_id=user.id)
-
-        with DbSession.use(readonly=False) as db:
-            db.delete(invitation)
-
-        with DbSession.use(readonly=False) as db:
-            db.insert(assign_user)
-
-        role_service = self._get_service(RoleService)
-
-        await role_service.project.grant_default(user_id=user.id, project_id=invitation.project_id)
-
-        project_service = self._get_service_by_name("project")
-
-        model = {
-            "assigned_members": await project_service.get_assigned_users(project, as_api=True),
-            "invited_members": await self.get_invited_users(project, as_api=True),
-            "invitation_uid": invitation.get_uid(),
-        }
-
-        await ProjectInvitationPublisher.accepted(project, model)
-
-        ProjectActivityTask.project_invited_user_accepted(user, project)
+        await self.__assign_project_user(project, user, invitation)
 
         return project.get_uid()
 
@@ -337,6 +317,36 @@ class ProjectInvitationService(BaseService):
                 return None
 
         return invitation
+
+    async def __assign_project_user(self, project: Project, user: User, invitation: ProjectInvitation | None = None):
+        assign_user = ProjectAssignedUser(project_id=project.id, user_id=user.id)
+
+        if invitation:
+            await self.__delete_notification(user, project, invitation)
+
+            with DbSession.use(readonly=False) as db:
+                db.delete(invitation)
+
+        with DbSession.use(readonly=False) as db:
+            db.insert(assign_user)
+
+        role_service = self._get_service(RoleService)
+
+        await role_service.project.grant_default(user_id=user.id, project_id=project.id)
+
+        project_service = self._get_service_by_name("project")
+
+        model = {
+            "assigned_members": await project_service.get_assigned_users(project, as_api=True),
+            "invited_members": await self.get_invited_users(project, as_api=True),
+        }
+
+        if invitation:
+            model["invitation_uid"] = invitation.get_uid()
+
+        await ProjectInvitationPublisher.accepted(project, model)
+
+        ProjectActivityTask.project_invited_user_accepted(user, project)
 
     async def __delete_notification(self, user: User, project: Project, invitation: ProjectInvitation):
         notification_service = self._get_service(NotificationService)
