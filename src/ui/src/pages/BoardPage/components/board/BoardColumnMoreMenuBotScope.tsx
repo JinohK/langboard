@@ -50,7 +50,13 @@ const BoardColumnMoreMenuBotScopeItem = memo(({ bot, column }: IBoardColumnMoreM
                 avatarSize="xs"
                 withNameProps={{ className: "inline-flex gap-1 select-none", nameClassName: "text-base" }}
             >
-                <UserAvatarDefaultList userOrBot={bot} projectUID={project.uid} />
+                <UserAvatarDefaultList
+                    userOrBot={bot}
+                    scope={{
+                        projectUID: project.uid,
+                        columnUID: column.uid,
+                    }}
+                />
             </UserAvatar.Root>
 
             <Flex items="center" gap="1">

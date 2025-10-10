@@ -18,6 +18,7 @@ import {
     ProjectCardBotScope,
     ProjectColumnBotSchedule,
     ProjectCardBotSchedule,
+    ChatSessionModel,
 } from "@/core/models";
 import { useSocketOutsideProvider } from "@/core/providers/SocketProvider";
 import { ESocketTopic } from "@langboard/core/enums";
@@ -39,9 +40,15 @@ export const deleteProjectModel = (topic: Exclude<ESocketTopic, ESocketTopic.Non
         [ESocketTopic.BoardWiki]: [] as string[],
     };
 
-    ActivityModel.Model.deleteModels((model) => model.filterable_type === "project" && model.filterable_uid === projectUID);
-    ChatMessageModel.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
-    ChatMessageModel.Model.deleteModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
+    ActivityModel.Model.deleteModels((model) => model.filterable_map.project === projectUID);
+    ChatSessionModel.Model.deleteModels((model) => {
+        if (model.filterable_table !== "project" || model.filterable_uid !== projectUID) {
+            return false;
+        }
+
+        ChatMessageModel.Model.deleteModels((message) => message.chat_session_uid === model.uid);
+        return true;
+    });
     ProjectWiki.Model.deleteModels((model) => {
         MetadataModel.Model.deleteModels((metadataModel) => metadataModel.uid === model.uid);
         if (model.project_uid !== projectUID) {

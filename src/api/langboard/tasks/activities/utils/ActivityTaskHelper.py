@@ -75,23 +75,28 @@ class ActivityTaskHelper(Generic[_TActivityModel]):
 
         return self.__get_updated(CardRelationship, old_relationship_ids, new_relationship_ids, relationship_converter)
 
-    def create_project_default_history(self, project: Project, card: Card | None = None):
+    def create_project_default_history(
+        self, project: Project, column: ProjectColumn | None = None, card: Card | None = None
+    ):
         history = {
             "project": ActivityHistoryHelper.create_project_history(project),
         }
 
+        if column:
+            history["column"] = ActivityHistoryHelper.create_project_column_history(column)
+
         if not card:
             return history
 
-        column = None
-        with DbSession.use(readonly=True) as db:
-            result = db.exec(
-                SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
-            )
-            column = cast(ProjectColumn, result.first())
-
         if not column:
-            raise ValueError(f"ProjectColumn with ID {card.project_column_id} not found.")
+            with DbSession.use(readonly=True) as db:
+                result = db.exec(
+                    SqlBuilder.select.table(ProjectColumn).where(ProjectColumn.column("id") == card.project_column_id)
+                )
+                column = cast(ProjectColumn, result.first())
+
+            if not column:
+                raise ValueError(f"ProjectColumn with ID {card.project_column_id} not found.")
 
         history.update(**ActivityHistoryHelper.create_card_history(card, column))
 

@@ -5,13 +5,20 @@ import { memo } from "react";
 
 export interface IBoardCardCheckitemAssignedMemberProps {
     projectUID: string;
+    cardUID: string;
     assignedUser: User.TModel;
 }
 
-const BoardCardCheckitemAssignedMember = memo(({ projectUID, assignedUser }: IBoardCardCheckitemAssignedMemberProps): JSX.Element => {
+const BoardCardCheckitemAssignedMember = memo(({ projectUID, cardUID, assignedUser }: IBoardCardCheckitemAssignedMemberProps): JSX.Element => {
     return (
         <UserAvatar.Root userOrBot={assignedUser} avatarSize="xs">
-            <UserAvatarDefaultList userOrBot={assignedUser} projectUID={projectUID} />
+            <UserAvatarDefaultList
+                userOrBot={assignedUser}
+                scope={{
+                    projectUID,
+                    cardUID,
+                }}
+            />
         </UserAvatar.Root>
     );
 });

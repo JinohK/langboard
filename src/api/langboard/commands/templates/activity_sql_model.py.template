@@ -16,6 +16,5 @@ class {class_name}Activity(BaseActivityModel, table=True):
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value
-        base_api_response["filterable_type"] = ""
-        base_api_response["filterable_uid"] = self.
+        base_api_response["filterable_map"] = {empty_dict}
         return base_api_response

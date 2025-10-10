@@ -16,14 +16,14 @@ export const getListRequestData = (form: TGetListForm) => {
                 case "project":
                     url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT, { uid: form.project_uid });
                     break;
+                case "project_column":
+                    url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT_COLUMN, { uid: form.project_uid, column_uid: form.column_uid });
+                    break;
                 case "card":
                     url = Utils.String.format(Routing.API.ACTIVITIY.CARD, { uid: form.project_uid, card_uid: form.card_uid });
                     break;
                 case "project_wiki":
                     url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT_WIKI, { uid: form.project_uid, wiki_uid: form.wiki_uid });
-                    break;
-                case "project_assignee":
-                    url = Utils.String.format(Routing.API.ACTIVITIY.PROJECT_ASSIGNEE, { uid: form.project_uid, assignee_uid: form.assignee_uid });
                     break;
                 default:
                     throw new Error("Invalid activity type");

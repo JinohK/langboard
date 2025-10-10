@@ -72,7 +72,12 @@ const BoardSettingsMemberRole = memo(({ member, isValidating, setIsValidating }:
                     nameClassName: "text-base",
                 }}
             >
-                <UserAvatarDefaultList userOrBot={member} projectUID={project.uid} />
+                <UserAvatarDefaultList
+                    userOrBot={member}
+                    scope={{
+                        projectUID: project.uid,
+                    }}
+                />
             </UserAvatar.Root>
             <Flex wrap gap="2">
                 {Object.keys(Project.ERoleAction).map((key) => {

@@ -1,6 +1,6 @@
 import { TCreatedAtModelName } from "@/core/models/ModelRegistry";
 
-type TActivityType = "user" | "project" | "card" | "project_wiki" | "project_assignee";
+export type TActivityType = "user" | "project" | "project_column" | "card" | "project_wiki";
 
 export interface IBaseGetListForm<TModelName extends TCreatedAtModelName> {
     listType: TModelName;
@@ -9,6 +9,7 @@ export interface IBaseGetListForm<TModelName extends TCreatedAtModelName> {
 interface IBaseGetActivitiesForm<TActivity extends TActivityType> extends IBaseGetListForm<"ActivityModel"> {
     listType: "ActivityModel";
     type: TActivity;
+    assignee_uid?: string;
 }
 
 interface IGetUserActivitiesForm extends IBaseGetActivitiesForm<"user"> {
@@ -17,6 +18,11 @@ interface IGetUserActivitiesForm extends IBaseGetActivitiesForm<"user"> {
 
 interface IGerProjectActivitiesForm extends IBaseGetActivitiesForm<"project"> {
     project_uid: string;
+}
+
+interface IGetProjectColumnActivitiesForm extends IBaseGetActivitiesForm<"project_column"> {
+    project_uid: string;
+    column_uid: string;
 }
 
 interface IGetCardActivitiesForm extends IBaseGetActivitiesForm<"card"> {
@@ -29,17 +35,12 @@ interface IGetProjectWikiActivitiesForm extends IBaseGetActivitiesForm<"project_
     wiki_uid: string;
 }
 
-interface IGetProjectAssigneeActivitiesForm extends IBaseGetActivitiesForm<"project_assignee"> {
-    project_uid: string;
-    assignee_uid: string;
-}
-
 export type TGetActivitiesForm =
     | IGetUserActivitiesForm
     | IGerProjectActivitiesForm
+    | IGetProjectColumnActivitiesForm
     | IGetCardActivitiesForm
-    | IGetProjectWikiActivitiesForm
-    | IGetProjectAssigneeActivitiesForm;
+    | IGetProjectWikiActivitiesForm;
 
 export type TGetListForm<TModelName extends TCreatedAtModelName> = TModelName extends "ActivityModel"
     ? IBaseGetActivitiesForm<TActivityType>

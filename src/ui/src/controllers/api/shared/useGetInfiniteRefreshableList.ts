@@ -47,6 +47,7 @@ const useGetInfiniteRefreshableList = <TModelName extends TCreatedAtModelName>(
 
             const res = await api.get(url, {
                 params: {
+                    assignee_uid: (form as any).assignee_uid,
                     ...params,
                     refer_time: lastCurrentDateRef.current,
                     limit: limitRef.current,

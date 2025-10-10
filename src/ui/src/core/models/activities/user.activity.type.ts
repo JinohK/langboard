@@ -33,10 +33,10 @@ export interface IProjectWikiReferredActivity extends IBaseReferredActivity {
 export type TReferredActivity = IProjectReferredActivity | IProjectWikiReferredActivity;
 
 export interface IBaseUserActivity<THistory extends Record<string, any>> extends IBaseActivity<THistory> {
-    filterable_type: "user";
-    filterable_uid: string;
-    sub_filterable_type?: never;
-    sub_filterable_uid?: never;
+    filterable_map: IBaseActivity<THistory>["filterable_map"] & {
+        user?: string;
+        bot?: string;
+    };
 }
 
 export interface IUserActivatedActivity extends IBaseUserActivity<{ activated_at: Date }> {

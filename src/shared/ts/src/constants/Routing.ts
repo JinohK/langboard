@@ -52,9 +52,9 @@ const API = {
     ACTIVITIY: {
         USER: "/activity/user",
         PROJECT: "/activity/project/{uid}",
+        PROJECT_COLUMN: "/activity/project/{uid}/column/{column_uid}",
         CARD: "/activity/project/{uid}/card/{card_uid}",
         PROJECT_WIKI: "/activity/project/{uid}/wiki/{wiki_uid}",
-        PROJECT_ASSIGNEE: "/activity/project/{uid}/assignee/{assignee_uid}",
     },
     DASHBOARD: {
         ALL_STARRED_PROJECTS: "/dashboard/user/projects/starred",

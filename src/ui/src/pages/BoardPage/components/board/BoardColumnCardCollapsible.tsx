@@ -192,7 +192,10 @@ function BoardColumnCardCollapsible({ isDragging }: IBoardColumnCardCollapsibleP
                             <UserAvatarList
                                 maxVisible={3}
                                 userOrBots={cardMembers}
-                                projectUID={project.uid}
+                                scope={{
+                                    projectUID: project.uid,
+                                    cardUID: card.uid,
+                                }}
                                 size="sm"
                                 {...attributes}
                                 className="cursor-default"

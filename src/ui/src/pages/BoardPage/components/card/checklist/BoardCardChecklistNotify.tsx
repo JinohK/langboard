@@ -83,7 +83,10 @@ function BoardCardChecklistNotify() {
             allSelectables={projectMembers.filter((member) => member.uid !== currentUser.uid)}
             originalAssignees={[]}
             tagContentProps={{
-                projectUID,
+                scope: {
+                    projectUID,
+                    cardUID: card.uid,
+                },
             }}
             createSearchKeywords={((item: User.TModel) => [item.email, item.firstname, item.lastname]) as IFormProps["createSearchKeywords"]}
             createLabel={((item: User.TModel) => `${item.firstname} ${item.lastname}`.trim()) as IFormProps["createLabel"]}

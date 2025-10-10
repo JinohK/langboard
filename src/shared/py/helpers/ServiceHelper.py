@@ -3,6 +3,7 @@ from core.db import BaseSqlModel, DbSession, SoftDeleteModel, SqlBuilder
 from core.types import SnowflakeID
 from core.utils.decorators import staticclass
 from sqlalchemy import Delete, Update, func
+from sqlalchemy.orm.attributes import InstrumentedAttribute
 from sqlmodel.sql.expression import Select, SelectOfScalar
 from .ModelHelper import ModelHelper
 
@@ -147,10 +148,12 @@ class ServiceHelper:
             return statement
         arg, value = kwargs.popitem()
         if arg in model_class.model_fields and value is not None:
+            if not isinstance(arg, InstrumentedAttribute):
+                arg = model_class.column(arg)
             if isinstance(value, list):
-                statement = statement.where(model_class.column(arg).in_(value))
+                statement = statement.where(arg.in_(value))
             else:
-                statement = statement.where(model_class.column(arg) == value)
+                statement = statement.where(arg == value)
         return ServiceHelper.where_recursive(statement, model_class, **kwargs)
 
     @staticmethod
@@ -252,7 +255,9 @@ class ServiceHelper:
         return None
 
     @staticmethod
-    def convert_id(id_param: SnowflakeID | int | str) -> SnowflakeID:
+    def convert_id(id_param: BaseSqlModel | SnowflakeID | int | str) -> SnowflakeID:
+        if isinstance(id_param, BaseSqlModel):
+            return id_param.id
         if isinstance(id_param, SnowflakeID):
             return id_param
         if isinstance(id_param, int):

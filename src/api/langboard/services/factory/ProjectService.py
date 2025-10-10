@@ -262,20 +262,29 @@ class ProjectService(BaseService):
             assignee = result.first()
         return bool(assignee), assignee
 
-    async def is_user_related_to_other_user(self, user: User, target_user: User) -> bool:
+    async def is_user_related_to_other_user(
+        self, user: User, target_user: User, project: TProjectParam | None = None
+    ) -> bool:
         user_a = aliased(ProjectAssignedUser)
         user_b = aliased(ProjectAssignedUser)
 
+        query = (
+            SqlBuilder.select.column(user_a.id)
+            .join(
+                user_b,
+                cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id,
+            )
+            .where((user_a.user_id == user.id) & (user_b.user_id == target_user.id))
+            .limit(1)
+        )
+
+        if project:
+            project = ServiceHelper.convert_id(project)
+            query = query.where((user_a.project_id == project) & (user_b.project_id == project))
+
         record = None
         with DbSession.use(readonly=True) as db:
-            result = db.exec(
-                SqlBuilder.select.column(user_a.id)
-                .join(
-                    user_b,
-                    cast(InstrumentedAttribute, user_a.project_id) == user_b.project_id,
-                )
-                .where((user_a.user_id == user.id) & (user_b.user_id == target_user.id))
-            )
+            result = db.exec(query)
             record = result.first()
         return bool(record)
 

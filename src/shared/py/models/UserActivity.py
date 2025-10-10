@@ -4,6 +4,8 @@ from core.db import EnumLikeType, SnowflakeIDField
 from core.types import SnowflakeID
 from sqlmodel import Field
 from .bases import BaseActivityModel
+from .Bot import Bot
+from .User import User
 
 
 class UserActivityType(Enum):
@@ -21,8 +23,7 @@ class UserActivity(BaseActivityModel, table=True):
         return BaseActivityModel.api_schema(
             {
                 "activity_type": f"Literal[{', '.join([activity_type.value for activity_type in UserActivityType])}]?",
-                "filterable_type": "Literal[user]",
-                "filterable_uid": "string",
+                "filterable_map": "object",
                 **(schema or {}),
             }
         )
@@ -30,11 +31,11 @@ class UserActivity(BaseActivityModel, table=True):
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value if self.activity_type else None
-        base_api_response["filterable_type"] = "user"
+        base_api_response["filterable_map"] = {}
         if self.user_id:
-            base_api_response["filterable_uid"] = self.user_id.to_short_code()
+            base_api_response["filterable_map"][User.__tablename__] = self.user_id.to_short_code()
         elif self.bot_id:
-            base_api_response["filterable_uid"] = self.bot_id.to_short_code()
+            base_api_response["filterable_map"][Bot.__tablename__] = self.bot_id.to_short_code()
         else:
-            base_api_response["filterable_uid"] = self.get_uid()
+            base_api_response["filterable_map"]["uid"] = self.get_uid()
         return base_api_response

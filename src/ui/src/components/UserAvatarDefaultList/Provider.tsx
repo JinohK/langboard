@@ -1,5 +1,5 @@
 import { createContext, memo, useContext, useEffect, useMemo, useState } from "react";
-import { AuthUser, Project } from "@/core/models";
+import { AuthUser, Project, ProjectCard, ProjectColumn, ProjectWiki } from "@/core/models";
 import useRoleActionFilter from "@/core/hooks/useRoleActionFilter";
 import { useAuth } from "@/core/providers/AuthProvider";
 import useIsProjectAssignee from "@/controllers/api/board/useIsProjectAssignee";
@@ -9,15 +9,25 @@ import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
 export interface IUserAvatarDefaultListContext {
     socket: ISocketContext;
     userOrBot: TUserLikeModel;
-    project?: Project.TModel;
+    scopeModels: {
+        project?: Project.TModel;
+        column?: ProjectColumn.TModel;
+        card?: ProjectCard.TModel;
+        wiki?: ProjectWiki.TModel;
+    };
     currentUser: AuthUser.TModel;
     hasRoleAction: ReturnType<typeof useRoleActionFilter<Project.TRoleActions>>["hasRoleAction"];
     isAssignee: bool;
     setIsAssignee: React.Dispatch<React.SetStateAction<bool>>;
 }
 
-interface IUserAvatarDefaultListProviderProps {
-    projectUID?: string;
+export interface IUserAvatarDefaultListProviderProps {
+    scope?: {
+        projectUID?: string;
+        columnUID?: string;
+        cardUID?: string;
+        wikiUID?: string;
+    };
     userOrBot: TUserLikeModel;
     children: React.ReactNode;
 }
@@ -25,7 +35,7 @@ interface IUserAvatarDefaultListProviderProps {
 const initialContext = {
     socket: {} as ISocketContext,
     userOrBot: {} as TUserLikeModel,
-    project: {} as Project.TModel,
+    scopeModels: {},
     currentUser: {} as AuthUser.TModel,
     hasRoleAction: () => false,
     isAssignee: false,
@@ -34,15 +44,40 @@ const initialContext = {
 
 const UserAvatarDefaultListContext = createContext<IUserAvatarDefaultListContext>(initialContext);
 
-export const UserAvatarDefaultListProvider = memo(({ projectUID, userOrBot, children }: IUserAvatarDefaultListProviderProps): React.ReactNode => {
+export const UserAvatarDefaultListProvider = memo(({ scope, userOrBot, children }: IUserAvatarDefaultListProviderProps): React.ReactNode => {
     const socket = useSocket();
+    const scopeModels = useMemo(() => {
+        if (!scope) {
+            return {};
+        }
+
+        const models: IUserAvatarDefaultListContext["scopeModels"] = {};
+
+        if (scope.projectUID) {
+            models.project = Project.Model.getModel(scope.projectUID);
+        }
+
+        if (scope.columnUID) {
+            models.column = ProjectColumn.Model.getModel(scope.columnUID);
+        }
+
+        if (scope.cardUID) {
+            models.card = ProjectCard.Model.getModel(scope.cardUID);
+        }
+
+        if (scope.wikiUID) {
+            models.wiki = ProjectWiki.Model.getModel(scope.wikiUID);
+        }
+
+        return models;
+    }, [scope]);
     const project = useMemo(() => {
-        if (projectUID) {
-            return Project.Model.getModel(projectUID);
+        if (scope?.projectUID) {
+            return Project.Model.getModel(scope.projectUID);
         } else {
             return undefined;
         }
-    }, [projectUID]);
+    }, [scope, scope?.projectUID]);
     const { currentUser } = useAuth();
     const currentUserRoleActions = useMemo(() => {
         if (project) {
@@ -89,7 +124,7 @@ export const UserAvatarDefaultListProvider = memo(({ projectUID, userOrBot, chil
             value={{
                 socket,
                 userOrBot,
-                project,
+                scopeModels,
                 currentUser,
                 hasRoleAction,
                 isAssignee,

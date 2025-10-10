@@ -8,6 +8,12 @@ export interface IProjectColumnActivityHistory extends IProjectActivityHistory {
     };
 }
 
+export interface IBaseProjectCardActivity<THistory extends IProjectColumnActivityHistory> extends IBaseProjectActivity<THistory> {
+    filterable_map: IBaseProjectActivity<THistory>["filterable_map"] & {
+        project_column: string;
+    };
+}
+
 export interface IProjectColumnCreatedActivitiy extends IBaseProjectActivity<IProjectColumnActivityHistory> {
     activity_type: EProjectActivityType.ProjectColumnCreated;
 }

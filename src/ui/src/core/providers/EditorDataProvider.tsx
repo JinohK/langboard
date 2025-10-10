@@ -14,7 +14,6 @@ export interface IEditorDataContext {
     socketEvents?: ReturnType<typeof createEditorSocketEvents>;
     chatEventKey?: string;
     copilotEventKey?: string;
-    commonSocketEventData?: Record<string, any>;
     uploadPath?: string;
     uploadedCallback?: (respones: any) => void;
 }
@@ -147,7 +146,6 @@ export const EditorDataProvider = ({
                 socketEvents,
                 chatEventKey,
                 copilotEventKey,
-                commonSocketEventData: form,
                 uploadPath,
                 uploadedCallback,
             }}

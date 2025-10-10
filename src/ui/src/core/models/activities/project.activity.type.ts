@@ -16,8 +16,9 @@ export interface IProjectActivityHistory {
 }
 
 export interface IBaseProjectActivity<THistory extends IProjectActivityHistory> extends IBaseActivity<THistory> {
-    filterable_type: "project";
-    filterable_uid: string;
+    filterable_map: IBaseActivity<THistory>["filterable_map"] & {
+        project: string;
+    };
     references: {
         project: IBaseModel;
     };

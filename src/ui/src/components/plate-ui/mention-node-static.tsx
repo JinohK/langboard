@@ -67,7 +67,14 @@ export function MentionElementStatic(
                     customName: customName,
                 }}
             >
-                <UserAvatarDefaultList userOrBot={mentioned} projectUID={form?.project_uid} />
+                <UserAvatarDefaultList
+                    userOrBot={mentioned}
+                    scope={{
+                        projectUID: form?.project_uid,
+                        cardUID: form?.card_uid,
+                        wikiUID: form?.wiki_uid,
+                    }}
+                />
             </UserAvatar.Root>
         </SlateElement>
     );

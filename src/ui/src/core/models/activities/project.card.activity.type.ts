@@ -16,10 +16,9 @@ export interface IProjectCardActivityHistory extends IProjectColumnActivityHisto
 }
 
 export interface IBaseProjectCardActivity<THistory extends IProjectCardActivityHistory> extends IBaseProjectActivity<THistory> {
-    filterable_type: "project";
-    filterable_uid: string;
-    sub_filterable_type: "card";
-    sub_filterable_uid: string;
+    filterable_map: IBaseProjectActivity<THistory>["filterable_map"] & {
+        card: string;
+    };
     references: {
         project: IBaseModel;
         card: IBaseModel;

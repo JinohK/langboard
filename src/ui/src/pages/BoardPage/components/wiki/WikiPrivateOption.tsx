@@ -170,7 +170,10 @@ const WikiPrivateOption = memo(({ wiki, changeTab }: IWikiPrivateOptionProps) =>
                     originalAssignees={originalAssignees}
                     showableAssignees={assignedMembers}
                     tagContentProps={{
-                        projectUID,
+                        scope: {
+                            projectUID,
+                            wikiUID: wiki.uid,
+                        },
                     }}
                     addIconSize="6"
                     save={saveAssignees as TSaveHandler}

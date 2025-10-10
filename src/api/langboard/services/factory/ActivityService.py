@@ -3,13 +3,14 @@ from core.db import DbSession, SqlBuilder
 from core.db.Models import BaseSqlModel
 from core.schema import Pagination
 from core.service import BaseService
-from core.types import SafeDateTime
+from core.types import SafeDateTime, SnowflakeID
 from helpers import ServiceHelper
 from models import (
     Bot,
     Card,
     Project,
     ProjectActivity,
+    ProjectColumn,
     ProjectWiki,
     ProjectWikiActivity,
     User,
@@ -17,11 +18,12 @@ from models import (
 )
 from models.bases import BaseActivityModel
 from sqlmodel.sql.expression import Select, SelectOfScalar
-from .Types import TBotParam, TCardParam, TProjectParam, TUserParam, TWikiParam
+from .Types import TCardParam, TColumnParam, TProjectParam, TUserOrBotParam, TUserParam, TWikiParam
 
 
 _TActivityModel = TypeVar("_TActivityModel", bound=BaseActivityModel)
 _TSelectParam = TypeVar("_TSelectParam", bound=Any)
+_TActivityScope = Literal["project", "project_column", "card", "project_wiki"]
 
 
 class ActivityService(BaseService):
@@ -77,80 +79,13 @@ class ActivityService(BaseService):
         return api_activties, count_new_records, user
 
     @overload
-    async def get_list_by_project_assignee(
-        self,
-        project: TProjectParam,
-        assignee: TUserParam | TBotParam,
-        pagination: Pagination,
-        refer_time: SafeDateTime,
-    ) -> tuple[list[dict[str, Any]], int, User | Bot] | None: ...
-    @overload
-    async def get_list_by_project_assignee(
-        self,
-        project: TProjectParam,
-        assignee: TUserParam | TBotParam,
-        pagination: Pagination,
-        refer_time: SafeDateTime,
-        only_count: Literal[True],
-    ) -> int | None: ...
-    async def get_list_by_project_assignee(
-        self,
-        project: TProjectParam,
-        assignee: TUserParam | TBotParam,
-        pagination: Pagination,
-        refer_time: SafeDateTime,
-        only_count: bool = False,
-    ) -> tuple[list[dict[str, Any]], int, User | Bot] | int | None:
-        project = ServiceHelper.get_by_param(Project, project)
-        assignee = ServiceHelper.get_by_param(User, assignee)
-        if not assignee:
-            assignee = ServiceHelper.get_by_param(Bot, assignee)
-        if not assignee:
-            return None
-
-        if not project or not assignee:
-            return None
-
-        list_query = self.__refer_project(SqlBuilder.select.table(UserActivity), project)
-        outdated_query = self.__refer_project(SqlBuilder.select.count(UserActivity, UserActivity.column("id")), project)
-        where_clauses = {}
-
-        if isinstance(assignee, User):
-            where_clauses["user_id"] = assignee.id
-        else:
-            where_clauses["bot_id"] = assignee.id
-
-        if only_count:
-            return await self.__count_new_records(UserActivity, refer_time, outdated_query, **where_clauses)
-
-        activities, count_new_records = await self.__get_list(
-            UserActivity,
-            pagination,
-            refer_time,
-            list_query,
-            outdated_query,
-            **where_clauses,
-        )
-        api_activties = []
-        cached_dict = await self.__get_cached_references(activities)
-        for activity in activities:
-            if not activity.refer_activity_id or not activity.refer_activity_table:
-                continue
-
-            if activity.id not in cached_dict:
-                continue
-
-            api_activity = {
-                **activity.api_response(),
-                **cached_dict[activity.id],
-            }
-            api_activties.append(api_activity)
-
-        return api_activties, count_new_records, assignee
-
-    @overload
     async def get_list_by_project(
-        self, project: TProjectParam, pagination: Pagination, refer_time: SafeDateTime
+        self,
+        project: TProjectParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: Literal[False] = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project] | None: ...
     @overload
     async def get_list_by_project(
@@ -159,6 +94,7 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: Literal[True],
+        assignee: TUserOrBotParam | None = None,
     ) -> int | None: ...
     async def get_list_by_project(
         self,
@@ -166,21 +102,93 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: bool = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project] | int | None:
         project = ServiceHelper.get_by_param(Project, project)
         if not project:
             return None
 
+        activity_class, list_query, outdated_query, where_clauses = self.__create_refer_activity_queries(
+            ProjectActivity, "project", assignee, project=project
+        )
+        if not where_clauses:
+            where_clauses = {"project_id": project.id}
+
         if only_count:
-            return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id)
+            return await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
 
         activities, count_new_records = await self.__get_list(
-            ProjectActivity, pagination, refer_time, project_id=project.id
+            activity_class, pagination, refer_time, cast(Any, list_query), outdated_query, **where_clauses
         )
+
+        if activity_class is UserActivity:
+            api_activities = await self.__convert_api_response(cast(Any, activities))
+        else:
+            api_activities = [activity.api_response() for activity in activities]
+
         return (
-            [activity.api_response() for activity in activities],
+            api_activities,
             count_new_records,
             project,
+        )
+
+    @overload
+    async def get_list_by_column(
+        self,
+        project: TProjectParam,
+        column: TColumnParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: Literal[False] = False,
+        assignee: TUserOrBotParam | None = None,
+    ) -> tuple[list[dict[str, Any]], int, Project, ProjectColumn] | None: ...
+    @overload
+    async def get_list_by_column(
+        self,
+        project: TProjectParam,
+        column: TColumnParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: Literal[True],
+        assignee: TUserOrBotParam | None = None,
+    ) -> int: ...
+    async def get_list_by_column(
+        self,
+        project: TProjectParam,
+        column: TColumnParam,
+        pagination: Pagination,
+        refer_time: SafeDateTime,
+        only_count: bool = False,
+        assignee: TUserOrBotParam | None = None,
+    ) -> tuple[list[dict[str, Any]], int, Project, ProjectColumn] | int | None:
+        params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectColumn, column))
+        if not params:
+            return None
+        project, column = params
+
+        activity_class, list_query, outdated_query, where_clauses = self.__create_refer_activity_queries(
+            ProjectActivity, "project", assignee, project=project, project_column=column
+        )
+        if not where_clauses:
+            where_clauses = {"project_id": project.id, "column_id": column.id}
+
+        if only_count:
+            return await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
+
+        activities, count_new_records = await self.__get_list(
+            activity_class, pagination, refer_time, cast(Any, list_query), outdated_query, **where_clauses
+        )
+
+        if activity_class is UserActivity:
+            api_activities = await self.__convert_api_response(cast(Any, activities))
+        else:
+            api_activities = [activity.api_response() for activity in activities]
+
+        return (
+            api_activities,
+            count_new_records,
+            project,
+            column,
         )
 
     @overload
@@ -190,6 +198,8 @@ class ActivityService(BaseService):
         card: TCardParam,
         pagination: Pagination,
         refer_time: SafeDateTime,
+        only_count: Literal[False] = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | None: ...
     @overload
     async def get_list_by_card(
@@ -199,6 +209,7 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: Literal[True],
+        assignee: TUserOrBotParam | None = None,
     ) -> int: ...
     async def get_list_by_card(
         self,
@@ -207,24 +218,33 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: bool = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project, Card] | int | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (Card, card))
         if not params:
             return None
         project, card = params
 
+        activity_class, list_query, outdated_query, where_clauses = self.__create_refer_activity_queries(
+            ProjectActivity, "project", assignee, project=project, card=card
+        )
+        if not where_clauses:
+            where_clauses = {"project_id": project.id, "card_id": card.id}
+
         if only_count:
-            return await self.__count_new_records(ProjectActivity, refer_time, project_id=project.id, card_id=card.id)
+            return await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
 
         activities, count_new_records = await self.__get_list(
-            ProjectActivity,
-            pagination,
-            refer_time,
-            project_id=project.id,
-            card_id=card.id,
+            activity_class, pagination, refer_time, cast(Any, list_query), outdated_query, **where_clauses
         )
+
+        if activity_class is UserActivity:
+            api_activities = await self.__convert_api_response(cast(Any, activities))
+        else:
+            api_activities = [activity.api_response() for activity in activities]
+
         return (
-            [activity.api_response() for activity in activities],
+            api_activities,
             count_new_records,
             project,
             card,
@@ -237,6 +257,8 @@ class ActivityService(BaseService):
         wiki: TWikiParam,
         pagination: Pagination,
         refer_time: SafeDateTime,
+        only_count: Literal[False] = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | None: ...
     @overload
     async def get_list_by_wiki(
@@ -246,6 +268,7 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: Literal[True],
+        assignee: TUserOrBotParam | None = None,
     ) -> int | None: ...
     async def get_list_by_wiki(
         self,
@@ -254,33 +277,43 @@ class ActivityService(BaseService):
         pagination: Pagination,
         refer_time: SafeDateTime,
         only_count: bool = False,
+        assignee: TUserOrBotParam | None = None,
     ) -> tuple[list[dict[str, Any]], int, Project, ProjectWiki] | int | None:
         params = ServiceHelper.get_records_with_foreign_by_params((Project, project), (ProjectWiki, wiki))
         if not params:
             return None
         project, wiki = params
 
+        activity_class, list_query, outdated_query, where_clauses = self.__create_refer_activity_queries(
+            ProjectWikiActivity, "project", assignee, project=project, project_wiki=wiki
+        )
+        if not where_clauses:
+            where_clauses = {"project_id": project.id, "project_wiki_id": wiki.id}
+
         if only_count:
-            return await self.__count_new_records(
-                ProjectWikiActivity,
-                refer_time,
-                project_id=project.id,
-                project_wiki_id=wiki.id,
-            )
+            return await self.__count_new_records(activity_class, refer_time, outdated_query, **where_clauses)
 
         activities, count_new_records = await self.__get_list(
-            ProjectWikiActivity,
-            pagination,
-            refer_time,
-            project_id=project.id,
-            project_wiki_id=wiki.id,
+            activity_class, pagination, refer_time, cast(Any, list_query), outdated_query, **where_clauses
         )
+
+        if activity_class is UserActivity:
+            api_activities = await self.__convert_api_response(cast(Any, activities))
+        else:
+            api_activities = [activity.api_response() for activity in activities]
+
         return (
-            [activity.api_response() for activity in activities],
+            api_activities,
             count_new_records,
             project,
             wiki,
         )
+
+    def get_user_or_bot(self, user_or_bot_param: TUserOrBotParam) -> User | Bot | None:
+        user_or_bot = ServiceHelper.get_by_param(User, user_or_bot_param)
+        if not user_or_bot:
+            user_or_bot = ServiceHelper.get_by_param(Bot, user_or_bot_param)
+        return user_or_bot
 
     async def __get_list(
         self,
@@ -348,35 +381,103 @@ class ActivityService(BaseService):
         query = ServiceHelper.where_recursive(query, activity_class, **where_clauses)
         return query
 
+    def __create_refer_activity_queries(
+        self,
+        activity_class: type[_TActivityModel],
+        scope: _TActivityScope,
+        assignee: TUserOrBotParam | None = None,
+        **kwargs,
+    ):
+        if not assignee:
+            return activity_class, None, None, None
+
+        assignee = self.get_user_or_bot(assignee)
+        if not assignee:
+            return activity_class, None, None, None
+
+        list_query = self.__refer(SqlBuilder.select.table(UserActivity), scope, **kwargs)
+        outdated_query = self.__refer(SqlBuilder.select.count(UserActivity, UserActivity.column("id")), scope, **kwargs)
+        where_clauses = {}
+
+        if isinstance(assignee, User):
+            where_clauses["user_id"] = assignee.id
+        else:
+            where_clauses["bot_id"] = assignee.id
+
+        return UserActivity, list_query, outdated_query, where_clauses
+
     @overload
-    def __refer_project(self, query: Select[_TActivityModel], project: Project) -> Select[_TActivityModel]: ...
+    def __refer(self, query: Select[_TActivityModel], scope: _TActivityScope, **kwargs) -> Select[_TActivityModel]: ...
     @overload
-    def __refer_project(
-        self, query: SelectOfScalar[_TActivityModel], project: Project
+    def __refer(
+        self, query: SelectOfScalar[_TActivityModel], scope: _TActivityScope, **kwargs
     ) -> SelectOfScalar[_TActivityModel]: ...
     @overload
-    def __refer_project(self, query: SelectOfScalar[int], project: Project) -> SelectOfScalar[int]: ...
-    def __refer_project(
+    def __refer(self, query: SelectOfScalar[int], scope: _TActivityScope, **kwargs) -> SelectOfScalar[int]: ...
+    def __refer(
         self,
         query: Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int],
-        project: Project,
+        scope: _TActivityScope,
+        **kwargs,
     ) -> Select[_TActivityModel] | SelectOfScalar[_TActivityModel] | SelectOfScalar[int]:
-        return (
-            query.outerjoin(
+        tables = []
+        if scope in {"project", "project_wiki"}:
+            query = query.outerjoin(
                 ProjectActivity,
                 (UserActivity.column("refer_activity_table") == ProjectActivity.__tablename__)
                 & (ProjectActivity.column("id") == UserActivity.column("refer_activity_id")),
-            )
-            .outerjoin(
+            ).outerjoin(
                 ProjectWikiActivity,
                 (UserActivity.column("refer_activity_table") == ProjectWikiActivity.__tablename__)
                 & (ProjectWikiActivity.column("id") == UserActivity.column("refer_activity_id")),
             )
-            .where(
-                (ProjectActivity.column("project_id") == project.id)
-                | (ProjectWikiActivity.column("project_id") == project.id)
+            tables = [ProjectActivity, ProjectWikiActivity]
+        elif scope in {"project_column", "card"}:
+            query = query.outerjoin(
+                ProjectActivity,
+                (UserActivity.column("refer_activity_table") == ProjectActivity.__tablename__)
+                & (ProjectActivity.column("id") == UserActivity.column("refer_activity_id")),
             )
-        )
+            tables = [ProjectActivity]
+
+        for key, value in kwargs.items():
+            if not isinstance(value, (BaseSqlModel, SnowflakeID, int)):
+                continue
+
+            value = ServiceHelper.convert_id(value)
+            key = f"{key}_id"
+
+            or_clauses = None
+            for table in tables:
+                if key not in table.model_fields:
+                    continue
+
+                if or_clauses is None:
+                    or_clauses = table.column(key) == value
+                else:
+                    or_clauses |= table.column(key) == value
+
+            if or_clauses is not None:
+                query = query.where(or_clauses)
+
+        return query
+
+    async def __convert_api_response(self, activities: list[UserActivity]) -> list[dict[str, Any]]:
+        api_activties = []
+        cached_dict = await self.__get_cached_references(activities)
+        for activity in activities:
+            if not activity.refer_activity_id or not activity.refer_activity_table:
+                continue
+
+            if activity.id not in cached_dict:
+                continue
+
+            api_activity = {
+                **activity.api_response(),
+                **cached_dict[activity.id],
+            }
+            api_activties.append(api_activity)
+        return api_activties
 
     async def __get_cached_references(self, activities: list[UserActivity]):
         refer_activities = ServiceHelper.get_references(

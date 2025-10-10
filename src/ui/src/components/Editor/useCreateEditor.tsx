@@ -31,7 +31,7 @@ export type TUseCreateEditor = IUseReadonlyEditor | IUseEditor;
 export const useCreateEditor = (props: TUseCreateEditor) => {
     const socket = useSocket();
     const { value, readOnly = false, plugins: customPlugins } = props;
-    const { socketEvents, chatEventKey, copilotEventKey, commonSocketEventData } = useEditorData();
+    const { socketEvents, chatEventKey, copilotEventKey, form } = useEditorData();
 
     const plugins = useMemo(() => {
         const pluginList = [...EditorKit, ...(customPlugins ?? [])];
@@ -39,17 +39,17 @@ export const useCreateEditor = (props: TUseCreateEditor) => {
             const { chatEvents, copilotEvents } = socketEvents;
             pluginList.push(
                 ...DndKit,
-                ...createAiKit({ socket, eventKey: chatEventKey!, events: chatEvents, commonEventData: commonSocketEventData }),
+                ...createAiKit({ socket, eventKey: chatEventKey!, events: chatEvents, commonEventData: form }),
                 ...createCopilotKit({
                     socket,
                     eventKey: copilotEventKey!,
                     events: copilotEvents,
-                    commonEventData: commonSocketEventData,
+                    commonEventData: form,
                 })
             );
         }
         return pluginList;
-    }, [readOnly, socketEvents, chatEventKey, copilotEventKey, commonSocketEventData]);
+    }, [readOnly, socketEvents, chatEventKey, copilotEventKey, form]);
     const convertValue = useCallback(
         (editor: PlateEditor) => {
             if (value) {

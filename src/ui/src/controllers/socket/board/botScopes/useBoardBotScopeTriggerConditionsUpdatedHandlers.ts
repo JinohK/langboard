@@ -6,18 +6,18 @@ import { EBotTriggerCondition } from "@/core/models/botScopes/EBotTriggerConditi
 import { ESocketTopic } from "@langboard/core/enums";
 import { Utils } from "@langboard/core/utils";
 
-export interface IBoardBoardBotScopeConditionsUpdatedRawResponse {
+export interface IBoardBotScopeConditionsUpdatedRawResponse {
     scope_table: TBotRelatedTargetTable;
     uid: string;
     conditions: string[];
 }
 
-export interface IUseBoardBoardBotScopeConditionsUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
+export interface IUseBoardBotScopeConditionsUpdatedHandlersProps extends IBaseUseSocketHandlersProps<{}> {
     projectUID: string;
 }
 
-const useBoardBoardBotScopeConditionsUpdatedHandlers = ({ callback, projectUID }: IUseBoardBoardBotScopeConditionsUpdatedHandlersProps) => {
-    return useSocketHandler<{}, IBoardBoardBotScopeConditionsUpdatedRawResponse>({
+const useBoardBotScopeConditionsUpdatedHandlers = ({ callback, projectUID }: IUseBoardBotScopeConditionsUpdatedHandlersProps) => {
+    return useSocketHandler<{}, IBoardBotScopeConditionsUpdatedRawResponse>({
         topic: ESocketTopic.BoardSettings,
         topicId: projectUID,
         eventKey: `board-bot-scope-trigger-conditions-updated-${projectUID}`,
@@ -44,4 +44,4 @@ const useBoardBoardBotScopeConditionsUpdatedHandlers = ({ callback, projectUID }
     });
 };
 
-export default useBoardBoardBotScopeConditionsUpdatedHandlers;
+export default useBoardBotScopeConditionsUpdatedHandlers;

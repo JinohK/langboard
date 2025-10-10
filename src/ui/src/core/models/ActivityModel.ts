@@ -34,32 +34,11 @@ export class ActivityModel extends BaseModel<TActivity> {
         this.update({ activity_history: value });
     }
 
-    public get filterable_type() {
-        return this.getValue("filterable_type");
+    public get filterable_map() {
+        return this.getValue("filterable_map");
     }
-    public set filterable_type(value) {
-        this.update({ filterable_type: value });
-    }
-
-    public get filterable_uid() {
-        return this.getValue("filterable_uid");
-    }
-    public set filterable_uid(value) {
-        this.update({ filterable_uid: value });
-    }
-
-    public get sub_filterable_type() {
-        return this.getValue("sub_filterable_type");
-    }
-    public set sub_filterable_type(value) {
-        this.update({ sub_filterable_type: value });
-    }
-
-    public get sub_filterable_uid() {
-        return this.getValue("sub_filterable_uid");
-    }
-    public set sub_filterable_uid(value) {
-        this.update({ sub_filterable_uid: value });
+    public set filterable_map(value) {
+        this.update({ filterable_map: value });
     }
 
     public get refer() {

@@ -1,18 +1,21 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Popover } from "@/components/base";
 import { AuthUser, Project } from "@/core/models";
 import ActivityList from "@/components/ActivityList";
 import { useTranslation } from "react-i18next";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useUserAvatar } from "@/components/UserAvatar/Provider";
 import UserAvatar from "@/components/UserAvatar";
 import useHandleInteractOutside from "@/core/hooks/useHandleInteractOutside";
+import { IUserAvatarDefaultListContext } from "@/components/UserAvatarDefaultList/Provider";
+import { TActivityType } from "@/controllers/api/shared/types";
 
 export interface IUserAvatarDefaultViewActivitiesActionProps {
-    project: Project.TModel;
+    scopeModels: Required<IUserAvatarDefaultListContext["scopeModels"]> & { project: Project.TModel };
     currentUser: AuthUser.TModel;
 }
 
-function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAvatarDefaultViewActivitiesActionProps): JSX.Element | null {
+function UserAvatarDefaultViewActivitiesAction({ scopeModels, currentUser }: IUserAvatarDefaultViewActivitiesActionProps): JSX.Element | null {
     const { userOrBot, getAvatarHoverCardAttrs } = useUserAvatar();
     const [t] = useTranslation();
     const triggerRef = useRef<HTMLDivElement>(null);
@@ -22,6 +25,27 @@ function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAv
     const style = {
         "--max-height": maxHeight,
     };
+    const activityForm = useMemo(() => {
+        const form: Record<string, string> = { project_uid: scopeModels.project.uid };
+        let scopeType: TActivityType = "project";
+
+        if (scopeModels.column) {
+            scopeType = "project_column";
+            form.column_uid = scopeModels.column.uid;
+        }
+
+        if (scopeModels.card) {
+            scopeType = "card";
+            form.card_uid = scopeModels.card.uid;
+        }
+
+        if (scopeModels.wiki) {
+            scopeType = "project_wiki";
+            form.wiki_uid = scopeModels.wiki.uid;
+        }
+
+        return { listType: "ActivityModel", type: scopeType, assignee_uid: userOrBot.uid, ...form };
+    }, [scopeModels]);
     const checkSize = useCallback(() => {
         if (!triggerRef.current || !isOpened) {
             return;
@@ -86,11 +110,11 @@ function UserAvatarDefaultViewActivitiesAction({ project, currentUser }: IUserAv
                 {...getAvatarHoverCardAttrs()}
             >
                 <ActivityList
-                    form={{ listType: "ActivityModel", type: "project_assignee", assignee_uid: userOrBot.uid, project_uid: project.uid }}
+                    form={activityForm as any}
                     currentUser={currentUser}
                     outerClassName="max-h-[calc(var(--max-height)_-_theme(spacing.8))] px-4 pb-2.5 w-full"
                     outerStyle={style as React.CSSProperties}
-                    isUserView
+                    viewType={currentUser.uid === userOrBot.uid ? "user" : "default"}
                 />
             </Popover.Content>
         </Popover.Root>

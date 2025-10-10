@@ -11,10 +11,9 @@ export interface IProjectWikiActivityHistory extends IProjectActivityHistory {
 }
 
 export interface IBaseProjectCardActivity<THistory extends IProjectWikiActivityHistory> extends IBaseProjectActivity<THistory> {
-    filterable_type: "project";
-    filterable_uid: string;
-    sub_filterable_type: "project_wiki";
-    sub_filterable_uid: string;
+    filterable_map: IBaseProjectActivity<THistory>["filterable_map"] & {
+        project_wiki: string;
+    };
     references: {
         project: IBaseModel;
         project_wiki: IBaseModel;

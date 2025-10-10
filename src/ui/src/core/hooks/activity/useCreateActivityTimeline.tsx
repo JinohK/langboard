@@ -17,8 +17,11 @@ import { IProjectWikiActivityHistory } from "@/core/models/activities/project.wi
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
+import { cloneDeep } from "lodash";
 import React from "react";
 import { Trans, useTranslation } from "react-i18next";
+
+export type TActivityViewType = "user" | "default";
 
 export interface IActivityTimelineProps {
     activity: ActivityModel.TModel | ActivityModel.TActivity;
@@ -29,14 +32,15 @@ interface IBaseActivityComponentProps {
     references: ActivityModel.TModel["references"];
 }
 
-const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bool) => {
+const useCreateActivityTimeline = (currentUser: AuthUser.TModel, viewType: TActivityViewType = "default") => {
     const [t] = useTranslation();
     const navigate = usePageNavigateRef();
+    const isThirdView = viewType !== "user";
 
     const SkeletonActivity = React.memo(({ ref }: { ref?: React.Ref<HTMLDivElement> }) => (
         <Flex direction="col" gap="1" p="2" ref={ref}>
             <Flex items="start" gap="1">
-                {!isUserView && <Skeleton size="8" rounded="full" />}
+                {isThirdView && <Skeleton size="8" rounded="full" />}
                 <Skeleton h="6" mt="1" className="w-3/5 md:w-2/5" />
             </Flex>
             <Flex items="center" justify="end">
@@ -49,37 +53,32 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         const activityType = activity.activity_type;
         const activityHistory = activity.activity_history;
         const activityCreatedAt = useUpdateDateDistance(activity.created_at);
-        const filterableType = activity.filterable_type;
-        const subFilterableType = activity.sub_filterable_type;
         const refer = activity.refer;
 
         if (refer) {
             return <ActivityTimeline activity={refer} references={activity.references} />;
         }
 
-        const activityReferences = { ...(references ?? {}) };
+        const activityReferences = cloneDeep({ ...(references ?? {}) });
         let i18nKey;
-        switch (filterableType) {
-            case "user":
-                i18nKey = `activity.user.${activityType}`;
-                break;
-            case "project":
-                {
-                    const viewType = isUserView ? "user_view" : "default";
-                    const subType = subFilterableType ? `.${subFilterableType}` : "";
-                    i18nKey = `activity.project${subType}.${activityType}.${viewType}`;
-                }
-                break;
+        if (activity.filterable_map.user) {
+            i18nKey = `activity.user.${activityType}.${viewType}`;
+        } else if (activity.filterable_map.project) {
+            i18nKey = `activity.project.${activityType}.${viewType}`;
         }
 
-        if (subFilterableType && references && !activityReferences[subFilterableType]) {
-            activityReferences[subFilterableType] = { uid: activity.sub_filterable_uid! };
-        }
+        Object.entries(activity.filterable_map).forEach(([key, value]) => {
+            if (!activityReferences[key]) {
+                activityReferences[key] = {};
+            }
+
+            activityReferences[key].uid = value;
+        });
 
         return (
             <Flex direction="col" gap="1" rounded="md" border p="2">
                 <Flex items="start" gap="1">
-                    {!isUserView && (
+                    {isThirdView && (
                         <Box>
                             <UserOrBotComponent userOrBot={activityHistory.recorder} onlyAvatar />
                         </Box>
@@ -203,7 +202,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
                         </Avatar.Fallback>
                     </Avatar.Root>
                 </Tooltip.Trigger>
-                <Tooltip.Content>{names}</Tooltip.Content>
+                <Tooltip.Content side="bottom">{names}</Tooltip.Content>
             </Tooltip.Root>
         );
 
@@ -324,7 +323,7 @@ const useCreateActivityTimeline = (currentUser: AuthUser.TModel, isUserView?: bo
         }
 
         return (
-            <Box px="3" py="2" ml={isUserView ? "0" : "9"} my="1" border rounded="md" className="bg-secondary/25">
+            <Box px="3" py="2" ml={!isThirdView ? "0" : "9"} my="1" border rounded="md" className="bg-secondary/25">
                 {elements}
             </Box>
         );

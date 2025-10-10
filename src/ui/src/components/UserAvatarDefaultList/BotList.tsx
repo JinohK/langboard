@@ -1,15 +1,19 @@
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultViewActivitiesAction from "@/components/UserAvatarDefaultList/actions/ViewActivitiesAction";
-import { useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
+import { IUserAvatarDefaultListContext, useUserAvatarDefaultList } from "@/components/UserAvatarDefaultList/Provider";
+import { Project } from "@/core/models";
 
 function UserAvatarDefaultBotList(): JSX.Element {
-    const { project, currentUser } = useUserAvatarDefaultList();
+    const { scopeModels, currentUser } = useUserAvatarDefaultList();
 
     return (
         <>
-            {project && (
+            {scopeModels?.project && (
                 <>
-                    <UserAvatarDefaultViewActivitiesAction project={project} currentUser={currentUser} />
+                    <UserAvatarDefaultViewActivitiesAction
+                        scopeModels={scopeModels as Required<IUserAvatarDefaultListContext["scopeModels"]> & { project: Project.TModel }}
+                        currentUser={currentUser}
+                    />
                     <UserAvatar.ListSeparator />
                 </>
             )}

@@ -3,10 +3,14 @@ import { IBaseModel } from "@/core/models/Base";
 
 export interface IBaseActivity<TActivityHistory extends Record<string, any>> extends IBaseModel {
     activity_history: TActivityHistory & { recorder: IBotInActivityHistory | IUserInActivityHistory };
-    filterable_type: "project" | "user";
-    filterable_uid: string;
-    sub_filterable_type?: "card" | "project_wiki";
-    sub_filterable_uid?: string;
+    filterable_map: {
+        project?: string;
+        user?: string;
+        bot?: string;
+        project_column?: string;
+        card?: string;
+        project_wiki?: string;
+    };
     refer?: any;
     references?: any;
     created_at: Date;

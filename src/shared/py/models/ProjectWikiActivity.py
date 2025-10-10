@@ -26,10 +26,7 @@ class ProjectWikiActivity(BaseActivityModel, table=True):
         return BaseActivityModel.api_schema(
             {
                 "activity_type": f"Literal[{', '.join([activity_type.value for activity_type in ProjectWikiActivityType])}]",
-                "filterable_type": "Literal[project]",
-                "filterable_uid": "string",
-                "sub_filterable_type": "Literal[project_wiki]",
-                "sub_filterable_uid": "string",
+                "filterable_map": "object",
                 **(schema or {}),
             }
         )
@@ -37,8 +34,8 @@ class ProjectWikiActivity(BaseActivityModel, table=True):
     def api_response(self) -> dict[str, Any]:
         base_api_response = super().api_response()
         base_api_response["activity_type"] = self.activity_type.value
-        base_api_response["filterable_type"] = "project"
-        base_api_response["filterable_uid"] = self.project_id.to_short_code()
-        base_api_response["sub_filterable_type"] = "project_wiki"
-        base_api_response["sub_filterable_uid"] = self.project_wiki_id.to_short_code()
+        base_api_response["filterable_map"] = {
+            Project.__tablename__: self.project_id.to_short_code(),
+            ProjectWiki.__tablename__: self.project_wiki_id.to_short_code(),
+        }
         return base_api_response

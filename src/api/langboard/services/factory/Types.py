@@ -24,6 +24,7 @@ from models import (
 TBaseParam = int | str | None
 
 TUserOrBot = User | Bot
+TUserOrBotParam = User | Bot | TBaseParam
 TProjectParam = Project | TBaseParam
 TColumnParam = ProjectColumn | TBaseParam
 TCardParam = Card | TBaseParam

@@ -57,6 +57,7 @@ def _get_activity_params(activity_type: ProjectActivityType, project: Project, c
     activity_params = {
         "activity_type": activity_type,
         "project_id": project.id,
+        "project_column_id": card.project_column_id,
         "card_id": card.id,
     }
 

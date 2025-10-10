@@ -68,7 +68,10 @@ const BoardCardMemberList = memo(() => {
             save={onSave as TSaveHandler}
             allSelectables={projectMembers}
             tagContentProps={{
-                projectUID,
+                scope: {
+                    projectUID,
+                    cardUID: card.uid,
+                },
             }}
             originalAssignees={cardMembers}
             createSearchKeywords={((item: User.TModel) => [item.email, item.firstname, item.lastname]) as IFormProps["createSearchKeywords"]}

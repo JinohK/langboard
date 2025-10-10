@@ -37,6 +37,7 @@ const useGetPaginatedList = <TModelName extends TCreatedAtModelName>(
 
         const res = await api.get(url, {
             params: {
+                assignee_uid: (form as any).assignee_uid,
                 refer_time: lastCurrentDateRef.current,
                 limit: limitRef.current,
             },

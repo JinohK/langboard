@@ -60,7 +60,7 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
         >
             <Box display="grid" gap="2" className="grid-cols-[theme(spacing.8),1fr]">
                 <Box>
-                    <BoardCommentUserAvatar projectUID={projectUID} />
+                    <BoardCommentUserAvatar projectUID={projectUID} cardUID={card.uid} />
                 </Box>
                 <Flex
                     direction="col"
@@ -101,13 +101,19 @@ const BoardComment = memo(({ comment, deletedComment }: IBoardCommentProps): JSX
     );
 });
 
-function BoardCommentUserAvatar({ projectUID }: { projectUID: string }): JSX.Element {
+function BoardCommentUserAvatar({ projectUID, cardUID }: { projectUID: string; cardUID: string }): JSX.Element {
     const { params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
     const { author } = params;
 
     return (
         <UserAvatar.Root avatarSize="sm" userOrBot={author}>
-            <UserAvatarDefaultList userOrBot={author} projectUID={projectUID} />
+            <UserAvatarDefaultList
+                userOrBot={author}
+                scope={{
+                    projectUID,
+                    cardUID,
+                }}
+            />
         </UserAvatar.Root>
     );
 }

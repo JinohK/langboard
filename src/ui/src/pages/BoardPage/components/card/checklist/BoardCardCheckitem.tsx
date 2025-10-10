@@ -82,7 +82,7 @@ interface IBoardCardSubCheckitemDisplayProps {
 }
 
 const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }: IBoardCardSubCheckitemDisplayProps) => {
-    const { projectUID, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
+    const { projectUID, card, currentUser, hasRoleAction, sharedClassNames } = useBoardCard();
     const navigate = usePageNavigateRef();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);
@@ -162,6 +162,7 @@ const BoardCardCheckitemDisplay = memo(({ checkitem, canReorder, draggableRef }:
                                     <BoardCardCheckitemAssignedMember
                                         key={`board-card-checkitem-assigned-member-${checkitem.uid}`}
                                         projectUID={projectUID}
+                                        cardUID={card.uid}
                                         assignedUser={assignedUser}
                                     />
                                 )}

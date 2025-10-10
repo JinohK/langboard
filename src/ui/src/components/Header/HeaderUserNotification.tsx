@@ -268,7 +268,7 @@ const HeaderUserNotificationItem = memo(({ notification, updater }: IHeaderUserN
                     nameClassName: "text-base",
                 }}
             >
-                <UserAvatarDefaultList userOrBot={userOrBot} projectUID={notification.records.project?.uid} />
+                <UserAvatarDefaultList userOrBot={userOrBot} scope={{ projectUID: notification.records.project?.uid }} />
             </UserAvatar.Root>
         );
     };

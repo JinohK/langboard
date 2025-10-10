@@ -10,7 +10,7 @@ async def project_column_created(user_or_bot: User | Bot, project: Project, colu
     helper = ActivityTaskHelper(ProjectActivity)
     activity_history = _get_default_history(helper, project, column)
     activity = helper.record(
-        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnCreated, project)
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnCreated, project, column)
     )
     record_project_activity(user_or_bot, activity)
 
@@ -23,7 +23,9 @@ async def project_column_name_changed(user_or_bot: User | Bot, project: Project,
         "changes": {"before": {"name": old_name}, "after": {"name": column.name}},
     }
     activity = helper.record(
-        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnNameChanged, project)
+        user_or_bot,
+        activity_history,
+        **_get_activity_params(ProjectActivityType.ProjectColumnNameChanged, project, column),
     )
     record_project_activity(user_or_bot, activity)
 
@@ -33,7 +35,7 @@ async def project_column_deleted(user_or_bot: User | Bot, project: Project, colu
     helper = ActivityTaskHelper(ProjectActivity)
     activity_history = _get_default_history(helper, project, column)
     activity = helper.record(
-        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnDeleted, project)
+        user_or_bot, activity_history, **_get_activity_params(ProjectActivityType.ProjectColumnDeleted, project, column)
     )
     record_project_activity(user_or_bot, activity)
 
@@ -46,10 +48,11 @@ def _get_default_history(helper: ActivityTaskHelper, project: Project, column: P
     return history
 
 
-def _get_activity_params(activity_type: ProjectActivityType, project: Project):
+def _get_activity_params(activity_type: ProjectActivityType, project: Project, column: ProjectColumn):
     activity_params = {
         "activity_type": activity_type,
         "project_id": project.id,
+        "project_column_id": column.id,
     }
 
     return activity_params

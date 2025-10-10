@@ -81,7 +81,9 @@ const BoardMemberList = memo(({ isSelectCardView }: IBoardMemberListProps) => {
                 listAlign: "start",
             }}
             tagContentProps={{
-                projectUID: project.uid,
+                scope: {
+                    projectUID: project.uid,
+                },
             }}
             addIconSize="6"
             allSelectables={allSelectables}
