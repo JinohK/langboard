@@ -1,4 +1,4 @@
-import { cloneElement, forwardRef, isValidElement, useLayoutEffect, useRef, useState } from "react";
+import { Children, cloneElement, forwardRef, isValidElement, useLayoutEffect, useRef, useState } from "react";
 import { cn } from "@/core/utils/ComponentUtils";
 import useInfiniteScrollerVirtualizer from "@/components/InfiniteScroller/useInfiniteScrollerVirtualizer";
 import { TSharedInfiniteScrollerProps } from "@/components/InfiniteScroller/types";
@@ -50,7 +50,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         const containerRef = useRef<HTMLElement | null>(null);
         const measureRef = useRef<HTMLElement>(null);
 
-        const flatItems = (Array.isArray(children) ? children : [children]) as React.ReactElement[];
+        const flatItems = Children.toArray(children).filter(isValidElement) as React.ReactElement[];
         const [columnCount, setColumnCount] = useState(1);
 
         // measure column count from actual DOM (via user-defined grid classes)
@@ -96,6 +96,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
         );
 
         const chunked = chunkArray(flatItems, columnCount);
+        const totalRowCount = Math.ceil(totalCount / Math.max(1, columnCount)) + (hasMore ? 1 : 0);
 
         const { setLoaderRef, items, virtualizer } = useInfiniteScrollerVirtualizer({
             hasMore,
@@ -104,7 +105,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
             pageStart,
             loader,
             scrollable,
-            totalCount,
+            totalCount: totalRowCount,
             virtualizerRef,
             children: chunked,
         });
@@ -130,7 +131,7 @@ const GridInfiniteScroller = forwardRef<HTMLElement, IGridInfiniteScrollerProps>
                         return null;
                     }
 
-                    const rowItems = (items[virtualRow.index] || items[index]) as React.ReactElement[];
+                    const rowItems = items[virtualRow.index] as React.ReactElement[];
                     if (!rowItems) {
                         return null;
                     }
