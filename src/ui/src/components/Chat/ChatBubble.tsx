@@ -1,15 +1,15 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cva, type VariantProps } from "class-variance-authority";
-import { Avatar, Button, ButtonProps, Tooltip } from "@/components/base";
+import { Avatar, Button, ButtonProps, IconComponent, Tooltip } from "@/components/base";
 import MessageLoading from "@/components/Chat/MessageLoading";
-import { cn } from "@/core/utils/ComponentUtils";
+import { cn, copyToClipboard } from "@/core/utils/ComponentUtils";
 import Markdown from "@/components/Markdown";
 import { IChatContent } from "@/core/models/Base";
 import { useTranslation } from "react-i18next";
 
 // ChatBubble
-const chatBubbleVariant = cva("flex gap-2 max-w-[85%] items-end relative group", {
+const chatBubbleVariant = cva("flex gap-2 max-w-full items-end relative group", {
     variants: {
         variant: {
             received: "self-start",
@@ -26,9 +26,11 @@ const chatBubbleVariant = cva("flex gap-2 max-w-[85%] items-end relative group",
     },
 });
 
-interface ChatBubbleProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chatBubbleVariant> {}
+interface ChatBubbleProps extends React.HTMLAttributes<HTMLDivElement>, VariantProps<typeof chatBubbleVariant> {
+    message?: IChatContent;
+}
 
-const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(({ className, variant, layout, children, ...props }, ref) => (
+const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(({ className, variant, layout, message, children, ...props }, ref) => (
     <div className={cn(chatBubbleVariant({ variant, layout, className }), "group relative")} ref={ref} {...props}>
         {React.Children.map(children, (child) =>
             React.isValidElement(child) && typeof child.type !== "string"
@@ -37,6 +39,11 @@ const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(({ classNam
                       layout,
                   } as React.ComponentProps<typeof child.type>)
                 : child
+        )}
+        {!!message?.content && (
+            <div className={cn("w-full max-w-[15%]", variant === "sent" ? "text-right" : "text-left")}>
+                <ChatBubbleCopyButton message={message} className="invisible relative group-hover:visible" />
+            </div>
         )}
     </div>
 ));
@@ -75,7 +82,7 @@ const ChatBubbleAvatar: React.FC<ChatBubbleAvatarProps> = ({ src, fallback, titl
 };
 
 // ChatBubbleMessage
-const chatBubbleMessageVariants = cva("px-3 py-2", {
+const chatBubbleMessageVariants = cva("relative z-10 px-3 py-2", {
     variants: {
         variant: {
             received: "bg-secondary text-secondary-foreground rounded-r-lg rounded-tl-lg",
@@ -103,7 +110,7 @@ const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProp
 
         return (
             <div
-                className={cn(chatBubbleMessageVariants({ variant, layout, className }), "max-w-full whitespace-pre-wrap break-words")}
+                className={cn(chatBubbleMessageVariants({ variant, layout }), "max-w-full whitespace-pre-wrap break-words", className)}
                 ref={ref}
                 {...props}
             >
@@ -121,6 +128,33 @@ const ChatBubbleMessage = React.forwardRef<HTMLDivElement, ChatBubbleMessageProp
     }
 );
 ChatBubbleMessage.displayName = "ChatBubbleMessage";
+
+interface IChatBubbleCopyButtonProps {
+    message: IChatContent;
+    className?: string;
+}
+
+function ChatBubbleCopyButton({ message, className }: IChatBubbleCopyButtonProps) {
+    const [t] = useTranslation();
+    const [isCopied, setIsCopied] = React.useState(false);
+    const handleCopy = async () => {
+        await copyToClipboard(message.content);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    return (
+        <Button
+            variant="ghost"
+            size="icon-sm"
+            className={cn(className, "size-7")}
+            title={t(isCopied ? "common.Copied." : "common.Copy")}
+            onClick={handleCopy}
+        >
+            <IconComponent icon={isCopied ? "check" : "copy"} size="3.5" />
+        </Button>
+    );
+}
 
 // ChatBubbleTimestamp
 interface ChatBubbleTimestampProps extends React.HTMLAttributes<HTMLDivElement> {
@@ -168,6 +202,7 @@ export {
     ChatBubble,
     ChatBubbleAvatar,
     ChatBubbleMessage,
+    ChatBubbleCopyButton,
     ChatBubbleTimestamp,
     chatBubbleVariant,
     chatBubbleMessageVariants,

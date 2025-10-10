@@ -64,7 +64,7 @@ interface ITopicSocketSendProps extends IBaseSocketSendProps {
     topicId: string;
 }
 
-type TSocketSendProps = INoneOrGlobalTopicSocketSendProps | ITopicSocketSendProps;
+export type TSocketSendProps = INoneOrGlobalTopicSocketSendProps | ITopicSocketSendProps;
 
 export interface IStreamCallbackMap<TStartResponse = unknown, TBufferResponse = unknown, TEndResponse = unknown> {
     start: ISocketEvent<TStartResponse>;

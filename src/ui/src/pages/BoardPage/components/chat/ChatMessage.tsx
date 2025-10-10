@@ -9,12 +9,12 @@ export interface IChatMessageProps {
 
 function ChatMessage({ chatMessage }: IChatMessageProps): JSX.Element {
     const message = chatMessage.useField("message");
-    const isReceived = chatMessage.useField("isReceived");
+    const isReceived = chatMessage.useField("is_received");
     const isPending = chatMessage.useField("isPending");
     const variant = isReceived ? "received" : "sent";
 
     return (
-        <ChatBubble key={`chat-bubble-${chatMessage.uid}`} variant={variant}>
+        <ChatBubble key={`chat-bubble-${chatMessage.uid}`} variant={variant} message={message}>
             {isReceived && <ChatMessageBotAvatar />}
             {isPending ? <ChatBubbleMessage isLoading /> : <ChatBubbleMessage variant={variant} message={message} />}
         </ChatBubble>

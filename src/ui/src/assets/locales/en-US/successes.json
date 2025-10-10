@@ -1,5 +1,7 @@
 {
   "Column added successfully.": "Column added successfully.",
+  "Chat session renamed successfully.": "Chat session renamed successfully.",
+  "Chat session deleted successfully.": "Chat session deleted successfully.",
   "Card added successfully.": "Card added successfully.",
   "Unassigned successfully.": "Unassigned successfully.",
   "Title changed successfully.": "Title changed successfully.",
@@ -25,7 +27,6 @@
   "Comment updated successfully.": "Comment updated successfully.",
   "Comment deleted successfully.": "Comment deleted successfully.",
   "Relationships updated successfully.": "Relationships updated successfully.",
-  "Card deleted.": "Card deleted.",
   "Metadata added successfully.": "Metadata added successfully.",
   "Metadata saved successfully.": "Metadata saved successfully.",
   "Metadata deleted successfully.": "Metadata deleted successfully.",

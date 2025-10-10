@@ -35,28 +35,28 @@ abstract class BaseModel extends BaseEntity {
         return new SnowflakeID(this.id).toShortCode();
     }
 
-    static create<T extends BaseModel>(
+    public static create<T extends BaseModel>(
         this: {
             new (): T;
         } & typeof BaseModel
     ): T;
-    static create<T extends BaseModel>(
+    public static create<T extends BaseModel>(
         this: {
             new (): T;
         } & typeof BaseModel,
         entityLike: DeepPartial<Omit<T, "id">>
     ): T;
-    static create<T extends BaseModel>(
+    public static create<T extends BaseModel>(
         this: {
             new (): T;
         } & typeof BaseModel,
         entityLikeArray: DeepPartial<Omit<T, "id">>[]
     ): T[];
-    static create(this: any, entityLike?: DeepPartial<any> | DeepPartial<any>[]): any {
+    public static create(this: any, entityLike?: DeepPartial<any> | DeepPartial<any>[]): any {
         return super.create(entityLike);
     }
 
-    static insert<T extends BaseEntity>(
+    public static insert<T extends BaseEntity>(
         this: {
             new (): T;
         } & typeof BaseEntity,
@@ -66,12 +66,18 @@ abstract class BaseModel extends BaseEntity {
         return super.insert(entity);
     }
 
-    public save(options?: SaveOptions): Promise<this> {
+    public async save(options?: SaveOptions): Promise<this> {
+        let id;
         if (!this.id) {
-            this.id = new SnowflakeID().toString();
+            id = new SnowflakeID().toString();
+            this.id = id;
+        } else {
+            id = this.id;
         }
         this.updated_at = new Date();
-        return super.save(options);
+        const result = await super.save(options);
+        result.id = id;
+        return result;
     }
 }
 

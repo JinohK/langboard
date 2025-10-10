@@ -1,4 +1,5 @@
 import { Button, ButtonProps, DropdownMenu, IconComponent } from "@/components/base";
+import { TIconName } from "@/components/base/IconComponent";
 import { MoreMenuProvider } from "@/components/MoreMenu/Provider";
 import useHandleInteractOutside from "@/core/hooks/useHandleInteractOutside";
 import { useState } from "react";
@@ -7,11 +8,20 @@ import { useTranslation } from "react-i18next";
 export interface IMoreMenuRootProps {
     modal?: bool;
     triggerProps?: ButtonProps;
+    triggerIcon?: TIconName;
+    triggerIconSize?: React.ComponentPropsWithoutRef<typeof IconComponent>["size"];
     contentProps?: React.ComponentProps<typeof DropdownMenu.Content>;
     children: React.ReactNode;
 }
 
-function MoreMenuRoot({ modal, triggerProps, contentProps, children }: IMoreMenuRootProps): JSX.Element {
+function MoreMenuRoot({
+    modal,
+    triggerProps,
+    triggerIcon = "ellipsis-vertical",
+    triggerIconSize = "4",
+    contentProps,
+    children,
+}: IMoreMenuRootProps): JSX.Element {
     const [t] = useTranslation();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);
@@ -30,7 +40,7 @@ function MoreMenuRoot({ modal, triggerProps, contentProps, children }: IMoreMenu
             <DropdownMenu.Root modal={modal} open={isOpened} onOpenChange={changeOpenedState}>
                 <DropdownMenu.Trigger asChild>
                     <Button type="button" variant={variant} size={size} title={t("common.More")} {...triggerProps}>
-                        <IconComponent icon="ellipsis-vertical" size="4" />
+                        <IconComponent icon={triggerIcon} size={triggerIconSize} />
                     </Button>
                 </DropdownMenu.Trigger>
                 <DropdownMenu.Content align="end" onInteractOutside={onInteractOutside} onPointerDownOutside={onPointerDownOutside} {...contentProps}>

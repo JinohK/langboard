@@ -1,17 +1,15 @@
 import { Box, Button, Flex, IconComponent, Input, Textarea, Toast } from "@/components/base";
 import useUploadProjectChatAttachment from "@/controllers/api/board/chat/useUploadProjectChatAttachment";
-import { SocketEvents } from "@langboard/core/constants";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
-import { useSocket } from "@/core/providers/SocketProvider";
 import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
-import { ESocketTopic } from "@langboard/core/enums";
 import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTemplateListDialog";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import mimeTypes from "react-native-mime-types";
 import { MAX_FILE_SIZE_MB } from "@/constants";
+import useBoardChatSentHandlers from "@/controllers/socket/board/chat/useBoardChatSentHandlers";
 
 export interface IChatInputProps {
     height: number;
@@ -19,11 +17,11 @@ export interface IChatInputProps {
 }
 
 function ChatInput({ height, setHeight }: IChatInputProps) {
-    const { projectUID, isSending, setIsSending, isUploading, setIsUploading, chatTaskIdRef } = useBoardChat();
+    const { projectUID, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID, chatTaskIdRef } = useBoardChat();
     const [t] = useTranslation();
-    const socket = useSocket();
     const { mutateAsync: uploadProjectChatAttachmentMutateAsync } = useUploadProjectChatAttachment();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
+    const { send: sendChat } = useBoardChatSentHandlers({ projectUID });
     const chatAttachmentRef = useRef<HTMLInputElement>(null);
     const chatInputRef = useRef<HTMLTextAreaElement>(null);
     const [previewElement, setPreviewElement] = useState<React.ReactNode | null>(null);
@@ -35,12 +33,17 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
         const selectionStart = chatInputRef.current.selectionStart;
         const selectionEnd = chatInputRef.current.selectionEnd;
-        setHeight(measureTextAreaHeight(chatInputRef.current) + 2);
+        let measuredHeight = measureTextAreaHeight(chatInputRef.current);
+        const maxHeight = window.innerHeight * 0.2;
+        if (measuredHeight > maxHeight) {
+            measuredHeight = maxHeight;
+        }
+        setHeight(measuredHeight);
         chatInputRef.current.selectionStart = selectionStart;
         chatInputRef.current.selectionEnd = selectionEnd;
     }, [setHeight]);
 
-    const sendChat = useCallback(async () => {
+    const send = useCallback(async () => {
         if (!chatInputRef.current || !chatAttachmentRef.current) {
             return;
         }
@@ -111,11 +114,11 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
             chatTaskIdRef.current = Utils.String.Token.uuid();
 
-            return socket.send({
-                topic: ESocketTopic.Board,
-                topicId: projectUID,
-                eventName: SocketEvents.CLIENT.BOARD.CHAT.SEND,
-                data: { message: chatMessage, file_path: filePath, task_id: chatTaskIdRef.current },
+            return sendChat({
+                message: chatMessage,
+                file_path: filePath,
+                task_id: chatTaskIdRef.current,
+                session_uid: currentSessionUID,
             }).isConnected;
         };
 
@@ -134,7 +137,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
         if (!trySendChat()) {
             triedTimeout = setTimeout(trySendChatWrapper, 1000);
         }
-    }, [updateHeight, isSending, setIsSending, isUploading, setIsUploading]);
+    }, [updateHeight, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID]);
 
     const onAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         if (!e.target.files || e.target.files.length === 0) {
@@ -193,7 +196,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                     if (e.key === "Enter") {
                         e.preventDefault();
                         e.stopPropagation();
-                        sendChat();
+                        send();
                     }
                 }}
                 onChange={updateHeight}
@@ -231,7 +234,7 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                     className={"mr-1 gap-1.5 px-2"}
                     title={t(isSending ? "project.Stop" : "project.Send a message")}
                     titleSide="top"
-                    onClick={sendChat}
+                    onClick={send}
                 >
                     <IconComponent
                         icon={isSending ? (isUploading ? "loader-circle" : "square") : "send"}

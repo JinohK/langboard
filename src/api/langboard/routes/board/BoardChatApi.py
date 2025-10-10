@@ -2,46 +2,96 @@ from core.filter import AuthFilter
 from core.routing import ApiErrorCode, AppRouter, JsonResponse
 from core.schema import OpenApiSchema
 from fastapi import Depends, status
-from models import ChatHistory, ChatTemplate, Project, ProjectRole, User
+from models import ChatHistory, ChatSession, ChatTemplate, Project, ProjectRole, User
 from models.ProjectRole import ProjectRoleAction
 from publishers import ProjectPublisher
 from ...filter import RoleFilter
 from ...security import Auth, RoleFinder
 from ...services import Service
-from .forms import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate
+from .forms import ChatHistoryPagination, CreateChatTemplate, UpdateChatTemplate, UpdateProjectChatSessionForm
 
 
 @AppRouter.api.get(
-    "/board/{project_uid}/chat",
+    "/board/{project_uid}/chat/sessions",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().suc({"sessions": [ChatSession]}).auth().forbidden().get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
+@AuthFilter.add("user")
+async def get_project_chat_sessions(
+    project_uid: str,
+    user: User = Auth.scope("api_user"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    sessions = await service.chat.get_session_list(user, Project.__tablename__, project_uid)
+
+    return JsonResponse(content={"sessions": sessions})
+
+
+@AppRouter.api.get(
+    "/board/{project_uid}/chat/session/{session_uid}",
     tags=["Board.Chat"],
     responses=OpenApiSchema().suc({"histories": [ChatHistory]}).auth().forbidden().get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
-async def get_project_chat(
+async def get_project_chat_histories(
     project_uid: str,
+    session_uid: str,
     query: ChatHistoryPagination = Depends(),
     user: User = Auth.scope("api_user"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    histories = await service.chat.get_list(user, Project.__tablename__, project_uid, query.refer_time, query)
+    session = await service.chat.get_session_by_uid(session_uid)
+    if not _is_session_matched(session, user, project_uid):
+        return JsonResponse(content={"histories": []})
+
+    histories = await service.chat.get_history_list(user, session, query.refer_time, query)
 
     return JsonResponse(content={"histories": histories})
 
 
-@AppRouter.api.delete(
-    "/board/{project_uid}/chat/clear",
+@AppRouter.api.put(
+    "/board/{project_uid}/chat/session/{session_uid}",
     tags=["Board.Chat"],
     responses=OpenApiSchema().auth().forbidden().get(),
 )
 @RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
 @AuthFilter.add("user")
-async def clear_project_chat(
+async def update_project_chat_session(
     project_uid: str,
+    session_uid: str,
+    form: UpdateProjectChatSessionForm,
     user: User = Auth.scope("api_user"),
     service: Service = Service.scope(),
 ) -> JsonResponse:
-    await service.chat.clear(user, Project.__tablename__, project_uid)
+    session = await service.chat.get_session_by_uid(session_uid)
+    if not _is_session_matched(session, user, project_uid):
+        return JsonResponse(content=ApiErrorCode.NF2021, status_code=status.HTTP_404_NOT_FOUND)
+
+    await service.chat.update_session(session, form.title)
+
+    return JsonResponse()
+
+
+@AppRouter.api.delete(
+    "/board/{project_uid}/chat/session/{session_uid}",
+    tags=["Board.Chat"],
+    responses=OpenApiSchema().auth().forbidden().get(),
+)
+@RoleFilter.add(ProjectRole, [ProjectRoleAction.Read], RoleFinder.project)
+@AuthFilter.add("user")
+async def delete_project_chat_session(
+    project_uid: str,
+    session_uid: str,
+    user: User = Auth.scope("api_user"),
+    service: Service = Service.scope(),
+) -> JsonResponse:
+    session = await service.chat.get_session_by_uid(session_uid)
+    if not _is_session_matched(session, user, project_uid):
+        return JsonResponse(content={"histories": []})
+
+    await service.chat.delete_session(session)
 
     return JsonResponse()
 
@@ -129,3 +179,12 @@ async def delete_chat_template(project_uid: str, template_uid: str, service: Ser
     await ProjectPublisher.chat_template_deleted(project, template_uid)
 
     return JsonResponse()
+
+
+def _is_session_matched(session: ChatSession | None, user: User, project_uid: str) -> bool:
+    return (
+        session is not None
+        and session.user_id == user.id
+        and session.filterable_table == Project.__tablename__
+        and session.filterable_id.to_short_code() == project_uid
+    )

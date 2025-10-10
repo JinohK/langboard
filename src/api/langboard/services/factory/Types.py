@@ -4,6 +4,8 @@ from models import (
     Card,
     CardAttachment,
     CardComment,
+    ChatHistory,
+    ChatSession,
     ChatTemplate,
     Checkitem,
     Checklist,
@@ -29,6 +31,8 @@ TAttachmentParam = CardAttachment | TBaseParam
 TCommentParam = CardComment | TBaseParam
 TChecklistParam = Checklist | TBaseParam
 TCheckitemParam = Checkitem | TBaseParam
+TChatSessionParam = ChatSession | TBaseParam
+TChatHistoryParam = ChatHistory | TBaseParam
 TWikiParam = ProjectWiki | TBaseParam
 TUserParam = User | TBaseParam
 TUserGroupParam = UserGroup | TBaseParam

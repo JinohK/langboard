@@ -21,6 +21,7 @@ function MoreMenuPopoverItem({ onSave, onOpenChange, ...props }: TMoreMenuPopove
 function MoreMenuPopoverItemDisplay({
     modal,
     menuName,
+    triggerProps,
     contentProps,
     useButtons = true,
     saveButtonProps,
@@ -47,7 +48,9 @@ function MoreMenuPopoverItemDisplay({
     return (
         <Popover.Root modal={modal} open={isOpened} onOpenChange={setIsOpened}>
             <Popover.Trigger asChild>
-                <DropdownMenu.Item onClick={handleOpen}>{menuName}</DropdownMenu.Item>
+                <DropdownMenu.Item {...triggerProps} onClick={handleOpen}>
+                    {menuName}
+                </DropdownMenu.Item>
             </Popover.Trigger>
             <Popover.Content align="end" onInteractOutside={onInteractOutside} onPointerDownOutside={onPointerDownOutside} {...contentProps}>
                 <Flex direction="col" gap="2">

@@ -4,7 +4,13 @@
   "Project type": "Project type",
   "AI summary": "AI summary",
   "Chat with AI": "Chat with AI",
-  "Clear chat": "Clear chat",
+  "Session menu": "Session menu",
+  "Session list": "Session list",
+  "New chat": "New chat",
+  "Retitle": "Retitle",
+  "Session name": "Session name",
+  "Untitled": "Untitled",
+  "Delete session": "Delete session",
   "Ask anything to {app} AI!": "Ask anything to {{app}} AI!",
   "Enter a message": "Enter a message",
   "Send a message": "Send a message",
@@ -30,6 +36,7 @@
   },
   "errors": {
     "Project closed.": "Project closed.",
+    "Card deleted.": "Card deleted.",
     "You are not a member of this project.": "You are not a member of this project.",
     "missing": {
       "title": "Enter a title.",

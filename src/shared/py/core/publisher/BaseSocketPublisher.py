@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Any
 from pydantic import BaseModel
-from core.broadcast import DispatcherModel, DispatcherQueue
+from ..broadcast import DispatcherModel, DispatcherQueue
 from ..utils.decorators import staticclass
 
 

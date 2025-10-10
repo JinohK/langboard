@@ -52,3 +52,11 @@ export const getBotStatusMap = async (projectUID: string): Promise<Record<string
         return null;
     }
 };
+
+export const sanitizeBotTitle = (title: string): string => {
+    // Remove any html tags and its content, then trim the result
+    return title
+        .replace("\n", "")
+        .replace(/<[^>]+>[\s\S]*?<\/[^>]+>/g, "")
+        .trim();
+};

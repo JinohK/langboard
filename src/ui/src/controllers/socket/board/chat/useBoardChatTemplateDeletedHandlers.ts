@@ -12,7 +12,7 @@ const useBoardChatTemplateDeletedHandlers = ({ callback, projectUID, template }:
     return useSocketHandler<{}, {}>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `board-card-template-updated-${template.uid}`,
+        eventKey: `board-chat-template-deleted-${template.uid}`,
         onProps: {
             name: SocketEvents.SERVER.BOARD.CHAT.TEMPLATE.DELETED,
             params: { uid: template.uid },

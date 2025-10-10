@@ -4,26 +4,32 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { ChatMessageModel } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
 
-const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions) => {
+export interface IGetProjectChatMessagesForm {
+    session_uid?: string;
+}
+
+const useGetProjectChatMessages = (projectUID: string, limit: number = 20, options?: TMutationOptions<IGetProjectChatMessagesForm>) => {
     const { mutate } = useQueryMutation();
     const [isLastPage, setIsLastPage] = useState(true);
     const lastCurrentDateRef = useRef(new Date());
     const pageRef = useRef(0);
+    const lastPagesRef = useRef<Record<string, number>>({});
 
-    const getProjectChatMessages = async () => {
-        if (isLastPage && pageRef.current) {
-            return { isUpdated: false };
+    const getProjectChatMessages = async (params: IGetProjectChatMessagesForm) => {
+        if ((isLastPage && pageRef.current) || !params.session_uid) {
+            setIsLastPage(true);
+            return;
         }
 
-        if (!ChatMessageModel.Model.getModel((model) => model.filterable_table === "project" && model.filterable_uid === projectUID)) {
+        if (!ChatMessageModel.Model.getModel((model) => model.chat_session_uid === params.session_uid)) {
             pageRef.current = 0;
         }
 
         ++pageRef.current;
 
-        const url = Utils.String.format(Routing.API.BOARD.CHAT.GET_MESSAGES, { uid: projectUID });
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.GET_MESSAGES, { uid: projectUID, session_uid: params.session_uid });
         const res = await api.get(url, {
             params: {
                 refer_time: lastCurrentDateRef.current,
@@ -38,29 +44,14 @@ const useGetProjectChatMessages = (projectUID: string, limit: number = 20, optio
         ChatMessageModel.Model.fromArray(res.data.histories, true);
 
         setIsLastPage(res.data.histories.length < limit);
-
-        return { isUpdated: true };
     };
-
-    useEffect(() => {
-        if (pageRef.current) {
-            return;
-        }
-
-        lastCurrentDateRef.current = new Date();
-        getProjectChatMessages();
-
-        return () => {
-            pageRef.current = 0;
-        };
-    }, []);
 
     const result = mutate([`get-project-chat-messages-${projectUID}`], getProjectChatMessages, {
         ...options,
         retry: 0,
     });
 
-    return { ...result, isLastPage };
+    return { ...result, isLastPage, setIsLastPage, pageRef, lastCurrentDateRef, lastPagesRef };
 };
 
 export default useGetProjectChatMessages;

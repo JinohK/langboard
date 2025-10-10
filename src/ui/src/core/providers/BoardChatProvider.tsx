@@ -1,5 +1,5 @@
-import { createContext, useCallback, useContext, useMemo, useRef, useState } from "react";
-import { ChatMessageModel, InternalBotModel } from "@/core/models";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { ChatMessageModel, ChatSessionModel, InternalBotModel } from "@/core/models";
 import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import useBoardChatSentHandlers from "@/controllers/socket/board/chat/useBoardChatSentHandlers";
 import useSwitchSocketHandlers from "@/core/hooks/useSwitchSocketHandlers";
@@ -8,6 +8,8 @@ import { Toast } from "@/components/base";
 import useBoardChatStreamHandlers from "@/controllers/socket/board/chat/useBoardChatStreamHandlers";
 import { IChatContent } from "@/core/models/Base";
 import useTaskAbortedHandlers from "@/controllers/socket/global/useTaskAbortedHandlers";
+import useGetProjectChatSessions from "@/controllers/api/board/chat/useGetProjectChatSessions";
+import useBoardChatSessionCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatSessionCreatedHandlers";
 
 export interface IBoardChatContext {
     projectUID: string;
@@ -17,6 +19,11 @@ export interface IBoardChatContext {
     setIsSending: React.Dispatch<React.SetStateAction<bool>>;
     isUploading: bool;
     setIsUploading: React.Dispatch<React.SetStateAction<bool>>;
+    isSessionListOpened: bool;
+    setIsSessionListOpened: React.Dispatch<React.SetStateAction<bool>>;
+    chatSessions: ChatSessionModel.TModel[];
+    currentSessionUID?: string;
+    setCurrentSessionUID: React.Dispatch<React.SetStateAction<string | undefined>>;
     chatTaskIdRef: React.RefObject<string | null>;
     scrollToBottomRef: React.RefObject<() => void>;
     isAtBottomRef: React.RefObject<bool>;
@@ -36,6 +43,11 @@ const initialContext = {
     setIsSending: () => {},
     isUploading: false,
     setIsUploading: () => {},
+    isSessionListOpened: false,
+    setIsSessionListOpened: () => {},
+    chatSessions: [],
+    currentSessionUID: undefined,
+    setCurrentSessionUID: () => {},
     chatTaskIdRef: { current: null },
     scrollToBottomRef: { current: () => {} },
     isAtBottomRef: { current: true },
@@ -48,11 +60,27 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const [t] = useTranslation();
     const [isSending, setIsSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
+    const [isSessionListOpened, setIsSessionListOpened] = useState(false);
     const chatTaskIdRef = useRef<string | null>(null);
     const scrollToBottomRef = useRef<() => void>(() => {});
     const isAtBottomRef = useRef(true);
+    const flatChatSessions = ChatSessionModel.Model.useModels(
+        (model) => model.filterable_table === "project" && model.filterable_uid === projectUID,
+        [projectUID]
+    );
+    const chatSessions = useMemo(
+        () => flatChatSessions.sort((a, b) => (b.last_messaged_at?.getTime() ?? 0) - (a.last_messaged_at?.getTime() ?? 0)),
+        [flatChatSessions]
+    );
+    const { mutateAsync } = useGetProjectChatSessions(projectUID);
+    const isInitialMountedRef = useRef(false);
+    const [currentSessionUID, setCurrentSessionUID] = useState<string | undefined>(chatSessions[0]?.uid);
     const startCallback = useCallback((data: { ai_message: ChatMessageModel.Interface }) => {
-        ChatMessageModel.Model.fromOne({ ...data.ai_message, isPending: true }, true);
+        const chatMessage = ChatMessageModel.Model.fromOne({ ...data.ai_message, isPending: true }, true);
+        const chatSession = ChatSessionModel.Model.getModel((model) => model.uid === chatMessage.chat_session_uid);
+        if (chatSession) {
+            chatSession.last_messaged_at = chatMessage.updated_at;
+        }
         scrollToBottomRef.current();
     }, []);
     const bufferCallback = useCallback((data: { uid: string; message?: IChatContent; chunk?: string }) => {
@@ -89,6 +117,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     }, []);
     const endCallback = useCallback((data: { uid: string; status: "success" | "failed" | "aborted" }) => {
         const chatMessage = ChatMessageModel.Model.getModel(data.uid);
+        const chatSession = chatMessage ? ChatSessionModel.Model.getModel((model) => model.uid === chatMessage.chat_session_uid) : undefined;
         if (data.status === "failed") {
             Toast.Add.error(t("errors.Server has been temporarily disabled. Please try again later."));
         }
@@ -101,6 +130,9 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
 
         if (chatMessage && chatMessage.isPending) {
             chatMessage.isPending = undefined;
+            if (chatSession) {
+                chatSession.last_messaged_at = chatMessage.updated_at;
+            }
         }
 
         setIsSending(false);
@@ -111,7 +143,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
 
         chatTaskIdRef.current = null;
     }, []);
-    const errorCallback = useCallback((fromServer: bool = true) => {
+    const errorCallback = useCallback((_: Event, fromServer: bool = true) => {
         ChatMessageModel.Model.getModels((model) => model.isPending ?? false).forEach((message) => {
             if (message.isPending) {
                 message.isPending = undefined;
@@ -124,7 +156,18 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
 
         chatTaskIdRef.current = null;
     }, []);
-
+    const sessionCreatedHandlers = useMemo(
+        () =>
+            useBoardChatSessionCreatedHandlers({
+                projectUID,
+                callback: (data) => {
+                    if (!currentSessionUID) {
+                        setCurrentSessionUID(data.session.uid);
+                    }
+                },
+            }),
+        [currentSessionUID, setCurrentSessionUID]
+    );
     const sentHandlers = useBoardChatSentHandlers({ projectUID, callback: () => scrollToBottomRef.current() });
     const cancelledHandlers = useMemo(
         () =>
@@ -134,7 +177,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                         return;
                     }
 
-                    errorCallback(false);
+                    errorCallback({} as Event, false);
                 },
             }),
         [errorCallback]
@@ -143,15 +186,31 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
         () =>
             useBoardChatStreamHandlers({
                 projectUID,
-                callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback, error: errorCallback as () => void },
+                callbacks: { start: startCallback, buffer: bufferCallback, end: endCallback, error: errorCallback },
             }),
         [startCallback, bufferCallback, endCallback]
     );
     useSwitchSocketHandlers({
         socket,
-        handlers: [sentHandlers, cancelledHandlers, streamHandlers],
-        dependencies: [sentHandlers, cancelledHandlers, streamHandlers],
+        handlers: [sessionCreatedHandlers, sentHandlers, cancelledHandlers, streamHandlers],
+        dependencies: [sessionCreatedHandlers, sentHandlers, cancelledHandlers, streamHandlers],
     });
+
+    useEffect(() => {
+        mutateAsync({});
+    }, [projectUID]);
+
+    useEffect(() => {
+        if (isInitialMountedRef.current || !chatSessions.length) {
+            return;
+        }
+
+        if (!currentSessionUID) {
+            setCurrentSessionUID(chatSessions[0].uid);
+        }
+
+        isInitialMountedRef.current = true;
+    }, [flatChatSessions]);
 
     return (
         <BoardChatContext.Provider
@@ -163,6 +222,11 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                 setIsSending,
                 isUploading,
                 setIsUploading,
+                isSessionListOpened,
+                setIsSessionListOpened,
+                chatSessions,
+                currentSessionUID,
+                setCurrentSessionUID,
                 chatTaskIdRef,
                 scrollToBottomRef,
                 isAtBottomRef,

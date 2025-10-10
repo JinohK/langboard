@@ -1,11 +1,11 @@
 from typing import Any, Literal
-from core.db import BaseSqlModel, ChatContentModel, DbSession, SqlBuilder
+from core.db import BaseSqlModel, DbSession, SqlBuilder
 from core.schema import Pagination
 from core.service import BaseService
 from core.types import SafeDateTime, SnowflakeID
 from helpers import ServiceHelper
-from models import ChatHistory, ChatTemplate, User
-from .Types import TChatTemplateParam, TUserParam
+from models import ChatHistory, ChatSession, ChatTemplate, User
+from .Types import TChatHistoryParam, TChatSessionParam, TChatTemplateParam
 
 
 class ChatService(BaseService):
@@ -14,25 +14,52 @@ class ChatService(BaseService):
         """DO NOT EDIT THIS METHOD"""
         return "chat"
 
-    async def get_list(
+    async def get_session_by_uid(self, uid: str) -> ChatSession | None:
+        return ServiceHelper.get_by_param(ChatSession, uid)
+
+    async def get_session_list(
         self,
         user: User,
         filterable_table: str,
         filterable_id: SnowflakeID | str,
-        refer_time: SafeDateTime,
-        pagination: Pagination,
     ) -> list[dict[str, Any]]:
         filterable_id = ServiceHelper.convert_id(filterable_id)
         sql_query = (
-            SqlBuilder.select.table(ChatHistory)
-            .where((ChatHistory.sender_id == user.id) | (ChatHistory.receiver_id == user.id))
+            SqlBuilder.select.table(ChatSession)
             .where(
-                (ChatHistory.filterable_table == filterable_table)
-                & (ChatHistory.filterable_id == filterable_id)
-                & (ChatHistory.created_at <= refer_time)
+                (ChatSession.user_id == user.id)
+                & (ChatSession.filterable_table == filterable_table)
+                & (ChatSession.filterable_id == filterable_id)
             )
+            .order_by(ChatSession.column("last_messaged_at").desc(), ChatSession.column("id").desc())
+            .group_by(ChatSession.column("id"), ChatSession.column("last_messaged_at"))
         )
 
+        sessions = []
+        with DbSession.use(readonly=True) as db:
+            result = db.exec(sql_query)
+            sessions = result.all()
+
+        chat_sessions = []
+        for chat_session in sessions:
+            chat_sessions.append(chat_session.api_response())
+
+        return chat_sessions
+
+    async def get_history_list(
+        self,
+        user: User,
+        session: TChatSessionParam,
+        refer_time: SafeDateTime,
+        pagination: Pagination,
+    ) -> list[dict[str, Any]]:
+        session = ServiceHelper.get_by_param(ChatSession, session)
+        if not session or session.user_id != user.id:
+            return []
+
+        sql_query = SqlBuilder.select.table(ChatHistory).where(
+            (ChatHistory.chat_session_id == session.id) & (ChatHistory.created_at <= refer_time)
+        )
         sql_query = ServiceHelper.paginate(sql_query, pagination.page, pagination.limit)
         sql_query = sql_query.order_by(ChatHistory.column("created_at").desc(), ChatHistory.column("id").desc())
         sql_query = sql_query.group_by(ChatHistory.column("id"), ChatHistory.column("created_at"))
@@ -48,56 +75,33 @@ class ChatService(BaseService):
 
         return chat_histories
 
-    async def get_by_uid(self, uid: str) -> ChatHistory | None:
-        return ServiceHelper.get_by_param(ChatHistory, uid)
+    async def update_session(self, session: TChatSessionParam, title: str):
+        session = ServiceHelper.get_by_param(ChatSession, session)
+        if not session:
+            return None
 
-    async def create(
-        self,
-        filterable_table: str,
-        filterable_id: SnowflakeID | str,
-        message: ChatContentModel,
-        sender: TUserParam | None = None,
-        receiver: TUserParam | None = None,
-    ) -> ChatHistory:
-        filterable_id = ServiceHelper.convert_id(filterable_id)
-        sender = ServiceHelper.get_by_param(User, sender) if sender else None
-        receiver = ServiceHelper.get_by_param(User, receiver) if receiver else None
-        chat_history = ChatHistory(
-            filterable_table=filterable_table,
-            filterable_id=filterable_id,
-            message=message,
-            sender_id=sender.id if sender else None,
-            receiver_id=receiver.id if receiver else None,
-        )
+        session.title = title
 
         with DbSession.use(readonly=False) as db:
-            db.insert(chat_history)
+            db.update(session)
 
-        return chat_history
+        return session
 
-    async def update(self, chat_history: ChatHistory) -> ChatHistory:
+    async def delete_session(self, session: TChatSessionParam):
+        session = ServiceHelper.get_by_param(ChatSession, session)
+        if not session:
+            return None
+
         with DbSession.use(readonly=False) as db:
-            db.update(chat_history)
+            db.delete(session)
 
-        return chat_history
+    async def delete_history(self, chat_history: TChatHistoryParam):
+        chat_history = ServiceHelper.get_by_param(ChatHistory, chat_history)
+        if not chat_history:
+            return None
 
-    async def delete(self, chat_history: ChatHistory):
         with DbSession.use(readonly=False) as db:
             db.delete(chat_history)
-
-    async def clear(self, user: User, filterable_table: str, filterable_id: int | str):
-        filterable_id = ServiceHelper.convert_id(filterable_id)
-        sql_query = (
-            SqlBuilder.delete.table(ChatHistory)
-            .where((ChatHistory.column("sender_id") == user.id) | (ChatHistory.column("receiver_id") == user.id))
-            .where(
-                (ChatHistory.column("filterable_table") == filterable_table)
-                & (ChatHistory.column("filterable_id") == filterable_id)
-            )
-        )
-
-        with DbSession.use(readonly=False) as db:
-            db.exec(sql_query)
 
     async def get_templates(self, filterable_table: str, filterable_id: int | str) -> list[dict[str, Any]]:
         filterable_id = ServiceHelper.convert_id(filterable_id)

@@ -21,6 +21,7 @@ function MoreMenuDrawerItem({ onSave, onOpenChange, ...props }: TMoreMenuDrawerI
 function MoreMenuDrawerItemDisplay({
     modal,
     menuName,
+    triggerProps,
     contentProps,
     useButtons = true,
     saveButtonProps,
@@ -47,7 +48,9 @@ function MoreMenuDrawerItemDisplay({
     return (
         <Drawer.Root modal={modal} open={isOpened} onOpenChange={setIsOpened}>
             <Drawer.Trigger asChild>
-                <DropdownMenu.Item onClick={handleOpen}>{menuName}</DropdownMenu.Item>
+                <DropdownMenu.Item {...triggerProps} onClick={handleOpen}>
+                    {menuName}
+                </DropdownMenu.Item>
             </Drawer.Trigger>
             <Drawer.Content focusGuards={false} onInteractOutside={onInteractOutside} onPointerDownOutside={onPointerDownOutside} {...contentProps}>
                 <Drawer.Title hidden />

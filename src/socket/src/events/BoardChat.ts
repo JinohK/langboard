@@ -7,6 +7,7 @@ import ChatHistory from "@/models/ChatHistory";
 import { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import { SocketEvents } from "@langboard/core/constants";
+import ChatSession from "@/models/ChatSession";
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE, async ({ client, topicId }) => {
     const [internalBot, _] = (await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId)) ?? [null, null];
@@ -30,7 +31,7 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE,
 });
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async ({ client, topicId, data }) => {
-    const { message, file_path, task_id } = data ?? {};
+    const { message, file_path, task_id, session_uid } = data ?? {};
     if (!Utils.Type.isString(message) || !Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid message data", false);
         return;
@@ -70,16 +71,63 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
         return;
     }
 
-    const userMessage = await ChatHistory.create({
-        filterable_table: "project",
-        filterable_id: SnowflakeID.fromShortCode(topicId).toString(),
-        sender_id: client.user.id,
-        message: { content: message },
-    }).save();
+    let session: ChatSession | null = null;
+    if (!Utils.Type.isString(session_uid) || !session_uid) {
+        session = await ChatSession.create({
+            filterable_table: "project",
+            filterable_id: SnowflakeID.fromShortCode(topicId).toString(),
+            user_id: client.user.id,
+            title: "Untitled",
+            last_messaged_at: new Date(),
+        }).save();
 
-    if (isAborted()) {
-        return;
+        client.send({
+            event: SocketEvents.SERVER.BOARD.CHAT.SESSION,
+            topic: ESocketTopic.Board,
+            topic_id: topicId,
+            data: { session: session.apiResponse },
+        });
+
+        BotRunner.createTitle({
+            internalBot,
+            internalBotSettings,
+            data: {
+                message,
+                user_id: client.user.id,
+                project_uid: topicId,
+            },
+        }).then(async (title) => {
+            title ||= "Untitled";
+            if (!session || session.title === title) {
+                return;
+            }
+
+            session.title = title;
+            await ChatSession.update(session.id, {
+                title,
+            });
+
+            client.send({
+                event: SocketEvents.SERVER.BOARD.CHAT.SESSION,
+                topic: ESocketTopic.Board,
+                topic_id: topicId,
+                data: { session: session.apiResponse },
+            });
+        });
+    } else {
+        session = await ChatSession.findByUID(session_uid);
+        if (!session) {
+            client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid chat session", false);
+            return;
+        }
     }
+
+    const userMessage = await ChatHistory.create({
+        chat_session_id: session.id,
+        message: { content: message },
+        is_received: false,
+    }).save();
+    await session.updateLastMessagedAt(userMessage.created_at);
 
     client.send({
         event: SocketEvents.SERVER.BOARD.CHAT.SENT,
@@ -94,11 +142,11 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
 
     const stream = client.stream(ESocketTopic.Board, topicId, SocketEvents.SERVER.BOARD.CHAT.STREAM);
     const aiMessage = await ChatHistory.create({
-        filterable_table: userMessage.filterable_table,
-        filterable_id: userMessage.filterable_id,
-        receiver_id: client.user.id,
+        chat_session_id: session.id,
         message: { content: "" },
+        is_received: true,
     }).save();
+    await session.updateLastMessagedAt(aiMessage.created_at);
     const aiMessageUID = new SnowflakeID(aiMessage.id).toShortCode();
 
     stream.start({ ai_message: aiMessage.apiResponse });
@@ -112,6 +160,7 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
         stream.buffer({ uid: aiMessageUID, message: aiMessage.message });
         stream.end({ uid: aiMessageUID, status: "success" });
         await aiMessage.save();
+        await session.updateLastMessagedAt(aiMessage.created_at);
         return;
     }
 
@@ -123,6 +172,7 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
         await ChatHistory.update(aiMessage.id, {
             message: newContent,
         });
+        await session.updateLastMessagedAt(aiMessage.updated_at);
     };
 
     await response({

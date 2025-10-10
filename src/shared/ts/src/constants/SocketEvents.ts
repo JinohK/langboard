@@ -30,6 +30,7 @@ const SERVER = {
         DELETED: "board:deleted:{uid}",
         CHAT: {
             IS_AVAILABLE: "board:chat:available",
+            SESSION: "board:chat:session",
             SENT: "board:chat:sent",
             STREAM: "board:chat:stream",
             TEMPLATE: {

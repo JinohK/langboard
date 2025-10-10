@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import BaseBot, { IBotIsAvailableOptions, IBotRunAbortableOptions, IBotRunOptions, IBotUploadOptions, registerBot } from "@/core/ai/BaseBot";
+import { sanitizeBotTitle } from "@/core/ai/requests/utils";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { EInternalBotType } from "@/models/InternalBot";
 
@@ -40,6 +41,24 @@ class EditorChatBot extends BaseBot {
             },
             useStream: true,
         });
+    }
+
+    public async createTitle({ data, ...options }: IBotRunOptions) {
+        const result = await this.request({
+            ...options,
+            requestModel: {
+                message: data.message,
+                projectUID: data.project_uid,
+                userId: data.user_id,
+                inputType: "chat",
+                outputType: "text",
+                restData: data.rest_data,
+                isTitle: true,
+            },
+            useStream: false,
+        });
+
+        return sanitizeBotTitle(result || "");
     }
 
     public async isAvailable(options: IBotIsAvailableOptions): Promise<bool> {

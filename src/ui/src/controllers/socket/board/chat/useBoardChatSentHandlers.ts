@@ -16,15 +16,17 @@ const useBoardChatSentHandlers = ({ callback, projectUID }: IUseBoardChatSentHan
     return useSocketHandler<{}, IBoardChatSentRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `board-card-sent-${projectUID}`,
+        eventKey: `board-chat-sent-${projectUID}`,
         onProps: {
             name: SocketEvents.SERVER.BOARD.CHAT.SENT,
-            params: { uid: projectUID },
             callback,
             responseConverter: (data) => {
                 ChatMessageModel.Model.fromOne(data.user_message, true);
                 return {};
             },
+        },
+        sendProps: {
+            name: SocketEvents.CLIENT.BOARD.CHAT.SEND,
         },
     });
 };

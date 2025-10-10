@@ -57,6 +57,7 @@
     "NF2018": "The project or chat template couldn't be found.",
     "NF2019": "The project or internal bot couldn't be found.",
     "NF2020": "The bot scope couldn't be found.",
+    "NF2021": "The project or chat session couldn't be found.",
     "NF3001": "The bot couldn't be found.",
     "NF3002": "Settings couldn't be found.",
     "NF3003": "Global relationships couldn't be found.",

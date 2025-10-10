@@ -44,7 +44,7 @@ class SnowflakeID extends Number {
         }
 
         value = (timestamp << 22n) | (BigInt(machineID) << 12n) | BigInt(SnowflakeID.#getRandomBits(20));
-        super(Number(value));
+        super(value);
         this.#value = value;
     }
 

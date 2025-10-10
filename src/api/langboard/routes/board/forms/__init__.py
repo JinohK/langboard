@@ -20,6 +20,7 @@ from .Project import (
     ChatHistoryPagination,
     InviteProjectMemberForm,
     ProjectInvitationForm,
+    UpdateProjectChatSessionForm,
     UpdateProjectDetailsForm,
     UpdateRolesForm,
 )
@@ -66,4 +67,5 @@ __all__ = [
     "ChangeWikiPublicForm",
     "ChangeInternalBotForm",
     "ChangeInternalBotSettingsForm",
+    "UpdateProjectChatSessionForm",
 ]

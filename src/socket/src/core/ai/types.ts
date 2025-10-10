@@ -10,4 +10,5 @@ export interface IBotRequestModel {
     sessionId?: string;
     tweaks?: Record<string, Record<string, any>>;
     restData?: Record<string, any>;
+    isTitle?: bool;
 }

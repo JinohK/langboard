@@ -15,7 +15,7 @@ const useBoardChatTemplateCreatedHandlers = ({ callback, projectUID }: IUseBoard
     return useSocketHandler<{}, IBoardChatTemplateCreatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `board-card-template-created-${projectUID}`,
+        eventKey: `board-chat-template-created-${projectUID}`,
         onProps: {
             name: SocketEvents.SERVER.BOARD.CHAT.TEMPLATE.CREATED,
             params: { uid: projectUID },

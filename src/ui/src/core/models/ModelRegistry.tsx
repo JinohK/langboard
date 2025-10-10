@@ -5,6 +5,7 @@ import type { Model as AuthUserModel } from "@/core/models/AuthUser";
 import type { Model as BotLogModel } from "@/core/models/BotLogModel";
 import type { Model as BotModel } from "@/core/models/BotModel";
 import type { Model as ChatMessageModel } from "@/core/models/ChatMessageModel";
+import type { Model as ChatSessionModel } from "@/core/models/ChatSessionModel";
 import type { Model as ChatTemplateModel } from "@/core/models/ChatTemplateModel";
 import type { Model as GlobalRelationshipTypeModel } from "@/core/models/GlobalRelationshipType";
 import type { Model as InternalBotModel } from "@/core/models/InternalBotModel";
@@ -37,6 +38,7 @@ export interface IModelMap {
     BotLogModel: IModelRegistry<typeof BotLogModel>;
     BotModel: IModelRegistry<typeof BotModel>;
     ChatMessageModel: IModelRegistry<typeof ChatMessageModel>;
+    ChatSessionModel: IModelRegistry<typeof ChatSessionModel>;
     ChatTemplateModel: IModelRegistry<typeof ChatTemplateModel>;
     GlobalRelationshipType: IModelRegistry<typeof GlobalRelationshipTypeModel>;
     InternalBotModel: IModelRegistry<typeof InternalBotModel>;

@@ -2,7 +2,7 @@
 import { createOneTimeToken } from "@/core/ai/BotOneTimeToken";
 import BaseRequest from "@/core/ai/requests/BaseRequest";
 import { LangboardCalledVariablesComponent } from "@/core/ai/helpers/LangflowHelper";
-import langflowStreamResponse from "@/core/ai/requests/LangflowStreamResponse";
+import langflowStreamResponse from "@/core/ai/requests/LangflowHelper";
 import { IBotRequestModel } from "@/core/ai/types";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import { api } from "@/core/helpers/Api";
@@ -11,7 +11,6 @@ import { EHttpStatus } from "@langboard/core/enums";
 import { Utils } from "@langboard/core/utils";
 import formidable from "formidable";
 import fs from "fs";
-import { IStreamResponse } from "@/core/ai/requests/types";
 import { EBotPlatform, EBotPlatformRunningType } from "@/models/bot.related.types";
 import { OLLAMA_API_URL } from "@/Constants";
 
@@ -22,10 +21,7 @@ export interface ICreateLangflowRequestModelParams {
 }
 
 class LangflowRequest extends BaseRequest {
-    public async request(
-        requestModel: IBotRequestModel,
-        useStream: bool = false
-    ): Promise<string | ReturnType<typeof langflowStreamResponse> | null> {
+    public async request(requestModel: IBotRequestModel, useStream = false) {
         const headers = this.getBotRequestHeaders();
 
         const apiRequestModel = this.#createLangflowRequestModel({
@@ -51,17 +47,13 @@ class LangflowRequest extends BaseRequest {
                 throw new Error("Langflow request failed");
             }
 
-            return response.data;
+            return this.#parseLangflowResponse(response.data);
         } catch {
             return null;
         }
     }
 
-    public async requestAbortable(
-        task: [AbortController, () => void],
-        requestModel: IBotRequestModel,
-        useStream: bool = false
-    ): Promise<string | IStreamResponse | null> {
+    public async requestAbortable(task: [AbortController, () => void], requestModel: IBotRequestModel, useStream = false) {
         const [abortController, finish] = task;
         const headers = this.getBotRequestHeaders();
 
@@ -208,7 +200,7 @@ class LangflowRequest extends BaseRequest {
         };
 
         if (this.internalBot.platform === EBotPlatform.Default && this.internalBot.platform_running_type === EBotPlatformRunningType.Default) {
-            reqData.tweaks = this.#setDefaultTweaks(reqData.tweaks);
+            reqData.tweaks = this.#setDefaultTweaks(requestModel, reqData.tweaks);
         }
 
         return {
@@ -224,10 +216,18 @@ class LangflowRequest extends BaseRequest {
     }
 
     #parseLangflowResponse(response: { session_id: string; outputs: Record<string, any>[] }): string {
-        return response.outputs?.[0]?.outputs?.[0]?.results?.message?.data?.text ?? "";
+        try {
+            let responseOutputs = response.outputs[0];
+            while (!responseOutputs.messages) {
+                responseOutputs = responseOutputs.outputs[0];
+            }
+            return responseOutputs.messages[0].message;
+        } catch {
+            return "";
+        }
     }
 
-    #setDefaultTweaks(tweaks: Record<string, any>) {
+    #setDefaultTweaks(requestModel: IBotRequestModel, tweaks: Record<string, any>) {
         try {
             const botValue: Record<string, any> = Utils.Json.Parse(this.internalBot.value ?? "{}");
             if (!botValue.agent_llm) {
@@ -259,11 +259,16 @@ class LangflowRequest extends BaseRequest {
 
                 if (agentData.system_prompt) {
                     let systemPrompt;
-                    if (this.internalBotSettings) {
-                        systemPrompt = this.internalBotSettings.prompt;
+                    if (requestModel.isTitle) {
+                        systemPrompt = this.getTitlePrompt();
                     } else {
-                        systemPrompt = agentData.system_prompt;
+                        if (this.internalBotSettings) {
+                            systemPrompt = this.internalBotSettings.prompt;
+                        } else {
+                            systemPrompt = agentData.system_prompt;
+                        }
                     }
+
                     delete agentData.system_prompt;
                     tweaks.Prompt = {
                         prompt: systemPrompt,

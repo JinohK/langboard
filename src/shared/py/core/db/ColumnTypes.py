@@ -129,9 +129,14 @@ class SecretStrType(TypeDecorator):
 
 
 def DateTimeField(default: Callable | None, nullable: bool, onupdate: bool = False):
-    kwargs = {"nullable": nullable, "sa_type": DateTime(timezone=True)}
+    kwargs = {
+        "nullable": nullable,
+        "sa_type": DateTime(timezone=True),
+        "sa_column_kwargs": {"server_default": "CURRENT_TIMESTAMP" if not nullable else None},
+    }
     if onupdate:
-        kwargs["sa_column_kwargs"] = {"onupdate": SafeDateTime.now}
+        kwargs["sa_column_kwargs"]["onupdate"] = SafeDateTime.now
+        kwargs["sa_column_kwargs"]["server_default"] = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
 
     if default is None:
         return Field(default=None, **kwargs)

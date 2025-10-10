@@ -17,7 +17,7 @@ const useBoardChatTemplateUpdatedHandlers = ({ callback, projectUID, template }:
     return useSocketHandler<{}, IBoardChatTemplateUpdatedRawResponse>({
         topic: ESocketTopic.Board,
         topicId: projectUID,
-        eventKey: `board-card-template-updated-${template.uid}`,
+        eventKey: `board-chat-template-updated-${template.uid}`,
         onProps: {
             name: SocketEvents.SERVER.BOARD.CHAT.TEMPLATE.UPDATED,
             params: { uid: template.uid },

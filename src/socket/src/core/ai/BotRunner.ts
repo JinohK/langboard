@@ -26,6 +26,14 @@ class BotRunner {
         return await bot.runAbortable({ internalBot, ...options });
     }
 
+    public static async createTitle({ internalBot, data }: IBotRunOptions) {
+        const bot = getBot(internalBot.bot_type);
+        if (!bot) {
+            return null;
+        }
+        return await bot.createTitle({ internalBot, data });
+    }
+
     public static async abort({ botType, taskID, client }: IBotAbortOptions): Promise<void> {
         const bot = getBot(botType);
         if (!bot) {

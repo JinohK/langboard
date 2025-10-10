@@ -8,12 +8,14 @@ import { Box } from "@/components/base";
 import MarkdownDateBlock from "@/components/Markdown/DateBlock";
 import rehypeRaw from "rehype-raw"; // HTML 태그를 처리
 import { cn } from "@/core/utils/ComponentUtils";
+import MarkdownThinkBlock from "@/components/Markdown/ThinkBlock";
+import { memo } from "react";
 
 export interface IMarkdownProps extends Omit<MarkdownOptions, "remarkPlugins" | "rehypePlugins" | "className" | "components" | "children"> {
     message: IChatContent | { content: string };
 }
 
-function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
+const Markdown = memo(({ message, ...mdProps }: IMarkdownProps): JSX.Element => {
     const components: Components = {
         p({ node, ...props }) {
             return <div>{props.children}</div>;
@@ -37,7 +39,7 @@ function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
                 </div>
             );
         },
-        code: ({ node, className, children, ...props }) => {
+        code({ node, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || "");
             return match ? (
                 <MarkdownCodeBlock language={match[1]} code={String(children).replace(/\n$/, "")} />
@@ -50,14 +52,25 @@ function Markdown({ message, ...mdProps }: IMarkdownProps): JSX.Element {
     };
 
     (components as any).date = MarkdownDateBlock;
+    (components as any).think = MarkdownThinkBlock;
+
+    const replaceNewlinesInTags = (content: string): string => {
+        return content.replace(/(<[^>]+>)([\s\S]*?)(<\/[^>]+>)/g, (_, openTag, innerContent, closeTag) => {
+            const trimmedContent = innerContent.replace(/^\n+|\n+$/g, "");
+            const updatedContent = trimmedContent.replace(/\n/g, "<br>");
+            return `${openTag}${updatedContent}${closeTag}`;
+        });
+    };
+
+    const sanitizedContent = replaceNewlinesInTags(message.content);
 
     return (
         <Box className="markdown max-w-full">
             <BaseMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw, rehypeMathjax]} components={components} {...mdProps}>
-                {message.content}
+                {sanitizedContent}
             </BaseMarkdown>
         </Box>
     );
-}
+});
 
 export default Markdown;

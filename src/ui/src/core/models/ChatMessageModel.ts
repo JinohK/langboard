@@ -3,15 +3,12 @@ import { registerModel } from "@/core/models/ModelRegistry";
 import { Utils } from "@langboard/core/utils";
 
 export interface Interface extends IBaseModel {
-    filterable_table: "project";
-    filterable_uid: string;
-    sender_uid?: string;
-    receiver_uid?: string;
+    chat_session_uid: string;
     message: IChatContent;
+    is_received: bool;
     updated_at: Date;
 
     // variable set from the client side
-    isReceived: bool;
     isPending?: bool;
 }
 
@@ -24,38 +21,14 @@ class ChatMessageModel extends BaseModel<Interface> {
         if (Utils.Type.isString(model.updated_at)) {
             model.updated_at = new Date(model.updated_at);
         }
-        if (!model.sender_uid) {
-            model.isReceived = true;
-        }
         return model;
     }
 
-    public get filterable_table() {
-        return this.getValue("filterable_table");
+    public get chat_session_uid() {
+        return this.getValue("chat_session_uid");
     }
-    public set filterable_table(value) {
-        this.update({ filterable_table: value });
-    }
-
-    public get filterable_uid() {
-        return this.getValue("filterable_uid");
-    }
-    public set filterable_uid(value) {
-        this.update({ filterable_uid: value });
-    }
-
-    public get sender_uid() {
-        return this.getValue("sender_uid");
-    }
-    public set sender_uid(value) {
-        this.update({ sender_uid: value });
-    }
-
-    public get receiver_uid() {
-        return this.getValue("receiver_uid");
-    }
-    public set receiver_uid(value) {
-        this.update({ receiver_uid: value });
+    public set chat_session_uid(value) {
+        this.update({ chat_session_uid: value });
     }
 
     public get message() {
@@ -72,11 +45,11 @@ class ChatMessageModel extends BaseModel<Interface> {
         this.update({ updated_at: new Date(value) });
     }
 
-    public get isReceived() {
-        return this.getValue("isReceived");
+    public get is_received() {
+        return this.getValue("is_received");
     }
-    public set isReceived(value) {
-        this.update({ isReceived: value });
+    public set is_received(value) {
+        this.update({ is_received: value });
     }
 
     public get isPending() {

@@ -79,12 +79,16 @@ def run_migrations_offline() -> None:
 
     """
     url = config.get_main_option("sqlalchemy.url")
+    driver_type = DbConfigHelper.get_driver_type(Env.MAIN_DATABASE_URL)
+    render_as_batch = driver_type == "sqlite"
+
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
         render_item=render_item,
+        render_as_batch=render_as_batch,
     )
 
     with context.begin_transaction():
@@ -92,10 +96,14 @@ def run_migrations_offline() -> None:
 
 
 def do_run_migrations(connection: Connection) -> None:
+    driver_type = DbConfigHelper.get_driver_type(Env.MAIN_DATABASE_URL)
+    render_as_batch = driver_type == "sqlite"
+
     context.configure(
         connection=connection,
         target_metadata=target_metadata,
         render_item=render_item,
+        render_as_batch=render_as_batch,
     )
 
     with context.begin_transaction():

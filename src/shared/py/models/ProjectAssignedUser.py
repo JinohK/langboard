@@ -10,7 +10,7 @@ class ProjectAssignedUser(BaseSqlModel, table=True):
     project_id: SnowflakeID = SnowflakeIDField(foreign_key=Project, nullable=False, index=True)
     user_id: SnowflakeID = SnowflakeIDField(foreign_key=User, nullable=False, index=True)
     starred: bool = Field(default=False, nullable=False)
-    last_viewed_at: SafeDateTime = DateTimeField(default=SafeDateTime.now, nullable=False)
+    last_viewed_at: SafeDateTime = DateTimeField(default=SafeDateTime.now, nullable=False, onupdate=True)
 
     @staticmethod
     def api_schema() -> dict[str, Any]:

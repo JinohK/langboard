@@ -38,6 +38,13 @@ abstract class BaseRequest {
 
         return headers;
     }
+
+    protected getTitlePrompt() {
+        return `You are an expert at creating concise and relevant titles based on user input.
+Generate a title that accurately reflects the content and purpose of the input provided by the user.
+Keep the title brief, engaging, and to the point.
+YOU MUST RESPOND WITH ONLY THE TITLE AND NO ADDITIONAL TEXT.`;
+    }
 }
 
 export default BaseRequest;

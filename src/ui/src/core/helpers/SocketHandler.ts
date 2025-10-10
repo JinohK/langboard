@@ -103,13 +103,19 @@ const useSocketHandler = <TResponse, TRawResponse = TResponse, TRequest = unknow
         };
     };
 
-    const send = (data: TRequest) => {
+    const send: (
+        data: TRequest
+    ) => TUseSocketHandlerProps<TResponse, TRawResponse>["sendProps"] extends undefined ? undefined : ReturnType<typeof socket.send> = (
+        data: TRequest
+    ) => {
         if (!sendProps) {
-            return;
+            return undefined as unknown as TUseSocketHandlerProps<TResponse, TRawResponse>["sendProps"] extends undefined
+                ? undefined
+                : ReturnType<typeof socket.send>;
         }
 
         const eventName = sendProps.params ? Utils.String.format(sendProps.name, sendProps.params) : sendProps.name;
-        socket.send({
+        return socket.send({
             topic: props.topic as never,
             topicId: props.topicId,
             eventName,

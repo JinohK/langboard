@@ -10,7 +10,7 @@ from ..core.logger import Logger
 
 logger = Logger.use("cli")
 
-_TPyConfigType = Literal["model", "task", "command", "seed"]
+_TPyConfigType = Literal["model", "task", "publisher", "command", "seed"]
 
 
 def _get_py_config(config_type: _TPyConfigType):
@@ -29,6 +29,11 @@ def _get_py_config(config_type: _TPyConfigType):
             dirpath=BASE_DIR / "tasks",
             filename="{name}Task.py",
             should_update_init=False,
+        ),
+        "publisher": _TPyConfig(
+            dirpath=BASE_DIR / ".." / ".." / "shared" / "py" / "publishers",
+            filename="{name}Publisher.py",
+            should_update_init=True,
         ),
         "command": _TPyConfig(
             dirpath=BASE_DIR / "commands",

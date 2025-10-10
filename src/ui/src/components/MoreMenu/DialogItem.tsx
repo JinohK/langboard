@@ -20,6 +20,7 @@ function MoreMenuDialogItem({ onSave, onOpenChange, ...props }: TMoreMenuDialogI
 function MoreMenuDialogItemDisplay({
     modal,
     menuName,
+    triggerProps,
     contentProps,
     useButtons = true,
     saveButtonProps,
@@ -45,7 +46,9 @@ function MoreMenuDialogItemDisplay({
     return (
         <Dialog.Root modal={modal} open={isOpened} onOpenChange={setIsOpened}>
             <Dialog.Trigger asChild>
-                <DropdownMenu.Item onClick={handleOpen}>{menuName}</DropdownMenu.Item>
+                <DropdownMenu.Item {...triggerProps} onClick={handleOpen}>
+                    {menuName}
+                </DropdownMenu.Item>
             </Dialog.Trigger>
             <Dialog.Content {...contentProps}>
                 <Dialog.Title hidden />

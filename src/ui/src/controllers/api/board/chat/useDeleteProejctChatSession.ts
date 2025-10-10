@@ -4,15 +4,16 @@ import { api } from "@/core/helpers/Api";
 import { TMutationOptions, useQueryMutation } from "@/core/helpers/QueryMutation";
 import { Utils } from "@langboard/core/utils";
 
-export interface IClearProjectChatMessagesForm {
+export interface IDeleteProjectChatSessionForm {
     uid: string;
+    session_uid: string;
 }
 
-const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectChatMessagesForm>) => {
+const useDeleteProjectChatSession = (options?: TMutationOptions<IDeleteProjectChatSessionForm>) => {
     const { mutate } = useQueryMutation();
 
-    const clearProjectChatMessages = async (params: IClearProjectChatMessagesForm) => {
-        const url = Utils.String.format(Routing.API.BOARD.CHAT.CLEAR_MESSAGES, { uid: params.uid });
+    const deleteProjectChatSession = async (params: IDeleteProjectChatSessionForm) => {
+        const url = Utils.String.format(Routing.API.BOARD.CHAT.DELETE_SESSION, { uid: params.uid, session_uid: params.session_uid });
         const res = await api.delete(url, {
             env: {
                 interceptToast: options?.interceptToast,
@@ -22,7 +23,7 @@ const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectCha
         return res.data;
     };
 
-    const result = mutate(["clear-project-chat-messages"], clearProjectChatMessages, {
+    const result = mutate(["delete-project-chat-session"], deleteProjectChatSession, {
         ...options,
         retry: 0,
     });
@@ -30,4 +31,4 @@ const useClearProjectChatMessages = (options?: TMutationOptions<IClearProjectCha
     return result;
 };
 
-export default useClearProjectChatMessages;
+export default useDeleteProjectChatSession;

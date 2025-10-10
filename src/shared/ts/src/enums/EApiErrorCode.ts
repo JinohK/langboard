@@ -47,6 +47,7 @@ export enum EApiErrorCode {
     NF2018 = "Project or chat template not found.",
     NF2019 = "Project or internal bot not found.",
     NF2020 = "Bot scope not found.",
+    NF2021 = "Project or chat session not found.",
     NF3001 = "Bot not found.",
     NF3002 = "Settings not found.",
     NF3003 = "Global relationships not found.",

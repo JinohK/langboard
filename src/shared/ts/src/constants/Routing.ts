@@ -76,8 +76,10 @@ const API = {
         ACCEPT_INVITATION: "/project/invite/accept",
         DECLINE_INVITATION: "/project/invite/decline",
         CHAT: {
-            GET_MESSAGES: "/board/{uid}/chat",
-            CLEAR_MESSAGES: "/board/{uid}/chat/clear",
+            GET_SESSIONS: "/board/{uid}/chat/sessions",
+            GET_MESSAGES: "/board/{uid}/chat/session/{session_uid}",
+            UPDATE_SESSION: "/board/{uid}/chat/session/{session_uid}",
+            DELETE_SESSION: "/board/{uid}/chat/session/{session_uid}",
             UPLOAD: "/board/{uid}/chat/upload",
             TEMPLATE: {
                 GET_LIST: "/board/{uid}/chat/templates",

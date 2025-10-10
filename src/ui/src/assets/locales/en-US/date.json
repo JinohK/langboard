@@ -1,3 +1,4 @@
 {
-  "{distance} ago": "{{distance}} ago"
+  "{distance} ago": "{{distance}} ago",
+  "Invalid date": "Invalid date"
 }

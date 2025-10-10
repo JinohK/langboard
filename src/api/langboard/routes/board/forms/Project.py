@@ -42,3 +42,8 @@ class ChangeInternalBotSettingsForm(BaseFormModel):
     bot_type: InternalBotType
     use_default_prompt: bool | None = None
     prompt: str | None = None
+
+
+@form_model
+class UpdateProjectChatSessionForm(BaseFormModel):
+    title: str

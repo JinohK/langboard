@@ -6,6 +6,7 @@ import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { ChatMessageList } from "@/components/Chat/ChatMessageList";
 import { ChatMessageModel } from "@/core/models";
 import ChatMessage from "@/pages/BoardPage/components/chat/ChatMessage";
+import { cn } from "@/core/utils/ComponentUtils";
 
 const LOADING_ELEMENT_MIDDLE_Y = 18;
 
@@ -14,13 +15,16 @@ export interface IConversationProps {
 }
 
 function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
-    const { projectUID, scrollToBottomRef, isAtBottomRef } = useBoardChat();
+    const { projectUID, scrollToBottomRef, isAtBottomRef, currentSessionUID } = useBoardChat();
     const [t] = useTranslation();
     const [isLoaded, setIsLoaded] = useState(false);
     const isFetchingRef = useRef(false);
     const [isFetched, setIsFetched] = useState(false);
-    const { mutateAsync, isLastPage } = useGetProjectChatMessages(projectUID);
-    const messages = ChatMessageModel.Model.useModels((model) => model.filterable_table === "project" && model.filterable_uid === projectUID);
+    const { mutateAsync, isLastPage, setIsLastPage, pageRef, lastCurrentDateRef, lastPagesRef } = useGetProjectChatMessages(projectUID);
+    const messages = ChatMessageModel.Model.useModels(
+        (model) => !!currentSessionUID && model.chat_session_uid === currentSessionUID,
+        [currentSessionUID]
+    );
     const conversationRef = useRef<HTMLDivElement>(null);
     const sortedMessages = useMemo(() => messages.sort((a, b) => a.updated_at.getTime() - b.updated_at.getTime()), [messages]);
     const lastChatListHeightRef = useRef(0);
@@ -33,12 +37,37 @@ function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
         isFetchingRef.current = true;
         await new Promise((resolve) => {
             setTimeout(async () => {
-                await mutateAsync({});
+                await mutateAsync({ session_uid: currentSessionUID });
                 isFetchingRef.current = false;
                 resolve(null);
             }, 2500);
         });
     };
+
+    useEffect(() => {
+        if (!currentSessionUID) {
+            setIsLastPage(true);
+            return;
+        }
+
+        if (!lastPagesRef.current[currentSessionUID]) {
+            lastPagesRef.current[currentSessionUID] = 0;
+        }
+
+        pageRef.current = lastPagesRef.current[currentSessionUID];
+        if (pageRef.current) {
+            return;
+        }
+
+        lastCurrentDateRef.current = new Date();
+        mutateAsync({
+            session_uid: currentSessionUID,
+        });
+
+        return () => {
+            pageRef.current = 0;
+        };
+    }, [currentSessionUID]);
 
     useEffect(() => {
         if (!conversationRef.current) {
@@ -72,7 +101,7 @@ function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
         return () => {
             conversationRef.current?.removeEventListener("scroll", onScroll);
         };
-    }, [isLoaded, isLastPage]);
+    }, [isLoaded, isLastPage, currentSessionUID]);
 
     useEffect(() => {
         if (
@@ -91,10 +120,15 @@ function Conversation({ chatInputHeight }: IConversationProps): JSX.Element {
 
     return (
         <Box
-            className="min-h-[calc(100%_-_theme(spacing.20)_-_20vh)]"
-            style={{
-                height: `calc(100% - ${chatInputHeight}px - 5rem)`,
-            }}
+            className={cn(
+                "h-[calc(100%_-_theme(spacing.12)_-_var(--chat-input-height))]",
+                "max-h-[calc(100%_-_theme(spacing.24))] min-h-[calc(100%_-_theme(spacing.24)_-_20vh)]"
+            )}
+            style={
+                {
+                    "--chat-input-height": `${chatInputHeight}px`,
+                } as React.CSSProperties
+            }
         >
             <ChatMessageList scrollToBottomRef={scrollToBottomRef} isAtBottomRef={isAtBottomRef} ref={conversationRef}>
                 {!isLastPage && <Loading size="3" variant="secondary" spacing="1" animate="bounce" my="3" />}

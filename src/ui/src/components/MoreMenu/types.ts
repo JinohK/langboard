@@ -1,8 +1,9 @@
-import { ButtonProps } from "@/components/base";
+import { ButtonProps, DropdownMenu } from "@/components/base";
 
 interface IBaseMoreMenuItemProps<TContent> {
     modal?: bool;
     menuName: React.ReactNode;
+    triggerProps?: React.ComponentPropsWithoutRef<typeof DropdownMenu.Item>;
     contentProps?: TContent;
     useButtons?: bool;
     saveButtonProps?: Omit<ButtonProps, "type">;
