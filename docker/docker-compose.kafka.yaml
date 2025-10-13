@@ -9,7 +9,7 @@ x-kafka-env: &kafka-env
 
 services:
   kafka0:
-    image: bitnami/kafka:latest
+    image: bitnamilegacy/kafka:latest
     container_name: ${PROJECT_NAME}_kafka0
     environment:
       <<: *kafka-env
@@ -23,7 +23,7 @@ services:
     restart: always
 
   kafka1:
-    image: bitnami/kafka:latest
+    image: bitnamilegacy/kafka:latest
     container_name: ${PROJECT_NAME}_kafka1
     environment:
       <<: *kafka-env
@@ -37,7 +37,7 @@ services:
     restart: always
 
   kafka2:
-    image: bitnami/kafka:latest
+    image: bitnamilegacy/kafka:latest
     container_name: ${PROJECT_NAME}_kafka2
     environment:
       <<: *kafka-env

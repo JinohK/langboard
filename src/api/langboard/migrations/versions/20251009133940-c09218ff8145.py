@@ -26,12 +26,11 @@ def upgrade() -> None:
     op.create_table(
         "chat_session",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("filterable_table", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("filterable_id", SnowflakeIDType, nullable=True),

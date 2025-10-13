@@ -4,7 +4,7 @@ from json import loads as json_loads
 from typing import Any, Callable, TypeVar, cast
 from pydantic import BaseModel, SecretStr
 from pydantic_core import PydanticUndefined as Undefined
-from sqlalchemy import JSON, DateTime
+from sqlalchemy import JSON, DateTime, func
 from sqlalchemy.types import TEXT, VARCHAR, BigInteger, TypeDecorator
 from sqlmodel import Field, SQLModel
 from ..types import SafeDateTime, SnowflakeID
@@ -132,11 +132,11 @@ def DateTimeField(default: Callable | None, nullable: bool, onupdate: bool = Fal
     kwargs = {
         "nullable": nullable,
         "sa_type": DateTime(timezone=True),
-        "sa_column_kwargs": {"server_default": "CURRENT_TIMESTAMP" if not nullable else None},
+        "sa_column_kwargs": {"server_default": func.now() if not nullable else None},
     }
     if onupdate:
         kwargs["sa_column_kwargs"]["onupdate"] = SafeDateTime.now
-        kwargs["sa_column_kwargs"]["server_default"] = "CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"
+        kwargs["sa_column_kwargs"]["server_onupdate"] = func.now()
 
     if default is None:
         return Field(default=None, **kwargs)

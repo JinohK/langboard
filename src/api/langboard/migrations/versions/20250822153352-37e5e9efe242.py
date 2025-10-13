@@ -45,12 +45,11 @@ def upgrade() -> None:
     op.create_table(
         "app_setting",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("setting_type", EnumLikeType(AppSettingType), nullable=False),
         sa.Column("setting_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -62,12 +61,11 @@ def upgrade() -> None:
     op.create_table(
         "bot",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("platform", EnumLikeType(BotPlatform), nullable=False),
@@ -85,12 +83,11 @@ def upgrade() -> None:
     op.create_table(
         "chat_template",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("filterable_table", sqlmodel.sql.sqltypes.AutoString(), nullable=True),
         sa.Column("filterable_id", SnowflakeIDType, nullable=True),
@@ -101,12 +98,11 @@ def upgrade() -> None:
     op.create_table(
         "global_card_relationship_type",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("parent_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("child_name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -116,12 +112,11 @@ def upgrade() -> None:
     op.create_table(
         "internal_bot",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("platform", EnumLikeType(BotPlatform), nullable=False),
@@ -138,12 +133,11 @@ def upgrade() -> None:
     op.create_table(
         "user",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("firstname", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -161,12 +155,11 @@ def upgrade() -> None:
     op.create_table(
         "bot_log",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
         sa.Column("log_type", EnumLikeType(BotLogType), nullable=False),
@@ -178,12 +171,11 @@ def upgrade() -> None:
     op.create_table(
         "bot_schedule",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_id", SnowflakeIDType, nullable=False),
         sa.Column("running_type", EnumLikeType(BotScheduleRunningType), nullable=False),
@@ -198,12 +190,11 @@ def upgrade() -> None:
     op.create_table(
         "chat_history",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("filterable_table", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -218,12 +209,11 @@ def upgrade() -> None:
     op.create_table(
         "project",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("owner_id", SnowflakeIDType, nullable=False),
@@ -238,12 +228,11 @@ def upgrade() -> None:
     op.create_table(
         "user_activity",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=True),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
@@ -258,12 +247,11 @@ def upgrade() -> None:
     op.create_table(
         "user_email",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
@@ -276,12 +264,11 @@ def upgrade() -> None:
     op.create_table(
         "user_group",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -293,12 +280,11 @@ def upgrade() -> None:
     op.create_table(
         "user_notification",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("notifier_type", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("notifier_id", SnowflakeIDType, nullable=False),
@@ -315,12 +301,11 @@ def upgrade() -> None:
     op.create_table(
         "user_notification_unsubscription",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
         sa.Column("channel", EnumLikeType(NotificationChannel), nullable=False),
@@ -340,12 +325,11 @@ def upgrade() -> None:
     op.create_table(
         "user_profile",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
         sa.Column("industry", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -359,12 +343,11 @@ def upgrade() -> None:
     op.create_table(
         "project_assigned_internal_bot",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
         sa.Column("internal_bot_id", SnowflakeIDType, nullable=False),
@@ -387,21 +370,17 @@ def upgrade() -> None:
     op.create_table(
         "project_assigned_user",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
         sa.Column("starred", sa.Boolean(), nullable=False),
         sa.Column(
-            "last_viewed_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "last_viewed_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.ForeignKeyConstraint(["project_id"], ["project.id"], ondelete="CASCADE"),
         sa.ForeignKeyConstraint(["user_id"], ["user.id"], ondelete="CASCADE"),
@@ -412,12 +391,11 @@ def upgrade() -> None:
     op.create_table(
         "project_column",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
@@ -431,12 +409,11 @@ def upgrade() -> None:
     op.create_table(
         "project_invitation",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -448,12 +425,11 @@ def upgrade() -> None:
     op.create_table(
         "project_label",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
         sa.Column("name", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -467,12 +443,11 @@ def upgrade() -> None:
     op.create_table(
         "project_role",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("actions", CSVType, nullable=False),
         sa.Column("user_id", SnowflakeIDType, nullable=True),
@@ -485,12 +460,11 @@ def upgrade() -> None:
     op.create_table(
         "project_wiki",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
@@ -505,12 +479,11 @@ def upgrade() -> None:
     op.create_table(
         "user_group_assigned_email",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("group_id", SnowflakeIDType, nullable=False),
         sa.Column("email", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
@@ -523,12 +496,11 @@ def upgrade() -> None:
     op.create_table(
         "card",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("project_id", SnowflakeIDType, nullable=False),
@@ -548,12 +520,11 @@ def upgrade() -> None:
     op.create_table(
         "project_column_bot_log",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_log_id", SnowflakeIDType, nullable=True),
         sa.Column("project_column_id", SnowflakeIDType, nullable=False),
@@ -573,12 +544,11 @@ def upgrade() -> None:
     op.create_table(
         "project_column_bot_schedule",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_schedule_id", SnowflakeIDType, nullable=False),
         sa.Column("project_column_id", SnowflakeIDType, nullable=False),
@@ -601,12 +571,11 @@ def upgrade() -> None:
     op.create_table(
         "project_column_bot_scope",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
         sa.Column("conditions", CSVType, nullable=False),
@@ -625,12 +594,11 @@ def upgrade() -> None:
     op.create_table(
         "project_wiki_activity",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=True),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
@@ -651,12 +619,11 @@ def upgrade() -> None:
     op.create_table(
         "project_wiki_assigned_user",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_assigned_id", SnowflakeIDType, nullable=False),
         sa.Column("project_wiki_id", SnowflakeIDType, nullable=False),
@@ -684,12 +651,11 @@ def upgrade() -> None:
     op.create_table(
         "project_wiki_attachment",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
@@ -706,12 +672,11 @@ def upgrade() -> None:
     op.create_table(
         "project_wiki_metadata",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("value", sa.TEXT(), nullable=False),
@@ -726,12 +691,11 @@ def upgrade() -> None:
     op.create_table(
         "card_assigned_project_label",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
         sa.Column("project_label_id", SnowflakeIDType, nullable=False),
@@ -751,12 +715,11 @@ def upgrade() -> None:
     op.create_table(
         "card_assigned_user",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("project_assigned_id", SnowflakeIDType, nullable=False),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
@@ -774,12 +737,11 @@ def upgrade() -> None:
     op.create_table(
         "card_attachment",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("user_id", SnowflakeIDType, nullable=False),
@@ -796,12 +758,11 @@ def upgrade() -> None:
     op.create_table(
         "card_bot_log",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_log_id", SnowflakeIDType, nullable=True),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
@@ -814,12 +775,11 @@ def upgrade() -> None:
     op.create_table(
         "card_bot_schedule",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_schedule_id", SnowflakeIDType, nullable=False),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
@@ -834,12 +794,11 @@ def upgrade() -> None:
     op.create_table(
         "card_bot_scope",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
         sa.Column("conditions", CSVType, nullable=False),
@@ -853,12 +812,11 @@ def upgrade() -> None:
     op.create_table(
         "card_comment",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
@@ -874,12 +832,11 @@ def upgrade() -> None:
     op.create_table(
         "card_metadata",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("key", sqlmodel.sql.sqltypes.AutoString(), nullable=False),
         sa.Column("value", sa.TEXT(), nullable=False),
@@ -892,12 +849,11 @@ def upgrade() -> None:
     op.create_table(
         "card_relationship",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("relationship_type_id", SnowflakeIDType, nullable=False),
         sa.Column("card_id_parent", SnowflakeIDType, nullable=False),
@@ -915,12 +871,11 @@ def upgrade() -> None:
     op.create_table(
         "checklist",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("card_id", SnowflakeIDType, nullable=False),
@@ -934,12 +889,11 @@ def upgrade() -> None:
     op.create_table(
         "project_activity",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=True),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
@@ -957,12 +911,11 @@ def upgrade() -> None:
     op.create_table(
         "card_comment_reaction",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("user_id", SnowflakeIDType, nullable=True),
         sa.Column("bot_id", SnowflakeIDType, nullable=True),
@@ -977,12 +930,11 @@ def upgrade() -> None:
     op.create_table(
         "checkitem",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("deleted_at", sa.DateTime(timezone=True), nullable=True),
         sa.Column("checklist_id", SnowflakeIDType, nullable=False),
@@ -1003,12 +955,11 @@ def upgrade() -> None:
     op.create_table(
         "checkitem_timer_record",
         sa.Column("id", SnowflakeIDType, nullable=True),
-        sa.Column("created_at", sa.DateTime(timezone=True), server_default="CURRENT_TIMESTAMP", nullable=False),
         sa.Column(
-            "updated_at",
-            sa.DateTime(timezone=True),
-            server_default="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
-            nullable=False,
+            "created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
+        ),
+        sa.Column(
+            "updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False
         ),
         sa.Column("checkitem_id", SnowflakeIDType, nullable=False),
         sa.Column("status", sa.Enum("Started", "Paused", "Stopped", name="checkitemstatus"), nullable=False),
