@@ -6,7 +6,7 @@ import { ISocketContext, useSocket } from "@/core/providers/SocketProvider";
 import { ROUTES } from "@/core/routing/constants";
 import { Toast } from "@/components/base";
 import { useTranslation } from "react-i18next";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import useSearchFilters, { ISearchFilterMap } from "@/core/hooks/useSearchFilters";
 import { IPageNavigateOptions, usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { Utils } from "@langboard/core/utils";
@@ -72,7 +72,7 @@ const BoardContext = createContext<IBoardContext>(initialContext);
 export const BoardProvider = memo(({ project, currentUser, children }: IBoardProviderProps): React.ReactNode => {
     const navigate = usePageNavigateRef();
     const socket = useSocket();
-    const { selectCardViewType } = useBoardRelationshipController();
+    const { selectCardViewType } = useBoardController();
     const [t] = useTranslation();
     const members = project.useForeignField("all_members");
     const {

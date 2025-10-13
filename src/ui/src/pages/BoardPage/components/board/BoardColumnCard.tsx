@@ -7,7 +7,7 @@ import { BOARD_DND_SYMBOL_SET } from "@/pages/BoardPage/components/board/BoardCo
 import { ProjectCard, ProjectCardRelationship } from "@/core/models";
 import { Box, Card, Flex, Skeleton } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import BoardColumnCardCollapsible from "@/pages/BoardPage/components/board/BoardColumnCardCollapsible";
 import { cn } from "@/core/utils/ComponentUtils";
@@ -98,7 +98,7 @@ function BoardColumnCardDisplay({
     outerRef?: React.Ref<HTMLDivElement | null>;
     innerRef?: React.Ref<HTMLDivElement | null>;
 }) {
-    const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardRelationshipController();
+    const { selectCardViewType, currentCardUIDRef, isSelectedCard, isDisabledCard } = useBoardController();
     const { filters, canDragAndDrop, navigateWithFilters } = useBoard();
 
     const setFilters = (relationshipType: ProjectCardRelationship.TRelationship) => {

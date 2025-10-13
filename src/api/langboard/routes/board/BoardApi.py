@@ -156,6 +156,7 @@ async def get_project_labels(project_uid: str, service: Service = Service.scope(
                         Card,
                         {
                             "schema": {
+                                "column_name": "string",
                                 "count_comment": "integer",
                                 "member_uids": "string[]",
                                 "relationships": [CardRelationship],
@@ -189,6 +190,10 @@ async def get_project_cards(project_uid: str, service: Service = Service.scope()
     checklists = await service.checklist.get_list_only_by_project(project)
     column_bot_scopes = await service.project_column.get_bot_scopes_by_project(project)
     column_bot_schedules = await service.project_column.get_bot_schedules_by_project(project, columns, as_api=True)
+
+    for card in cards:
+        card["column_name"] = next((col["name"] for col in columns if col["uid"] == card["column_uid"]), "")
+
     return JsonResponse(
         content={
             "cards": cards,

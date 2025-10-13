@@ -1,5 +1,8 @@
+import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
 import { ProjectCardRelationship } from "@/core/models";
 import { createContext, memo, useContext, useRef, useState } from "react";
+
+export type TBoardViewType = "board" | "card" | "wiki" | "settings";
 
 interface IStartCardSelectionProps {
     type: ProjectCardRelationship.TRelationship;
@@ -8,11 +11,15 @@ interface IStartCardSelectionProps {
     cancelCallback: () => void;
 }
 
-export interface IBoardRelationshipControllerContext {
+export interface IBoardControllerContext {
+    boardViewType: TBoardViewType;
     selectCardViewType?: ProjectCardRelationship.TRelationship;
     selectedRelationshipUIDs: [string, string][];
     currentCardUIDRef: React.RefObject<string | null>;
     disabledCardSelectionUIDsRef: React.RefObject<string[]>;
+    chatResizableSidebar: TDashboardStyledLayoutProps["resizableSidebar"];
+    chatSidebarRef: React.RefObject<HTMLDivElement | null>;
+    setBoardViewType: React.Dispatch<React.SetStateAction<TBoardViewType>>;
     startCardSelection: (props: IStartCardSelectionProps) => void;
     setSelectedRelationshipCardUIDs: React.Dispatch<React.SetStateAction<[string, string][]>>;
     setCardSelection: (cardUID: string, relationshipUID?: string) => void;
@@ -22,16 +29,21 @@ export interface IBoardRelationshipControllerContext {
     isDisabledCard: (cardUID: string) => bool;
     filterRelationships: (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => ProjectCardRelationship.TModel[];
     filterRelatedCardUIDs: (cardUID: string, relationships: ProjectCardRelationship.TModel[], isParent: bool) => string[];
+    setChatResizableSidebar: React.Dispatch<React.SetStateAction<TDashboardStyledLayoutProps["resizableSidebar"]>>;
 }
 
-interface IBoardRelationshipControllerProps {
+interface IBoardControllerProps {
     children: React.ReactNode;
 }
 
 const initialContext = {
+    boardViewType: "board" as const,
     selectedRelationshipUIDs: [],
     currentCardUIDRef: { current: null },
     disabledCardSelectionUIDsRef: { current: [] },
+    chatResizableSidebar: undefined,
+    chatSidebarRef: { current: null },
+    setBoardViewType: () => {},
     startCardSelection: () => {},
     setSelectedRelationshipCardUIDs: () => {},
     setCardSelection: () => {},
@@ -41,17 +53,21 @@ const initialContext = {
     isDisabledCard: () => false,
     filterRelationships: () => [],
     filterRelatedCardUIDs: () => [],
+    setChatResizableSidebar: () => {},
 };
 
-const BoardRelationshipControllerContext = createContext<IBoardRelationshipControllerContext>(initialContext);
+const BoardControllerContext = createContext<IBoardControllerContext>(initialContext);
 
-export const BoardRelationshipController = memo(({ children }: IBoardRelationshipControllerProps): React.ReactNode => {
+export const BoardController = memo(({ children }: IBoardControllerProps): React.ReactNode => {
+    const [boardViewType, setBoardViewType] = useState<TBoardViewType>("board");
     const [selectCardViewType, setSelectCardViewType] = useState<ProjectCardRelationship.TRelationship>();
     const [selectedRelationshipUIDs, setSelectedRelationshipCardUIDs] = useState<[string, string][]>([]);
+    const [chatResizableSidebar, setChatResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
     const currentCardUIDRef = useRef<string>(null);
     const saveCardSelectionCallbackRef = useRef<(relationships: [string, string][]) => void>(null);
     const disabledCardSelectionUIDsRef = useRef<string[]>([]);
     const cancelCardSelectionCallbackRef = useRef<() => void>(null);
+    const chatSidebarRef = useRef<HTMLDivElement>(null);
 
     const setCardSelection = (cardUID: string, relationshipUID?: string) => {
         if (!relationshipUID) {
@@ -115,12 +131,16 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
     };
 
     return (
-        <BoardRelationshipControllerContext.Provider
+        <BoardControllerContext.Provider
             value={{
+                boardViewType,
                 selectCardViewType,
                 selectedRelationshipUIDs,
                 currentCardUIDRef,
                 disabledCardSelectionUIDsRef,
+                chatResizableSidebar,
+                chatSidebarRef,
+                setBoardViewType,
                 startCardSelection,
                 setSelectedRelationshipCardUIDs,
                 setCardSelection,
@@ -130,17 +150,18 @@ export const BoardRelationshipController = memo(({ children }: IBoardRelationshi
                 isDisabledCard,
                 filterRelationships,
                 filterRelatedCardUIDs,
+                setChatResizableSidebar,
             }}
         >
             {children}
-        </BoardRelationshipControllerContext.Provider>
+        </BoardControllerContext.Provider>
     );
 });
 
-export const useBoardRelationshipController = () => {
-    const context = useContext(BoardRelationshipControllerContext);
+export const useBoardController = () => {
+    const context = useContext(BoardControllerContext);
     if (!context) {
-        throw new Error("useBoardRelationshipController must be used within a BoardRelationshipController");
+        throw new Error("useBoardController must be used within a BoardController");
     }
     return context;
 };

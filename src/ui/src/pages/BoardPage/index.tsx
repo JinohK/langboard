@@ -11,13 +11,12 @@ import useIsBoardChatAvailableHandlers from "@/controllers/socket/board/chat/use
 import { useSocket } from "@/core/providers/SocketProvider";
 import { useAuth } from "@/core/providers/AuthProvider";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
-import { TDashboardStyledLayoutProps } from "@/components/Layout/DashboardStyledLayout";
 import BoardPage from "@/pages/BoardPage/BoardPage";
 import { IHeaderNavItem } from "@/components/Header/types";
 import BoardWikiPage, { SkeletonBoardWikiPage } from "@/pages/BoardPage/BoardWikiPage";
 import BoardSettingsPage, { SkeletonBoardSettingsPage } from "@/pages/BoardPage/BoardSettingsPage";
 import { BoardChatProvider } from "@/core/providers/BoardChatProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { TBoardViewType, useBoardController } from "@/core/providers/BoardController";
 import useBoardAssignedUsersUpdatedHandlers from "@/controllers/socket/board/useBoardAssignedUsersUpdatedHandlers";
 import useProjectDeletedHandlers from "@/controllers/socket/shared/useProjectDeletedHandlers";
 import { usePageHeader } from "@/core/providers/PageHeaderProvider";
@@ -30,8 +29,10 @@ import { InternalBotModel, Project } from "@/core/models";
 import { EHttpStatus, ESocketTopic } from "@langboard/core/enums";
 import useBoardBotStatusMapHandlers from "@/controllers/socket/board/useBoardBotStatusMapHandlers";
 
-const getCurrentPage = (pageRoute?: string): "board" | "wiki" | "settings" => {
+const getCurrentPage = (pageRoute?: string): TBoardViewType => {
     switch (pageRoute) {
+        case "card":
+            return "card";
         case "wiki":
             return "wiki";
         case "settings":
@@ -127,20 +128,19 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
     const { currentUser } = useAuth();
     const navigate = usePageNavigateRef();
     const [isReady, setIsReady] = useState(false);
-    const { selectCardViewType } = useBoardRelationshipController();
-    const [currentPage, setCurrentPage] = useState(getCurrentPage(pageRoute));
-    const [resizableSidebar, setResizableSidebar] = useState<TDashboardStyledLayoutProps["resizableSidebar"]>();
+    const { boardViewType, selectCardViewType, chatResizableSidebar, chatSidebarRef, setBoardViewType, setChatResizableSidebar } =
+        useBoardController();
     const isBoardChatAvailableHandlers = useMemo(
         () =>
             useIsBoardChatAvailableHandlers({
                 projectUID,
                 callback: (result) => {
                     if (result.available) {
-                        setResizableSidebar(() => ({
+                        setChatResizableSidebar(() => ({
                             children: (
                                 <Suspense>
                                     <BoardChatProvider projectUID={projectUID} bot={result.bot}>
-                                        <ChatSidebar />
+                                        <ChatSidebar ref={chatSidebarRef} />
                                     </BoardChatProvider>
                                 </Suspense>
                             ),
@@ -151,7 +151,7 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
                             floatingFullScreen: true,
                         }));
                     } else {
-                        setResizableSidebar(() => ({
+                        setChatResizableSidebar(() => ({
                             children: <></>,
                             initialWidth: 280,
                             collapsableWidth: 210,
@@ -161,7 +161,7 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
                     setIsReady(() => true);
                 },
             }),
-        [projectUID, setResizableSidebar, setIsReady]
+        [projectUID, setChatResizableSidebar, setIsReady]
     );
     const boardAssignedUsersUpdatedHandlers = useMemo(
         () =>
@@ -273,23 +273,27 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
         isBoardChatAvailableHandlers.send({});
     }, [isFetching, subscribedTopics]);
 
+    useEffect(() => {
+        setBoardViewType(getCurrentPage(pageRoute));
+    }, [pageRoute]);
+
     const headerNavs: IHeaderNavItem[] = [
         {
             name: t("board.Board"),
             onClick: () => {
-                setCurrentPage("board");
+                setBoardViewType("board");
                 navigate(ROUTES.BOARD.MAIN(projectUID), { smooth: true });
             },
-            active: currentPage === "board",
+            active: boardViewType === "board" || boardViewType === "card",
             hidden: !!selectCardViewType,
         },
         {
             name: t("board.Wiki"),
             onClick: () => {
-                setCurrentPage("wiki");
+                setBoardViewType("wiki");
                 navigate(ROUTES.BOARD.WIKI(projectUID), { smooth: true });
             },
-            active: currentPage === "wiki",
+            active: boardViewType === "wiki",
             hidden: !!selectCardViewType,
         },
         {
@@ -305,17 +309,17 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
         {
             name: t("board.Settings"),
             onClick: () => {
-                setCurrentPage("settings");
+                setBoardViewType("settings");
                 navigate(ROUTES.BOARD.SETTINGS(projectUID), { smooth: true });
             },
-            active: currentPage === "settings",
+            active: boardViewType === "settings",
             hidden: !!selectCardViewType,
         },
     ];
 
     let PageComponent;
     let SkeletonComponent;
-    switch (currentPage) {
+    switch (boardViewType) {
         case "wiki":
             PageComponent = BoardWikiPage;
             SkeletonComponent = SkeletonBoardWikiPage;
@@ -334,7 +338,9 @@ function BoardProxyDisplay({ projectUID, pageRoute, isFetching, projectTitle, se
         <DashboardStyledLayout
             headerNavs={headerNavs}
             headerTitle={projectTitle}
-            resizableSidebar={resizableSidebar ? { ...resizableSidebar, hidden: !!selectCardViewType || !!resizableSidebar.hidden } : undefined}
+            resizableSidebar={
+                chatResizableSidebar ? { ...chatResizableSidebar, hidden: !!selectCardViewType || !!chatResizableSidebar.hidden } : undefined
+            }
             className="!p-0"
         >
             {isReady && currentUser ? <PageComponent projectUID={projectUID} currentUser={currentUser} /> : <SkeletonComponent />}

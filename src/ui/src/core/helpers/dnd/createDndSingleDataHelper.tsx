@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { TRowData, TSingleSymbolSet } from "@/core/helpers/dnd/types";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";

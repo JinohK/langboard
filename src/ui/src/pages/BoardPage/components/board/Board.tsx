@@ -17,6 +17,7 @@ import { Utils } from "@langboard/core/utils";
 import { columnRowDndHelpers } from "@/core/helpers/dnd";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useColumnReordered from "@/core/hooks/useColumnReordered";
+import { useBoardController } from "@/core/providers/BoardController";
 
 export function SkeletonBoard() {
     const [cardCounts, setCardCounts] = useState([1, 3, 2]);
@@ -88,6 +89,7 @@ export function Board() {
 }
 
 function BoardDisplay({ scrollableRef }: { scrollableRef: React.RefObject<HTMLDivElement | null> }) {
+    const { chatResizableSidebar } = useBoardController();
     const { project, columns: flatColumns, cardsMap, socket, canDragAndDrop } = useBoard();
     const updater = useReducer((x) => x + 1, 0);
     const [_, forceUpdate] = updater;
@@ -145,7 +147,7 @@ function BoardDisplay({ scrollableRef }: { scrollableRef: React.RefObject<HTMLDi
                 );
             },
         });
-    }, [columns, cardsMap]);
+    }, [columns, cardsMap, chatResizableSidebar]);
 
     // Panning the board
     useEffect(() => {

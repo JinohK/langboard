@@ -1,7 +1,7 @@
 import { Dialog } from "@/components/base";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { useAuth } from "@/core/providers/AuthProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { ROUTES } from "@/core/routing/constants";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCard from "@/pages/BoardPage/components/card/BoardCard";
@@ -13,7 +13,7 @@ const BoardCardPage = memo(() => {
     const navigate = usePageNavigateRef();
     const { currentUser } = useAuth();
     const { projectUID, cardUID } = useParams();
-    const { selectCardViewType } = useBoardRelationshipController();
+    const { selectCardViewType } = useBoardController();
     const viewportRef = useRef<HTMLDivElement | null>(null);
 
     if (!projectUID || !cardUID) {

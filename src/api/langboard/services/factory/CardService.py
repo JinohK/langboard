@@ -57,6 +57,7 @@ class CardService(BaseService):
             return None
 
         api_card = card.api_response()
+        api_card["column_name"] = column.name
 
         project_service = self._get_service(ProjectService)
         api_card["project_members"] = await project_service.get_assigned_users(card.project_id, as_api=True)

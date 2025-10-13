@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import BotRunner from "@/core/ai/BotRunner";
 import SnowflakeID from "@/core/db/SnowflakeID";
 import EventManager from "@/core/server/EventManager";
@@ -8,6 +9,7 @@ import { EInternalBotType } from "@/models/InternalBot";
 import ProjectAssignedInternalBot from "@/models/ProjectAssignedInternalBot";
 import { SocketEvents } from "@langboard/core/constants";
 import ChatSession from "@/models/ChatSession";
+import { TChatScope } from "@langboard/core/types";
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE, async ({ client, topicId }) => {
     const [internalBot, _] = (await ProjectAssignedInternalBot.getInternalBotByProjectUID(EInternalBotType.ProjectChat, topicId)) ?? [null, null];
@@ -31,7 +33,7 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.IS_AVAILABLE,
 });
 
 EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async ({ client, topicId, data }) => {
-    const { message, file_path, task_id, session_uid } = data ?? {};
+    const { message, file_path, task_id, session_uid, scope_uid } = data ?? {};
     if (!Utils.Type.isString(message) || !Utils.Type.isString(task_id)) {
         client.sendError(ESocketStatus.WS_4001_INVALID_DATA, "Invalid message data", false);
         return;
@@ -44,6 +46,26 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
     }
 
     const [internalBot, internalBotSettings] = internalBotResult;
+    const restData: Record<string, any> = {};
+
+    const scopeTable = data.scope_table as TChatScope | undefined;
+    if (scopeTable) {
+        restData.chat_scope = scopeTable;
+        switch (scopeTable) {
+            case "project_column":
+                restData.project_column_uid = scope_uid;
+                break;
+            case "card":
+                restData.card_uid = scope_uid;
+                break;
+            case "project_wiki":
+                restData.project_wiki_uid = scope_uid;
+                break;
+            default:
+                restData.chat_scope = "project";
+                break;
+        }
+    }
 
     const response = await BotRunner.runAbortable({
         internalBot,
@@ -54,6 +76,7 @@ EventManager.on(ESocketTopic.Board, SocketEvents.CLIENT.BOARD.CHAT.SEND, async (
             file_path,
             project_uid: topicId,
             user_id: client.user.id,
+            rest_data: restData,
         },
     });
 

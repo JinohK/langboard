@@ -46,6 +46,17 @@ export type TRowDroppableTargetData<TModel extends TOrderableModel<TOrderableMod
     row: TModel;
 };
 
+export type TDroppableAreaData = {
+    [symbol: symbol]: bool;
+    target: Element;
+    rect: DOMRect;
+};
+
+export type TDroppableAreaTargetData = {
+    [symbol: symbol]: bool;
+    target: Element;
+};
+
 export type TColumnState =
     | {
           type: "is-row-over";
@@ -85,6 +96,19 @@ export type TRowState =
           dragging: DOMRect;
       };
 
+export type TDroppableAreaState =
+    | {
+          type: "is-row-over";
+          dragging: DOMRect;
+      }
+    | {
+          type: "is-column-over";
+          dragging: DOMRect;
+      }
+    | {
+          type: "idle";
+      };
+
 export type TSingleSymbolSet = {
     root: symbol;
     row: symbol;
@@ -106,3 +130,41 @@ export type TSingleRowState =
     | { type: "is-dragging" }
     | { type: "is-over"; dragging: DOMRect; closestEdge: Edge }
     | { type: "preview"; container: HTMLElement; dragging: DOMRect };
+
+interface IBaseDroppableArea {
+    target: HTMLElement;
+    allowedType: "all" | "column" | "row";
+    columnSymbolSet?: symbol[];
+    rowSymbolSet?: symbol[];
+    areaSymbol: symbol;
+    targetSymbol: symbol;
+}
+
+interface IAllDroppableArea<
+    TColumnModel extends TOrderableModel<TOrderableModelName>,
+    TRowModel extends TOrderableModel<TOrderableModelName> = TColumnModel,
+> extends IBaseDroppableArea {
+    allowedType: "all";
+    columnSymbolSet: symbol[];
+    rowSymbolSet: symbol[];
+    onDrop?: (data: TColumnData<TColumnModel> | TRowData<TRowModel>) => void;
+}
+
+interface IColumnDroppableArea<TColumnModel extends TOrderableModel<TOrderableModelName>> extends IBaseDroppableArea {
+    allowedType: "column";
+    columnSymbolSet: symbol[];
+    rowSymbolSet?: never;
+    onDrop?: (data: TColumnData<TColumnModel>) => void;
+}
+
+interface IRowDroppableArea<TRowModel extends TOrderableModel<TOrderableModelName>> extends IBaseDroppableArea {
+    allowedType: "row";
+    columnSymbolSet?: never;
+    rowSymbolSet: symbol[];
+    onDrop?: (data: TColumnData<TRowModel>) => void;
+}
+
+export type TDroppableArea<
+    TColumnModel extends TOrderableModel<TOrderableModelName>,
+    TRowModel extends TOrderableModel<TOrderableModelName> = TColumnModel,
+> = IAllDroppableArea<TColumnModel, TRowModel> | IColumnDroppableArea<TColumnModel> | IRowDroppableArea<TRowModel>;

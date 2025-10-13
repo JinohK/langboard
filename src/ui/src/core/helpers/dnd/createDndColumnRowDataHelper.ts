@@ -1,6 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-import { TColumnData, TColumnState, TRowDroppableTargetData, TRowData, TColumnRowSymbolSet } from "@/core/helpers/dnd/types";
+import { TColumnData, TColumnState, TRowDroppableTargetData, TRowData, TColumnRowSymbolSet, TDroppableAreaState } from "@/core/helpers/dnd/types";
 import { DragLocationHistory } from "@atlaskit/pragmatic-drag-and-drop/dist/types/internal-types";
 import { Edge } from "@atlaskit/pragmatic-drag-and-drop-hitbox/dist/types/types";
 import { TOrderableModel, TOrderableModelName } from "@/core/models/ModelRegistry";
@@ -52,7 +51,7 @@ const createDndColumnRowDataHelper = <
         const innerMost = location.current.dropTargets[0];
         const isOverChildRow = Boolean(innerMost && isRowDroppableTargetData(innerMost.data));
 
-        const proposed: TColumnState = {
+        const proposed: TColumnState | TDroppableAreaState = {
             type: "is-row-over",
             dragging: data.rect,
             isOverChildRow,

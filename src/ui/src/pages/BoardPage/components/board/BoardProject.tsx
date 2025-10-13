@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 import { BoardProvider } from "@/core/providers/BoardProvider";
 import BoardMemberList from "@/pages/BoardPage/components/board/BoardMemberList";
 import { AuthUser, Project } from "@/core/models";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { Board, SkeletonBoard } from "@/pages/BoardPage/components/board/Board";
 import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
 import { EHttpStatus } from "@langboard/core/enums";
@@ -54,7 +54,7 @@ const BoardProject = memo(({ project, currentUser }: IBoardProps) => {
 BoardProject.displayName = "BoardProject";
 
 const BoardResult = memo(({ project }: { project: Project.TModel }) => {
-    const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardRelationshipController();
+    const { selectCardViewType, selectedRelationshipUIDs, saveCardSelection, cancelCardSelection } = useBoardController();
     const [t] = useTranslation();
 
     return (

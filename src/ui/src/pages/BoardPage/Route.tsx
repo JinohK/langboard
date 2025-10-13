@@ -3,7 +3,7 @@ import { AuthGuard } from "@/core/routing/AuthGuard";
 import { ROUTES } from "@/core/routing/constants";
 import BoardProxy from "@/pages/BoardPage";
 import BoardCardPage from "@/pages/BoardPage/BoardCardPage";
-import { BoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { BoardController } from "@/core/providers/BoardController";
 import BoardActivityDialog from "@/pages/BoardPage/components/board/BoardActivityDialog";
 import WikiActivityDialog from "@/pages/BoardPage/components/wiki/WikiActivityDialog";
 import WikiMetadataDialog from "@/pages/BoardPage/components/wiki/WikiMetadataDialog";
@@ -24,10 +24,10 @@ const routes: RouteObject[] = [
         path: ROUTES.BOARD.MAIN(":projectUID"),
         element: (
             <AuthGuard>
-                <BoardRelationshipController>
+                <BoardController>
                     <BoardProxy />
                     <Outlet />
-                </BoardRelationshipController>
+                </BoardController>
             </AuthGuard>
         ),
         children: [

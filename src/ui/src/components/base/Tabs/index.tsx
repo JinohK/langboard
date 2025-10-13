@@ -88,22 +88,24 @@ const Provider = ({ defaultValue, value, onValueChange, children }: IProviderPro
             return;
         }
 
-        const activeTab = tabRefs.current[activeValue];
-        if (activeTab) {
-            const tabRect = activeTab.getBoundingClientRect();
-            const containerRect = tabListRef.current.getBoundingClientRect();
+        setTimeout(() => {
+            const activeTab = tabRefs.current[activeValue];
+            if (activeTab) {
+                const tabRect = activeTab.getBoundingClientRect();
+                const containerRect = tabListRef.current!.getBoundingClientRect();
 
-            setActiveTabBounds({
-                left: tabRect.left - containerRect.left,
-                width: tabRect.width,
-            });
-        } else {
-            setActiveTabBounds({
-                left: 0,
-                width: 0,
-            });
-            setActiveValue(undefined);
-        }
+                setActiveTabBounds(() => ({
+                    left: tabRect.left - containerRect.left,
+                    width: tabRect.width,
+                }));
+            } else {
+                setActiveTabBounds(() => ({
+                    left: 0,
+                    width: 0,
+                }));
+                setActiveValue(undefined);
+            }
+        }, 150);
     }, [activeValue, uiUpdated]);
 
     const handleTabClick = (value: string) => {

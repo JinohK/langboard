@@ -3,7 +3,7 @@ import useUpdateCardRelationships from "@/controllers/api/card/useUpdateCardRela
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { cn } from "@/core/utils/ComponentUtils";
 import BoardCardActionRelationshipList from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationshipList";
 import { ISharedBoardCardActionProps } from "@/pages/BoardPage/components/card/action/types";
@@ -23,7 +23,7 @@ function BoardCardActionRelationshipButton({ type, relationships, buttonClassNam
         startCardSelection,
         filterRelationships,
         filterRelatedCardUIDs,
-    } = useBoardRelationshipController();
+    } = useBoardController();
     const { projectUID, card } = useBoardCard();
     const [isOpened, setIsOpened] = useState(false);
     const [isValidating, setIsValidating] = useState(false);

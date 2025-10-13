@@ -50,6 +50,7 @@ from .forms import (
                     Card,
                     {
                         "schema": {
+                            "column_name": "string",
                             "project_members": [User],
                             "labels": [ProjectLabel],
                             "member_uids": "string[]",

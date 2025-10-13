@@ -1,7 +1,7 @@
 import { Button } from "@/components/base";
 import { ProjectCardRelationship } from "@/core/models";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
@@ -32,7 +32,7 @@ const BoardColumnCardRelationshipButton = memo(({ type, attributes }: IBoardColu
     const { model: card, params } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
     const { setFilters } = params;
     const isParent = type === "parents";
-    const { filterRelationships } = useBoardRelationshipController();
+    const { filterRelationships } = useBoardController();
     const flatRelationships = card.useForeignField("relationships");
     const relationships = filterRelationships(card.uid, flatRelationships, isParent);
 

@@ -3,7 +3,7 @@ import { DISABLE_DRAGGING_ATTR } from "@/constants";
 import useChangeProjectColumnName from "@/controllers/api/board/useChangeProjectColumnName";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import { Project, ProjectColumn } from "@/core/models";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { useBoard } from "@/core/providers/BoardProvider";
 import { cn } from "@/core/utils/ComponentUtils";
 import { memo, useCallback, useState } from "react";
@@ -16,7 +16,7 @@ export interface IBoardColumnTitleProps {
 }
 
 const BoardColumnTitle = memo(({ isDragging, column }: IBoardColumnTitleProps) => {
-    const { selectCardViewType } = useBoardRelationshipController();
+    const { selectCardViewType } = useBoardController();
     const { project, hasRoleAction } = useBoard();
     const [t] = useTranslation();
     const [isValidating, setIsValidating] = useState(false);

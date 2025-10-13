@@ -6,6 +6,7 @@
   "Chat with AI": "Chat with AI",
   "Session menu": "Session menu",
   "Session list": "Session list",
+  "Drop here to add": "Drop here to add",
   "New chat": "New chat",
   "Retitle": "Retitle",
   "Session name": "Session name",
@@ -14,6 +15,13 @@
   "Ask anything to {app} AI!": "Ask anything to {{app}} AI!",
   "Enter a message": "Enter a message",
   "Send a message": "Send a message",
+  "Add scope": "Add scope",
+  "chatScopes": {
+    "card": "Card",
+    "project_column": "Column",
+    "project_wiki": "Wiki",
+    "Unknown": "Unknown"
+  },
   "Stop": "Stop",
   "Parents": "Parents",
   "Children": "Children",

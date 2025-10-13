@@ -1,7 +1,7 @@
 import { Flex, ScrollArea } from "@/components/base";
 import { ProjectCardRelationship } from "@/core/models";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { Utils } from "@langboard/core/utils";
 import BoardCardActionRelationshipItem from "@/pages/BoardPage/components/card/action/relationship/BoardCardActionRelationshipItem";
 import { memo, useEffect, useState } from "react";
@@ -14,7 +14,7 @@ export interface IBoardCardActionRelationshipListProps {
 const BoardCardActionRelationshipList = memo(({ type, relationships: flatRelationships }: IBoardCardActionRelationshipListProps) => {
     const isParent = type === "parents";
     const { card } = useBoardCard();
-    const { filterRelationships } = useBoardRelationshipController();
+    const { filterRelationships } = useBoardController();
     const [relationships, setRelationships] = useState(filterRelationships(card.uid, flatRelationships, isParent));
 
     useEffect(() => {

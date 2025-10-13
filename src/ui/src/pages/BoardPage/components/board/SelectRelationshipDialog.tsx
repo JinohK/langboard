@@ -1,7 +1,7 @@
 import { Box, Button, Dialog, Flex, ScrollArea } from "@/components/base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoard } from "@/core/providers/BoardProvider";
-import { useBoardRelationshipController } from "@/core/providers/BoardRelationshipController";
+import { useBoardController } from "@/core/providers/BoardController";
 import { cn } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import { IBoardColumnCardContextParams } from "@/pages/BoardPage/components/board/BoardConstants";
@@ -15,7 +15,7 @@ export interface ISelectRelationshipDialogProps {
 
 const SelectRelationshipDialog = memo(({ isOpened, setIsOpened }: ISelectRelationshipDialogProps) => {
     const { model: card } = ModelRegistry.ProjectCard.useContext<IBoardColumnCardContextParams>();
-    const { selectCardViewType, selectedRelationshipUIDs, setCardSelection } = useBoardRelationshipController();
+    const { selectCardViewType, selectedRelationshipUIDs, setCardSelection } = useBoardController();
     const { globalRelationshipTypes } = useBoard();
     const [t] = useTranslation();
     const [selectedRelationshipUID, setSelectedRelationshipUID] = useState<string | undefined>(

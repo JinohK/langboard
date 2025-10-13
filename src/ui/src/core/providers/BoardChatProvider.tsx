@@ -10,6 +10,7 @@ import { IChatContent } from "@/core/models/Base";
 import useTaskAbortedHandlers from "@/controllers/socket/global/useTaskAbortedHandlers";
 import useGetProjectChatSessions from "@/controllers/api/board/chat/useGetProjectChatSessions";
 import useBoardChatSessionCreatedHandlers from "@/controllers/socket/board/chat/useBoardChatSessionCreatedHandlers";
+import { TChatScope } from "@langboard/core/types";
 
 export interface IBoardChatContext {
     projectUID: string;
@@ -21,6 +22,8 @@ export interface IBoardChatContext {
     setIsUploading: React.Dispatch<React.SetStateAction<bool>>;
     isSessionListOpened: bool;
     setIsSessionListOpened: React.Dispatch<React.SetStateAction<bool>>;
+    selectedScope?: [TChatScope, string] | undefined;
+    setSelectedScope: React.Dispatch<React.SetStateAction<[TChatScope, string] | undefined>>;
     chatSessions: ChatSessionModel.TModel[];
     currentSessionUID?: string;
     setCurrentSessionUID: React.Dispatch<React.SetStateAction<string | undefined>>;
@@ -45,6 +48,8 @@ const initialContext = {
     setIsUploading: () => {},
     isSessionListOpened: false,
     setIsSessionListOpened: () => {},
+    selectedScope: undefined,
+    setSelectedScope: () => {},
     chatSessions: [],
     currentSessionUID: undefined,
     setCurrentSessionUID: () => {},
@@ -61,6 +66,7 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
     const [isSending, setIsSending] = useState(false);
     const [isUploading, setIsUploading] = useState(false);
     const [isSessionListOpened, setIsSessionListOpened] = useState(false);
+    const [selectedScope, setSelectedScope] = useState<[TChatScope, string] | undefined>(undefined);
     const chatTaskIdRef = useRef<string | null>(null);
     const scrollToBottomRef = useRef<() => void>(() => {});
     const isAtBottomRef = useRef(true);
@@ -224,6 +230,8 @@ export const BoardChatProvider = ({ projectUID, bot, children }: IBoardChatProvi
                 setIsUploading,
                 isSessionListOpened,
                 setIsSessionListOpened,
+                selectedScope,
+                setSelectedScope,
                 chatSessions,
                 currentSessionUID,
                 setCurrentSessionUID,

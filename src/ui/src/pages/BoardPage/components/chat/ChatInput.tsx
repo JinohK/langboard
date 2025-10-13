@@ -1,15 +1,18 @@
-import { Box, Button, Flex, IconComponent, Input, Textarea, Toast } from "@/components/base";
+import { Button, Flex, IconComponent, Textarea, Toast } from "@/components/base";
 import useUploadProjectChatAttachment from "@/controllers/api/board/chat/useUploadProjectChatAttachment";
 import useBoardChatCancelHandlers from "@/controllers/socket/board/chat/useBoardChatCancelHandlers";
 import { useBoardChat } from "@/core/providers/BoardChatProvider";
 import { cn, measureTextAreaHeight } from "@/core/utils/ComponentUtils";
 import { Utils } from "@langboard/core/utils";
 import ChatTemplateListDialog from "@/pages/BoardPage/components/chat/ChatTemplateListDialog";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
-import mimeTypes from "react-native-mime-types";
 import { MAX_FILE_SIZE_MB } from "@/constants";
 import useBoardChatSentHandlers from "@/controllers/socket/board/chat/useBoardChatSentHandlers";
+import ChatInputPreviewList from "@/pages/BoardPage/components/chat/ChatInputPreviewList";
+import { ChatInputProvider, useChatInput } from "@/pages/BoardPage/components/chat/ChatInputProvider";
+import ChatInputFileUpload from "@/pages/BoardPage/components/chat/ChatInputFileUpload";
+import ChatInputAddScopeDialog from "@/pages/BoardPage/components/chat/ChatInputAddScopeDialog";
 
 export interface IChatInputProps {
     height: number;
@@ -17,14 +20,21 @@ export interface IChatInputProps {
 }
 
 function ChatInput({ height, setHeight }: IChatInputProps) {
-    const { projectUID, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID, chatTaskIdRef } = useBoardChat();
+    return (
+        <ChatInputProvider height={height} setHeight={setHeight}>
+            <ChatInputDisplay />
+        </ChatInputProvider>
+    );
+}
+
+function ChatInputDisplay() {
+    const { projectUID, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID, selectedScope, setSelectedScope, chatTaskIdRef } =
+        useBoardChat();
+    const { chatAttachmentRef, chatInputRef, height, setFile, setHeight } = useChatInput();
     const [t] = useTranslation();
     const { mutateAsync: uploadProjectChatAttachmentMutateAsync } = useUploadProjectChatAttachment();
     const { send: cancelChat } = useBoardChatCancelHandlers({ projectUID });
     const { send: sendChat } = useBoardChatSentHandlers({ projectUID });
-    const chatAttachmentRef = useRef<HTMLInputElement>(null);
-    const chatInputRef = useRef<HTMLTextAreaElement>(null);
-    const [previewElement, setPreviewElement] = useState<React.ReactNode | null>(null);
     const abortControllerRef = useRef<AbortController | null>(null);
     const updateHeight = useCallback(() => {
         if (!Utils.Type.isElement(chatInputRef.current, "textarea")) {
@@ -98,7 +108,8 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
         chatInputRef.current.value = "";
         chatAttachmentRef.current.value = "";
-        setPreviewElement(null);
+        setSelectedScope(undefined);
+        setFile(null);
         updateHeight();
 
         let tried = 0;
@@ -114,11 +125,15 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
 
             chatTaskIdRef.current = Utils.String.Token.uuid();
 
+            const [scopeTable, scopeUID] = selectedScope || [undefined, undefined];
+
             return sendChat({
                 message: chatMessage,
                 file_path: filePath,
                 task_id: chatTaskIdRef.current,
                 session_uid: currentSessionUID,
+                scope_table: scopeTable,
+                scope_uid: scopeUID,
             }).isConnected;
         };
 
@@ -137,22 +152,17 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
         if (!trySendChat()) {
             triedTimeout = setTimeout(trySendChatWrapper, 1000);
         }
-    }, [updateHeight, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID]);
+    }, [updateHeight, isSending, setIsSending, isUploading, setIsUploading, currentSessionUID, setSelectedScope]);
 
-    const onAttachmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        if (!e.target.files || e.target.files.length === 0) {
-            setPreviewElement(null);
+    const handleTextAreaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.shiftKey && e.key === "Enter") {
             return;
         }
 
-        const file = e.target.files[0];
-        setPreviewElement(<CHatInputFilePreview file={file} />);
-    };
-
-    const clearAttachmentPreview = () => {
-        setPreviewElement(null);
-        if (chatAttachmentRef.current) {
-            chatAttachmentRef.current.value = "";
+        if (e.key === "Enter") {
+            e.preventDefault();
+            e.stopPropagation();
+            send();
         }
     };
 
@@ -165,68 +175,23 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
             position="relative"
             className="min-h-[calc(theme(spacing.24)_-_1px)] border-t bg-background focus-within:ring-ring"
         >
-            <Flex
-                position="absolute"
-                top="-28"
-                h="28"
-                py="2"
-                w="full"
-                justify="center"
-                items="center"
-                className={cn("bg-secondary/70", !previewElement && "hidden")}
-            >
-                {!isSending && (
-                    <Button type="button" variant="ghost" size="icon-sm" className="absolute right-1 top-1" onClick={clearAttachmentPreview}>
-                        <IconComponent icon="x" size="4" />
-                    </Button>
-                )}
-                {previewElement}
-            </Flex>
+            <ChatInputPreviewList />
             <Textarea
                 placeholder={t("project.Enter a message")}
                 className="max-h-[20vh] min-h-12 border-none px-2 shadow-none focus-visible:ring-0"
                 resize="none"
                 disabled={isSending}
                 style={{ height }}
-                onKeyDown={(e) => {
-                    if (e.shiftKey && e.key === "Enter") {
-                        return;
-                    }
-
-                    if (e.key === "Enter") {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        send();
-                    }
-                }}
+                onKeyDown={handleTextAreaKeyDown}
                 onChange={updateHeight}
                 ref={chatInputRef}
             />
             <Flex justify="between" items="center">
-                <Box>
-                    <Input
-                        type="file"
-                        hidden
-                        accept="image/*, .txt, .xls, .xlsx"
-                        disabled={isSending}
-                        onChange={onAttachmentChange}
-                        ref={chatAttachmentRef}
-                        wrapperProps={{ className: "hidden" }}
-                    />
-                    <Button
-                        type="button"
-                        variant="ghost"
-                        size="icon-sm"
-                        title={t("common.Upload")}
-                        disabled={isSending}
-                        titleSide="top"
-                        titleAlign="start"
-                        onClick={() => chatAttachmentRef.current?.click()}
-                    >
-                        <IconComponent icon="paperclip" size="4" />
-                    </Button>
+                <Flex items="center" gap="1">
+                    <ChatInputFileUpload />
                     <ChatTemplateListDialog chatInputRef={chatInputRef} updateHeight={updateHeight} />
-                </Box>
+                    <ChatInputAddScopeDialog />
+                </Flex>
                 <Button
                     type="button"
                     variant={isSending ? "secondary" : "default"}
@@ -245,41 +210,6 @@ function ChatInput({ height, setHeight }: IChatInputProps) {
                 </Button>
             </Flex>
         </Flex>
-    );
-}
-
-interface IChatInputFilePreviewProps {
-    file: File;
-}
-
-function CHatInputFilePreview({ file }: IChatInputFilePreviewProps) {
-    const type = mimeTypes.lookup(file.name) || "file";
-    const [previewData, setPreviewData] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (!type.startsWith("image/")) {
-            setPreviewData(null);
-            return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => {
-            setPreviewData(reader.result as string);
-        };
-        reader.readAsDataURL(file);
-    }, []);
-
-    return (
-        <>
-            {type.startsWith("image/") && previewData ? (
-                <img src={previewData ?? ""} alt={file.name} className="h-full w-auto" />
-            ) : (
-                <Flex direction="col" items="center" className="text-center" w="full">
-                    <IconComponent icon="file" size="6" />
-                    <span className="w-[calc(100%_-_theme(spacing.4))] truncate">{file.name}</span>
-                </Flex>
-            )}
-        </>
     );
 }
 
