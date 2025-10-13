@@ -29,15 +29,19 @@ for service in "${!service_envs[@]}"; do
   output_file="docker/envs/.${service}.env"
   echo "Generating $output_file from templates: ${service_envs[$service]}"
 
-  # 비워서 시작
   : > "$output_file"
 
-  # 템플릿 이름들을 공백으로 split
   for template in ${service_envs[$service]}; do
     template_path="docker/envs/${template}.env.template"
 
     if [[ -f "$template_path" ]]; then
-      cat "$template_path" >> "$output_file"
+      eval "$(cat "$template_path")"
+      while read -r line; do
+        if [[ "$line" =~ ^([A-Za-z_][A-Za-z0-9_]*)= ]]; then
+          var_name="${BASH_REMATCH[1]}"
+          echo "$var_name=${!var_name}" >> "$output_file"
+        fi
+      done < "$template_path"
     else
       echo "⚠️ Warning: template '$template_path' not found"
     fi
