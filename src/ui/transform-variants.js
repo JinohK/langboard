@@ -38,14 +38,74 @@ export function transformVariants(content) {
         return content;
     }
 
-    content = applyVariantsUtils(content);
+    const { content: strippedContent, imports } = removeImportBlock(content);
+    const { content: appliedContent, namespaces } = applyVariantsUtils(strippedContent);
+    content = restoreImportBlock(appliedContent, imports, namespaces);
 
     return content.replace(tvVariants, content);
 }
 
 /**
  * @param {string} content
+ * @returns {{content: string, imports: {placeholder: string, original: string}[]}}
+ */
+function removeImportBlock(content) {
+    const importRegex = /import[\s\S]+?from\s+['"][^'"]+['"];?/gm;
+    const imports = [];
+    let i = 0;
+
+    content = content.replace(importRegex, (match) => {
+        const placeholder = `__IMPORT_BLOCK_${i}__`;
+        imports.push({ placeholder, original: match });
+        i++;
+        return placeholder;
+    });
+
+    return { content, imports };
+}
+
+/**
+ * @param {string} content
+ * @param {{placeholder: string, original: string}[]} imports
+ * @param {string[]} namespaces
  * @returns {string}
+ */
+function restoreImportBlock(content, imports, namespaces) {
+    imports.forEach(({ placeholder, original }) => {
+        for (let i = 0; i < namespaces.length; ++i) {
+            const namespace = namespaces[i];
+            if (original.includes(namespace)) {
+                original = original.replace(`${namespace},`, "").replace(namespace, "");
+            }
+        }
+
+        const lines = original.split("\n").filter((line) => line.trim() !== "");
+        if (!lines.length) {
+            return;
+        }
+
+        // If the import block is empty with multiple lines, remove it
+        if (lines[0].trim() === "import {") {
+            if (lines.length <= 2) {
+                return;
+            }
+        }
+
+        // If the import block is empty with single line, remove it
+        if (lines.length === 1 && lines[0].match(/import\s+{?\s*}?\s+from\s+['"][^'"]+['"];?/)) {
+            return;
+        }
+
+        original = lines.join("\n");
+
+        content = content.replace(placeholder, original);
+    });
+    return content;
+}
+
+/**
+ * @param {string} content
+ * @returns {{content: string, namespaces: string[]}}
  */
 const applyVariantsUtils = (content) => {
     const variantUtilsContent = fs.readFileSync("./src/core/utils/VariantUtils.ts", "utf-8");
@@ -92,7 +152,7 @@ const applyVariantsUtils = (content) => {
         }
     });
 
-    return content;
+    return { content, namespaces: Object.keys(declarations) };
 };
 
 /**
