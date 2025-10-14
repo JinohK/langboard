@@ -9,7 +9,7 @@ import useAddCardComment from "@/controllers/api/card/comment/useAddCardComment"
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
 import { isModel, TUserLikeModel } from "@/core/models/ModelRegistry";
-import { BotModel } from "@/core/models";
+import { BotModel, ProjectCard } from "@/core/models";
 import { getEditorStore, useIsCurrentEditor } from "@/core/stores/EditorStore";
 import { TEditor } from "@/components/Editor/editor-kit";
 import { getMentionOnSelectItem } from "@platejs/mention";
@@ -39,6 +39,7 @@ const BoardCommentForm = memo((): JSX.Element => {
     const projectMembers = card.useForeignField("project_members");
     const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
+    const cards = ProjectCard.Model.useModels((model) => model.uid !== card.uid && model.project_uid === projectUID, [projectUID, card]);
     const valueRef = useRef<IEditorContent>({ content: "" });
     const setValue = (value: IEditorContent) => {
         valueRef.current = value;
@@ -221,6 +222,7 @@ const BoardCommentForm = memo((): JSX.Element => {
                                 value={valueRef.current}
                                 currentUser={currentUser}
                                 mentionables={mentionables}
+                                linkables={cards}
                                 className="h-full max-h-[min(50vh,200px)] min-h-[min(50vh,200px)] overflow-y-auto px-6 py-3"
                                 editorType="card-new-comment"
                                 form={{

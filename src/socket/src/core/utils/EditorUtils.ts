@@ -8,4 +8,5 @@ export const DATA_TEXT_FORMAT_DESCRIPTIONS = {
     uml: "UML format: $$uml\numl_code\n$$",
     equation: "Equation format: $$\nmath_code\n$$",
     inline_equation: "Inline equation format: $$math_code$$",
+    internal_link: "Internal link format as obsidian syntax: [[card_or_project_wiki:card_or_wiki_id]]\nExample: [[card:...]], [[project_wiki:...]]",
 };

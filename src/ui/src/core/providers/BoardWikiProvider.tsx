@@ -56,7 +56,7 @@ export const BoardWikiProvider = ({
 }: IBoardWikiProviderProps): React.ReactNode => {
     const socket = useSocket();
     const navigate = usePageNavigateRef();
-    const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID);
+    const wikis = ProjectWiki.Model.useModels((model) => model.project_uid === projectUID, [projectUID]);
     const { wikiUID } = useParams();
     const [projectMembers, setProjectMembers] = useState(flatProjectMembers);
     const [t] = useTranslation();

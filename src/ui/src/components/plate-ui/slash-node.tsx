@@ -34,7 +34,7 @@ import {
     InlineComboboxItem,
 } from "@/components/plate-ui/inline-combobox";
 import { useTranslation } from "react-i18next";
-import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
 
 type Group = {
     group: string;

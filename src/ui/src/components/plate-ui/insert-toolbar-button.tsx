@@ -10,7 +10,6 @@ import {
     Heading2Icon,
     Heading3Icon,
     LightbulbIcon,
-    Link2Icon,
     ListIcon,
     ListOrderedIcon,
     MinusIcon,
@@ -23,6 +22,8 @@ import {
     TableOfContentsIcon,
     ImageIcon,
     FilmIcon,
+    Cable,
+    ExternalLink,
 } from "lucide-react";
 import { KEYS } from "platejs";
 import { type PlateEditor, useEditorRef } from "platejs/react";
@@ -30,7 +31,8 @@ import { DropdownMenu } from "@/components/base";
 import { insertBlock, insertInlineElement } from "@/components/Editor/transforms";
 import { ToolbarButton, ToolbarMenuGroup } from "@/components/plate-ui/toolbar";
 import { useTranslation } from "react-i18next";
-import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
+import { INTERNAL_LINK_KEY } from "@/components/Editor/plugins/customs/internal-link/InternalLinkPlugin";
 
 type Group = {
     group: string;
@@ -175,9 +177,14 @@ const groups: Group[] = [
         group: "Inline",
         items: [
             {
-                icon: <Link2Icon className="size-4" />,
-                label: "editor.Link",
+                icon: <ExternalLink className="size-4" />,
+                label: "editor.External link",
                 value: KEYS.link,
+            },
+            {
+                icon: <Cable className="size-4" />,
+                label: "editor.Internal link",
+                value: INTERNAL_LINK_KEY,
             },
             {
                 focusEditor: true,
@@ -186,7 +193,6 @@ const groups: Group[] = [
                 value: KEYS.date,
             },
             {
-                focusEditor: false,
                 icon: <RadicalIcon className="size-4" />,
                 label: "editor.Inline equation",
                 value: KEYS.inlineEquation,
@@ -194,6 +200,10 @@ const groups: Group[] = [
         ].map((item) => ({
             ...item,
             onSelect: (editor, value) => {
+                if (value === INTERNAL_LINK_KEY) {
+                    editor.tf.insertText("{{");
+                    return;
+                }
                 insertInlineElement(editor, value);
             },
         })),
@@ -216,13 +226,15 @@ export function InsertToolbarButton(props: DropdownMenuProps) {
             <DropdownMenu.Content className="flex max-h-[min(70vh,300px)] min-w-0 flex-col overflow-y-auto" align="start">
                 {groups.map(({ group, items: nestedItems }) => (
                     <ToolbarMenuGroup key={group} label={group}>
-                        {nestedItems.map(({ icon, label, value, onSelect }) => (
+                        {nestedItems.map(({ icon, label, value, onSelect, focusEditor }) => (
                             <DropdownMenu.Item
                                 key={value}
                                 className="min-w-[180px]"
                                 onSelect={() => {
                                     onSelect(editor, value);
-                                    editor.tf.focus();
+                                    if (focusEditor) {
+                                        editor.tf.focus();
+                                    }
                                 }}
                             >
                                 {icon}

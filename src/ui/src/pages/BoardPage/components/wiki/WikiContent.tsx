@@ -40,13 +40,14 @@ export function SkeletonWikiContent() {
 
 const WikiContent = memo(({ wiki }: IWikiContentProps) => {
     const navigate = usePageNavigateRef();
-    const { projectUID, socket, projectMembers, currentUser, changeTab } = useBoardWiki();
+    const { projectUID, wikis: flatWikis, socket, projectMembers, currentUser, changeTab } = useBoardWiki();
     const [t] = useTranslation();
     const { mutateAsync: changeWikiDetailsMutateAsync } = useChangeWikiDetails("content", { interceptToast: true });
     const editorName = `${wiki.uid}-wiki-description`;
     const isPublic = wiki.useField("is_public");
     const assignedMembers = wiki.useForeignField("assigned_members");
     const bots = BotModel.Model.useModels(() => true);
+    const wikis = useMemo(() => flatWikis.filter((w) => w.uid !== wiki.uid), [flatWikis, wiki]);
     const mentionables = useMemo(
         () => [...(isPublic ? projectMembers : assignedMembers), ...bots],
         [isPublic, assignedMembers, projectMembers, bots]
@@ -150,6 +151,7 @@ const WikiContent = memo(({ wiki }: IWikiContentProps) => {
                     value={content}
                     currentUser={currentUser}
                     mentionables={mentionables}
+                    linkables={wikis}
                     className={cn(
                         "h-full px-6 py-3",
                         isEditing

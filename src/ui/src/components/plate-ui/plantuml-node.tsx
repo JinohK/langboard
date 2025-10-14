@@ -5,7 +5,7 @@ import { PlateElement, PlateElementProps, useReadOnly } from "platejs/react";
 import { Flex, IconComponent } from "@/components/base";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { TPlantUmlElement, usePlantUmlElement } from "@/components/Editor/plugins/plantuml-plugin";
+import { TPlantUmlElement, usePlantUmlElement } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
 import PlantUmlDialog from "@/components/plate-ui/plantuml-dialog";
 
 export function PlantUmlElement(props: PlateElementProps<TPlantUmlElement>) {

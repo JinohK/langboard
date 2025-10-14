@@ -52,6 +52,9 @@
   "External Link Warning": "External Link Warning",
   "This link leads to an external website.": "This link leads to an external website.",
   "We can't guarantee the safety or privacy of external sites, so please proceed with caution.": "We can't guarantee the safety or privacy of external sites, so please proceed with caution.",
+  "Internal Link Warning": "Internal Link Warning",
+  "This link leads to an internal resource.": "This link leads to an internal resource.",
+  "Navigating to this link will cause you to lose all unsaved changes.": "Navigating to this link will cause you to lose all unsaved changes.",
   "Go to link": "Go to link",
   "Open in new tab": "Open in new tab",
   "avatarActions": {

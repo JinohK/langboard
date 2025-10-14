@@ -24,7 +24,8 @@ import { MentionKit } from "@/components/Editor/plugins/mention-kit";
 import { SlashKit } from "@/components/Editor/plugins/slash-kit";
 import { TableKit } from "@/components/Editor/plugins/table-kit";
 import { TocKit } from "@/components/Editor/plugins/toc-kit";
-import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
+import { InternalLinkKit } from "@/components/Editor/plugins/internal-link-kit";
 
 export const EditorKit = [
     ...BlockMenuKit,
@@ -64,6 +65,7 @@ export const EditorKit = [
     ...FloatingToolbarKit,
 
     // Custom
+    ...InternalLinkKit,
     PlantUmlPlugin,
 ];
 

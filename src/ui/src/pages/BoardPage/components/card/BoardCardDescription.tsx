@@ -5,7 +5,7 @@ import useChangeCardDetails from "@/controllers/api/card/useChangeCardDetails";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
 import useChangeEditMode from "@/core/hooks/useChangeEditMode";
 import useToggleEditingByClickOutside from "@/core/hooks/useToggleEditingByClickOutside";
-import { BotModel, Project } from "@/core/models";
+import { BotModel, Project, ProjectCard } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
 import { getEditorStore } from "@/core/stores/EditorStore";
@@ -34,6 +34,7 @@ const BoardCardDescription = memo((): JSX.Element => {
     const projectMembers = card.useForeignField("project_members");
     const bots = BotModel.Model.useModels(() => true);
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
+    const cards = ProjectCard.Model.useModels((model) => model.uid !== card.uid && model.project_uid === projectUID, [projectUID, card]);
     const description = card.useField("description");
     const { valueRef, isEditing, changeMode } = useChangeEditMode({
         canEdit: () => hasRoleAction(Project.ERoleAction.CardUpdate),
@@ -109,6 +110,7 @@ const BoardCardDescription = memo((): JSX.Element => {
             <PlateEditor
                 value={valueRef.current}
                 mentionables={mentionables}
+                linkables={cards}
                 currentUser={currentUser}
                 className={cn("h-full min-h-[calc(theme(spacing.56)_-_theme(spacing.8))]", isEditing ? "px-6 py-3" : "")}
                 readOnly={!isEditing}

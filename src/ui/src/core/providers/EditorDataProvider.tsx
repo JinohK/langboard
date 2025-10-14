@@ -4,23 +4,29 @@ import { AuthUser } from "@/core/models";
 import { Utils } from "@langboard/core/utils";
 import { Routing } from "@langboard/core/constants";
 import { TUserLikeModel } from "@/core/models/ModelRegistry";
+import { TInternalLinkableModel, TInternalLinkElement } from "@/components/Editor/plugins/customs/internal-link/InternalLinkPlugin";
+import { usePageNavigateRef } from "@/core/hooks/usePageNavigate";
+import { ROUTES } from "@/core/routing/constants";
 
 export type TEditorType = "view" | "card-description" | "card-comment" | "card-new-comment" | "wiki-content";
 
 export interface IEditorDataContext {
     currentUser: AuthUser.TModel;
     mentionables: TUserLikeModel[];
+    linkables: TInternalLinkableModel[];
     form?: any;
     socketEvents?: ReturnType<typeof createEditorSocketEvents>;
     chatEventKey?: string;
     copilotEventKey?: string;
     uploadPath?: string;
     uploadedCallback?: (respones: any) => void;
+    createInternalLink: (type: TInternalLinkElement["internalType"], uid: string) => () => void;
 }
 
 interface IBaseEditorDataProviderProps {
     currentUser: AuthUser.TModel;
     mentionables: TUserLikeModel[];
+    linkables?: TInternalLinkableModel[];
     editorType: TEditorType;
     form?: any;
     uploadedCallback?: (respones: any) => void;
@@ -77,6 +83,8 @@ export type TEditorDataProviderProps =
 const initialContext = {
     currentUser: {} as AuthUser.TModel,
     mentionables: [],
+    linkables: [],
+    createInternalLink: () => () => {},
 };
 
 const EditorDataContext = createContext<IEditorDataContext>(initialContext);
@@ -97,11 +105,13 @@ const createEditorSocketEvents = (baseEvent: string) => ({
 export const EditorDataProvider = ({
     currentUser,
     mentionables,
+    linkables = [],
     editorType,
     form,
     uploadedCallback,
     children,
 }: TEditorDataProviderProps): React.ReactNode => {
+    const navigate = usePageNavigateRef();
     const [baseSocketEvent, chatEventKey, copilotEventKey] = useMemo(() => {
         switch (editorType) {
             case "card-description":
@@ -136,18 +146,38 @@ export const EditorDataProvider = ({
             default:
         }
     }, [editorType, form]);
+    const createInternalLink = (type: TInternalLinkElement["internalType"], uid: string) => () => {
+        switch (type) {
+            case "card":
+                if (!form || !form.project_uid) {
+                    return;
+                }
+
+                navigate(ROUTES.BOARD.CARD(form.project_uid, uid));
+                break;
+            case "project_wiki":
+                if (!form || !form.project_uid) {
+                    return;
+                }
+
+                navigate(ROUTES.BOARD.WIKI_PAGE(form.project_uid, uid));
+                break;
+        }
+    };
 
     return (
         <EditorDataContext.Provider
             value={{
                 currentUser,
                 mentionables,
+                linkables,
                 form,
                 socketEvents,
                 chatEventKey,
                 copilotEventKey,
                 uploadPath,
                 uploadedCallback,
+                createInternalLink,
             }}
         >
             {children}

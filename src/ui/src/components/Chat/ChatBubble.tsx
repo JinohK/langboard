@@ -41,7 +41,7 @@ const ChatBubble = React.forwardRef<HTMLDivElement, ChatBubbleProps>(({ classNam
                 : child
         )}
         {!!message?.content && (
-            <div className={cn("w-full max-w-[15%]", variant === "sent" ? "text-right" : "text-left")}>
+            <div className={cn("w-full max-w-7", variant === "sent" ? "text-right" : "text-left")}>
                 <ChatBubbleCopyButton message={message} className="invisible relative group-hover:visible" />
             </div>
         )}

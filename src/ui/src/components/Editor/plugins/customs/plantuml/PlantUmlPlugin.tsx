@@ -2,15 +2,17 @@ import { type InsertNodesOptions, type SlateEditor, type TElement, bindFirst, cr
 import { toPlatePlugin } from "platejs/react";
 import PlantUMLEncoder from "plantuml-encoder";
 import React from "react";
-import { PlantUmlElement } from "@/components/plate-ui/plantuml-element";
+import { PlantUmlElement } from "@/components/plate-ui/plantuml-node";
 import { Utils } from "@langboard/core/utils";
+
+export const PLANTUML_KEY = "plantuml";
 
 export interface TPlantUmlElement extends TElement {
     umlCode: string;
 }
 
 const BasePlantUmlPlugin = createSlatePlugin({
-    key: "plantuml",
+    key: PLANTUML_KEY,
     node: { isElement: true, isVoid: true },
 }).extendEditorTransforms(({ editor }) => ({
     insert: {

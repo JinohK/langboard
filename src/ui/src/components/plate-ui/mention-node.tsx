@@ -5,7 +5,7 @@ import type { IMentionElement } from "@/components/Editor/plugins/markdown/menti
 import { IS_APPLE, KEYS, TComboboxInputElement } from "platejs";
 import { cn } from "@/core/utils/ComponentUtils";
 import { useMounted } from "@/core/hooks/useMounted";
-import { User } from "@/core/models";
+import { BotModel, User } from "@/core/models";
 import UserAvatar from "@/components/UserAvatar";
 import UserAvatarDefaultList from "@/components/UserAvatarDefaultList";
 import { useEditorData } from "@/core/providers/EditorDataProvider";
@@ -21,6 +21,7 @@ import {
 import { useTranslation } from "react-i18next";
 import { IMentionInputComboboxItemProps, MentionInputComboboxItem } from "@/components/plate-ui/mention-input-combobox-item";
 import { Utils } from "@langboard/core/utils";
+import UserLikeComponent from "@/components/UserLikeComponent";
 
 export type TMentionableUser = TUserLikeModel & {
     key: string;
@@ -39,16 +40,6 @@ export function MentionElement(
     const focused = useFocused();
     const mounted = useMounted();
     const mentioned = mentionables.find((userOrBot) => userOrBot.uid === element.key) ?? User.Model.createUnknownUser();
-    const renderLabel = React.useCallback(() => {
-        const mentionable = mentionables.find((val) => val.uid === element.key);
-        if (isModel(mentionable, "User")) {
-            return `${mentionable.firstname} ${mentionable.lastname}`;
-        } else if (isModel(mentionable, "BotModel")) {
-            return mentionable.name;
-        } else {
-            return element.value;
-        }
-    }, [element, mentionables]);
 
     const readOnly = useReadOnly();
 
@@ -59,7 +50,7 @@ export function MentionElement(
             <>
                 {props.children}
                 {prefix}
-                {renderLabel()}
+                <MentionLabel userOrBot={mentioned} />
             </>
         );
     } else {
@@ -67,7 +58,7 @@ export function MentionElement(
         customName = (
             <>
                 {prefix}
-                {renderLabel()}
+                <MentionLabel userOrBot={mentioned} />
                 {props.children}
             </>
         );
@@ -167,3 +158,28 @@ export function MentionInputElement(props: PlateElementProps<TComboboxInputEleme
         </PlateElement>
     );
 }
+
+const MentionLabel = ({ userOrBot }: { userOrBot: TUserLikeModel | IMentionElement }) => {
+    if (!isModel(userOrBot, "User") && !isModel(userOrBot, "BotModel")) {
+        return (userOrBot as IMentionElement).value;
+    }
+
+    return <UserLikeComponent userOrBot={userOrBot} userComp={MentionLabelUserItem} botComp={MentionLabelBotItem} props={{}} shouldReturnNull />;
+};
+
+const MentionLabelUserItem = ({ user }: { user: User.TModel }) => {
+    const firstname = user.useField("firstname");
+    const lastname = user.useField("lastname");
+
+    return (
+        <>
+            {firstname} {lastname}
+        </>
+    );
+};
+
+const MentionLabelBotItem = ({ bot }: { bot: BotModel.TModel }) => {
+    const name = bot.useField("name");
+
+    return <>{name}</>;
+};

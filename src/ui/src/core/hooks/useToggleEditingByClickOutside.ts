@@ -16,7 +16,8 @@ const useToggleEditingByClickOutside = (boxAttr: string, changeMode: (mode: "edi
                 target.closest("audio") ||
                 target.closest("img") ||
                 target.closest(".slate-file") ||
-                target.closest("[data-reply-component")
+                target.closest("[data-reply-component") ||
+                target.closest(".internal-link")
             ) {
                 return;
             }

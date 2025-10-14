@@ -1,5 +1,5 @@
 import { Box, Flex, Floating } from "@/components/base";
-import { TPlantUmlElement, usePlantUmlElement } from "@/components/Editor/plugins/plantuml-plugin";
+import { TPlantUmlElement, usePlantUmlElement } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
 import {
     AlertDialog,
     AlertDialogAction,

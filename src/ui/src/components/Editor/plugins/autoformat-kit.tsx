@@ -1,6 +1,6 @@
 "use client";
 
-import { PlantUmlPlugin } from "@/components/Editor/plugins/plantuml-plugin";
+import { PlantUmlPlugin } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
 import type { AutoformatRule } from "@platejs/autoformat";
 import {
     autoformatArrow,
@@ -222,6 +222,13 @@ const autoformatLists: AutoformatRule[] = [
                 checked: true,
                 listStyleType: KEYS.listTodo,
             });
+        },
+    },
+    {
+        match: ["[["],
+        mode: "text",
+        format: (editor) => {
+            editor.tf.insertText("{{");
         },
     },
 ];

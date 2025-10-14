@@ -4,16 +4,16 @@ import type { Node, Parent } from "mdast";
 import { MdMath } from "@platejs/markdown";
 import { Plugin } from "unified";
 import { visit } from "unist-util-visit";
-import { TPlantUmlElement } from "@/components/Editor/plugins/plantuml-plugin";
+import { PLANTUML_KEY, TPlantUmlElement } from "@/components/Editor/plugins/customs/plantuml/PlantUmlPlugin";
 
-export interface INode extends Omit<MdMath, "type"> {
+export interface IPlantUMLNode extends Omit<MdMath, "type"> {
     value: string;
-    type: "plantuml";
+    type: typeof PLANTUML_KEY;
 }
 
 declare module "mdast" {
     interface RootContentMap {
-        plantuml: INode;
+        plantuml: IPlantUMLNode;
     }
 }
 
@@ -26,7 +26,7 @@ export const remark: Plugin = function () {
 
             parent.children.splice(index, 1, {
                 ...node,
-                type: "plantuml",
+                type: PLANTUML_KEY,
                 value: node.value,
             });
         });
@@ -35,9 +35,9 @@ export const remark: Plugin = function () {
 
 export const rules = {
     plantuml: {
-        deserialize: (node: INode): TPlantUmlElement => ({
+        deserialize: (node: IPlantUMLNode): TPlantUmlElement => ({
             children: [{ text: "" }],
-            type: "plantuml",
+            type: PLANTUML_KEY,
             umlCode: node.value,
         }),
         serialize: (node: TPlantUmlElement) => ({
