@@ -1,7 +1,7 @@
 import { Box, Button, Drawer, Flex, Form, Skeleton, SubmitButton } from "@/components/base";
 import UserAvatar from "@/components/UserAvatar";
 import { useTranslation } from "react-i18next";
-import { memo, useCallback, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useMemo, useRef, useState, useEffect } from "react";
 import { PlateEditor } from "@/components/Editor/plate-editor";
 import { IEditorContent } from "@/core/models/Base";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -41,9 +41,9 @@ const BoardCommentForm = memo((): JSX.Element => {
     const mentionables = useMemo(() => [...projectMembers, ...bots], [projectMembers, bots]);
     const cards = ProjectCard.Model.useModels((model) => model.uid !== card.uid && model.project_uid === projectUID, [projectUID, card]);
     const valueRef = useRef<IEditorContent>({ content: "" });
-    const setValue = (value: IEditorContent) => {
+    const setValue = useCallback((value: IEditorContent) => {
         valueRef.current = value;
-    };
+    }, []);
     const drawerRef = useRef<HTMLDivElement>(null);
     const editorRef = useRef<TEditor>(null);
     const editorName = `${card.uid}-comment-form`;
@@ -118,12 +118,43 @@ const BoardCommentForm = memo((): JSX.Element => {
         });
     };
 
+    const commentStorageKey = useMemo(() => `comment-${projectUID}-${card.uid}`, [projectUID, card.uid]);
+    const saveDraftToStorage = useCallback(
+        (content: string) => {
+            if (typeof window === "undefined") {
+                return;
+            }
+            const trimmed = content.trim();
+            if (trimmed.length > 0) {
+                window.sessionStorage.setItem(commentStorageKey, content);
+            }
+        },
+        [commentStorageKey]
+    );
+    const readDraftFromStorage = useCallback((): string => {
+        if (typeof window === "undefined") {
+            return "";
+        }
+        return window.sessionStorage.getItem(commentStorageKey) ?? "";
+    }, [commentStorageKey]);
+    const clearDraftFromStorage = useCallback(() => {
+        if (typeof window === "undefined") {
+            return;
+        }
+        window.sessionStorage.removeItem(commentStorageKey);
+    }, [commentStorageKey]);
+
+    useEffect(() => {
+        if (!isCurrentEditor) {
+            saveDraftToStorage(valueRef.current.content);
+        }
+    }, [isCurrentEditor, saveDraftToStorage]);
+
     const changeOpenState = (opened: bool) => {
         if (isValidating) {
             return;
         }
 
-        setValue({ content: "" });
         if (!opened) {
             drawerRef.current?.setAttribute("data-state", "closed");
             setTimeout(() => {
@@ -133,6 +164,10 @@ const BoardCommentForm = memo((): JSX.Element => {
                 getEditorStore().setCurrentEditor(null);
             }, 450);
             return;
+        } else {
+            const currentContent = valueRef.current.content;
+            const initialContent = currentContent.length > 0 ? currentContent : readDraftFromStorage();
+            setValue({ content: initialContent });
         }
 
         getEditorStore().setCurrentEditor(editorName);
@@ -162,6 +197,8 @@ const BoardCommentForm = memo((): JSX.Element => {
                 },
                 onSettled: () => {
                     setIsValidating(false);
+                    setValue({ content: "" });
+                    clearDraftFromStorage();
                     getEditorStore().setCurrentEditor(null);
                     setTimeout(() => {
                         changeOpenState(false);
