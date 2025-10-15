@@ -167,8 +167,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         } else {
             const currentContent = valueRef.current.content;
             const initialContent = currentContent.length > 0 ? currentContent : readDraftFromStorage();
-            const resolvedContent = initialContent ?? "";
-            setValue({ content: resolvedContent });
+            setValue({ content: initialContent });
         }
 
         getEditorStore().setCurrentEditor(editorName);
