@@ -90,11 +90,13 @@ install_api: ## install the api dependencies
 
 install_ts_core: ## install the ts core dependencies
 	@echo 'Installing ts core dependencies'
+	cd $(TS_CORE_DIR) && yarn run format
 	cd $(TS_CORE_DIR) && yarn install
 	cd $(TS_CORE_DIR) && yarn run build
 
 install_ui: ## install ui dependencies
 	@echo 'Installing ui dependencies'
+	cd $(UI_DIR) && yarn run format
 	cd $(UI_DIR) && yarn install
 
 install_flows: ## install flows dependencies
@@ -103,6 +105,7 @@ install_flows: ## install flows dependencies
 
 install_socket: ## install socket dependencies
 	@echo 'Installing socket dependencies'
+	cd $(SOCKET_DIR) && yarn run format
 	cd $(SOCKET_DIR) && yarn install
 
 dev_api: ## run the API in development mode

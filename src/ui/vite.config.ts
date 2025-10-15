@@ -9,6 +9,8 @@ import path from "path";
 
 dns.setDefaultResultOrder("verbatim");
 
+const EXPECTED_ENV_PATHS = ["../../../", "../../", "../", "./"];
+
 const removeUseClient = () => {
     const filter = createFilter(/.*\.(js|ts|jsx|tsx)$/);
 
@@ -30,11 +32,14 @@ const removeUseClient = () => {
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
     const isLocal = mode !== "production" && process.env.ENVIRONMENT !== "development";
-    if (fs.existsSync("../../.env")) {
-        dotenv.config({ path: "../../.env" });
-    } else if (fs.existsSync("./.env")) {
-        dotenv.config();
+    for (let i = 0; i < EXPECTED_ENV_PATHS.length; ++i) {
+        const envPath = path.join(EXPECTED_ENV_PATHS[i], ".env");
+        if (fs.existsSync(envPath)) {
+            dotenv.config({ path: envPath });
+            break;
+        }
     }
+    EXPECTED_ENV_PATHS.splice(0);
 
     const PORT = Number(process.env.UI_PORT) || 5173;
 

@@ -11,6 +11,7 @@
       "@/*": ["./src/*"]
     },
     "baseUrl": ".",
+    "ignoreDeprecations": "6.0",
     "types": ["@langboard/core/global"]
   },
   "include": ["vite.config.ts"]

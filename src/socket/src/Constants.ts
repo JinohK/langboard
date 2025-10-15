@@ -5,15 +5,15 @@ import * as fs from "fs";
 import * as jwt from "jsonwebtoken";
 import { Utils } from "@langboard/core/utils";
 
-const expectedEnvPaths = ["../../../.env", "../../.env", "../.env", "./.env"];
-for (let i = 0; i < expectedEnvPaths.length; ++i) {
-    const envPath = expectedEnvPaths[i];
+const EXPECTED_ENV_PATHS = ["../../../", "../../", "../", "./"];
+for (let i = 0; i < EXPECTED_ENV_PATHS.length; ++i) {
+    const envPath = path.join(EXPECTED_ENV_PATHS[i], ".env");
     if (fs.existsSync(envPath)) {
         dotenv.config({ path: envPath });
         break;
     }
 }
-expectedEnvPaths.splice(0);
+EXPECTED_ENV_PATHS.splice(0);
 
 type TGetEnvParams<TValue extends string | number> = {
     key: string;

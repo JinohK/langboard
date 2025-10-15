@@ -2,7 +2,7 @@ import { Button, Flex, Separator, SubmitButton, Toast } from "@/components/base"
 import useDeleteCardComment from "@/controllers/api/card/comment/useDeleteCardComment";
 import useUpdateCardComment from "@/controllers/api/card/comment/useUpdateCardComment";
 import setupApiErrorHandler from "@/core/helpers/setupApiErrorHandler";
-import { Project } from "@/core/models";
+import { BotModel, Project } from "@/core/models";
 import { IEditorContent } from "@/core/models/Base";
 import { ModelRegistry } from "@/core/models/ModelRegistry";
 import { useBoardCard } from "@/core/providers/BoardCardProvider";
@@ -101,6 +101,7 @@ function BoardCommentFooterActions() {
     const { model: comment, params } = ModelRegistry.ProjectCardComment.useContext<IBoardCommentContextParams>();
     const { author, deletedComment, editorName, editorRef } = params;
     const projectMembers = card.useForeignField("project_members");
+    const bots = BotModel.Model.useModels(() => true);
     const [isValidating, setIsValidating] = useState(false);
     const canEdit = currentUser.uid === author.uid || currentUser.is_admin;
     const { mutateAsync: deleteCommentMutateAsync } = useDeleteCardComment({ interceptToast: true });
@@ -143,7 +144,7 @@ function BoardCommentFooterActions() {
             {hasRoleAction(Project.ERoleAction.Read) &&
                 currentUser.uid !== author.uid &&
                 currentUser.isValidUser() &&
-                projectMembers.find((user) => user.uid === author.uid) && (
+                [...projectMembers, ...bots].find((user) => user.uid === author.uid) && (
                     <>
                         <Separator orientation="vertical" className="h-1/2" />
                         <Button
