@@ -13,7 +13,6 @@ import { BotModel, ProjectCard } from "@/core/models";
 import { getEditorStore, useIsCurrentEditor } from "@/core/stores/EditorStore";
 import { TEditor } from "@/components/Editor/editor-kit";
 import { getMentionOnSelectItem } from "@platejs/mention";
-import { MarkdownPlugin } from "@platejs/markdown";
 
 export function SkeletonBoardCommentForm() {
     return (
