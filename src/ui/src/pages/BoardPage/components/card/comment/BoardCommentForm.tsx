@@ -148,7 +148,7 @@ const BoardCommentForm = memo((): JSX.Element => {
         if (!isCurrentEditor) {
             saveDraftToStorage(valueRef.current.content);
         }
-    }, [isCurrentEditor]);
+    }, [isCurrentEditor, saveDraftToStorage]);
 
     const changeOpenState = (opened: bool) => {
         if (isValidating) {
